@@ -1,0 +1,48 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/journey/list",
+    "pages/message/list",
+    "pages/mine/index"
+  ],
+  "subPackages": [],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "共享旅途",
+    "navigationBarBackgroundColor": "#F8F8F8",
+    "backgroundColor": "#F8F8F8"
+  },
+  "tabBar": {
+    "color": "#bfbfbf",
+    "selectedColor": "#409eff",
+    "borderStyle": "black",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "iconPath": "static/image/tabbar/index.png",
+        "selectedIconPath": "static/image/tabbar/index-active.png",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/journey/list",
+        "iconPath": "static/image/tabbar/car.png",
+        "selectedIconPath": "static/image/tabbar/car-active.png",
+        "text": "旅途"
+      },
+      {
+        "pagePath": "pages/message/list",
+        "iconPath": "static/image/tabbar/comment.png",
+        "selectedIconPath": "static/image/tabbar/comment-active.png",
+        "text": "消息"
+      },
+      {
+        "pagePath": "pages/mine/index",
+        "iconPath": "static/image/tabbar/my.png",
+        "selectedIconPath": "static/image/tabbar/my-active.png",
+        "text": "我的"
+      }
+    ]
+  },
+  "usingComponents": {}
+}

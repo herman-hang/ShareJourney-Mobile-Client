@@ -1,0 +1,75 @@
+{
+	"tabBar": {
+		"color": "#bfbfbf",
+		"selectedColor": "#409eff",
+		"borderStyle": "black",
+		"backgroundColor": "#ffffff",
+		"list": [{
+				"pagePath": "pages/index/index",
+				"iconPath": "static/image/tabbar/index.png",
+				"selectedIconPath": "static/image/tabbar/index-active.png",
+				"text": "首页"
+			}, {
+				"pagePath": "pages/journey/list",
+				"iconPath": "static/image/tabbar/car.png",
+				"selectedIconPath": "static/image/tabbar/car-active.png",
+				"text": "旅途"
+			}, {
+				"pagePath": "pages/message/list",
+				"iconPath": "static/image/tabbar/comment.png",
+				"selectedIconPath": "static/image/tabbar/comment-active.png",
+				"text": "消息"
+			},
+			{
+				"pagePath": "pages/mine/index",
+				"iconPath": "static/image/tabbar/my.png",
+				"selectedIconPath": "static/image/tabbar/my-active.png",
+				"text": "我的"
+			}
+		]
+	},
+	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "共享旅途"
+			}
+		},
+		{
+			"path": "pages/journey/list",
+			"style": {
+				"enablePullDownRefresh": true,
+				"navigationBarTitleText": "旅途"
+			}
+		},
+		{
+			"path": "pages/message/list",
+			"style": {
+				"enablePullDownRefresh": true,
+				"navigationBarTitleText": "消息"
+			}
+		},
+		{
+			"path": "pages/mine/index",
+			"style": {
+				"navigationBarTitleText": "我的",
+				"backgroundTextStyle": "dark"
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "共享旅途",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8",
+		// #ifdef H5
+		"maxWidth": 750,
+		"rpxCalcMaxDeviceWidth": 750, // rpx 计算所支持的最大设备宽度，单位 px，默认值为 960
+		"rpxCalcBaseDeviceWidth": 560, // rpx 计算使用的基准设备宽度，设备实际宽度超出 rpx 计算所支持的最大设备宽度时将按基准宽度计算，单位 px，默认值为 375
+		"rpxCalcIncludeWidth": 9999, // rpx 计算特殊处理的值，始终按实际的设备宽度计算，单位 rpx，默认值为 750
+		// #endif
+		"app-plus": {
+			"scrollIndicator": "none" //全局 在APP页面都不显示滚动条
+		}
+	}
+}
