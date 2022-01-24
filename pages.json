@@ -55,8 +55,77 @@
 				"navigationBarTitleText": "我的",
 				"backgroundTextStyle": "dark"
 			}
+		},
+		{
+			"path": "pages/login/index",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/login/login",
+			"style": {
+				"navigationBarTitleText": "登录"
+			}
+		},
+		{
+			"path": "pages/login/bind",
+			"style": {
+				"navigationBarTitleText": "绑定手机"
+			}
+		},
+		{
+			"path": "pages/register/register",
+			"style": {
+				"navigationBarTitleText": "新用户注册"
+			}
+		},
+		{
+			"path": "pages/password/password",
+			"style": {
+				"navigationBarTitleText": "找回密码"
+			}
+		},
+		{
+			"path": "pages/login/agreement",
+			"style": {
+				"navigationBarTitleText": "用户服务协议"
+			}
+		},
+		{
+			"path": "pages/login/policy",
+			"style": {
+				"navigationBarTitleText": "隐私政策"
+			}
+		},
+		{
+			"path": "pages/money/index",
+			"style": {
+				"navigationBarTitleText": "我的钱包"
+			}
+		},
+		{
+			"path": "pages/money/withdraw",
+			"style": {
+				"navigationBarTitleText": "申请提现"
+			}
+		},
+		{
+			"path": "pages/terms/index",
+			"style": {
+				"navigationBarTitleText": "法律条款"
+			}
+		},
+		{
+			"path": "pages/material/index",
+			"style": {
+				"navigationBarTitleText": "个人资料"
+			}
 		}
 	],
+	"easycom": {
+		"^u-(.*)": "@/uni_modules/uview-ui/components/u-$1/u-$1.vue"
+	},
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "共享旅途",

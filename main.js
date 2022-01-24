@@ -9,6 +9,8 @@ import * as db from './utils/db.js'
 // 时间过滤器
 import './utils/filter.js'
 import * as message from './utils/message.js'
+// 导入uview-ui框架
+import uView from '@/uni_modules/uview-ui'
 //挂载到原型对象上
 Vue.prototype.$db = db
 Vue.prototype.$app = core
@@ -19,8 +21,7 @@ import {
 	RouterMount
 } from 'router.js'
 Vue.use(router)
-
-
+Vue.use(uView)
 Vue.config.productionTip = false
 App.mpType = 'app'
 const app = new Vue({

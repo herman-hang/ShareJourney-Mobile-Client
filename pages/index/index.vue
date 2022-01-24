@@ -2,9 +2,7 @@
 	<view class="content">
 		<image class="logo" src="/static/logo.png"></image>
 		<view class="text-area">
-			<text class="title">{{ title }}</text>
-			<text class="title">1</text>
-			<text class="title">2</text>
+			<text class="title">{{ title + '，共享旅途'}}</text>
 		</view>
 	</view>
 </template>

@@ -10,3 +10,12 @@ export const getMoreListData = (resList, oldList, pageNo) => {
 	// 合并新数据
 	return oldList.data.concat(resList.data)
 }
+
+/**
+ * 跳转
+ */
+export const navTo = (url) => {
+	uni.navigateTo({
+		url
+	});
+}

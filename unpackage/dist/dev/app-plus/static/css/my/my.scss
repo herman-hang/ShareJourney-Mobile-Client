@@ -1,0 +1,968 @@
+//本页面由uniapp切片工具生成，uni-app切片-可视化设计工具(一套代码编译到7个平台iOS、Android、H5、小程序)，软件下载地址：http://www.ymznkf.com/new_view_669.htm
+html,
+body,
+#app {
+	height: 100%;
+	width: 100%;
+}
+.ym-content {
+	height: 100%;
+	width: 100%;
+}
+uni-page-body,
+#app {
+	height: 100%;
+}
+button::after {
+	border: none;
+	width: auto;
+}
+input {
+	outline: none;
+	border: none;
+	list-style: none;
+	width: auto;
+}
+.login-out {
+	border-radius: 20%;
+}
+.list-item {
+	float: left;
+}
+.ym-hide {
+	display: none;
+}
+.ym-show {
+	display: block;
+}
+.slide-image {
+	width: 100%;
+	height: 100%;
+}
+.list-horizontal {
+	width: auto;
+	display: inline-block;
+}
+.my-1 {
+	white-space: normal;
+	width: 749upx;
+	padding: 0upx;
+	clear: both;
+	float: left;
+	background-color: $uni-theme-color;
+	border-radius: 0upx;
+	font-size: 8upx;
+}
+.my-1 .my-3 {
+	white-space: normal;
+	width: 722upx;
+	height: 129upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 10upx;
+	margin-left: 13upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 8upx;
+}
+.my-1 .my-3 .my-4 {
+	white-space: normal;
+	width: 117upx;
+	height: 117upx;
+	padding: 0upx;
+	margin-top: 4upx;
+	margin-left: 10upx;
+	float: left;
+	border-radius: 50%;
+	font-size: 8upx;
+	line-height: 117upx;
+}
+.my-1 .my-3 .my-5 {
+	white-space: normal;
+	width: 493upx;
+	height: 87upx;
+	padding: 0upx;
+	margin-top: 27upx;
+	margin-left: 30upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 8upx;
+}
+.my-1 .my-3 .my-5 .my-7 {
+	white-space: normal;
+	width: 431upx;
+	height: 42upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 0upx;
+	margin-left: 0upx;
+	float: left;
+	border-radius: 0upx;
+	color: #ffffff;
+	font-size: 32upx;
+	line-height: 42upx;
+}
+.my-1 .my-3 .my-5 .my-8 {
+	white-space: normal;
+	width: 431upx;
+	height: 29upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 0upx;
+	margin-left: 0upx;
+	float: left;
+	border-radius: 0upx;
+	color: #ffffff;
+	font-size: 18upx;
+	line-height: 29upx;
+}
+.my-1 .my-3 .my-6 {
+	white-space: normal;
+	width: 31upx;
+	height: 43upx;
+	padding: 0upx;
+	margin-top: 40upx;
+	margin-left: 17upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 42upx;
+	line-height: 43upx;
+}
+.my-1 .my-2 {
+	white-space: normal;
+	width: 749upx;
+	height: 1300upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 11upx;
+	margin-left: 0upx;
+	float: left;
+	background-color: #f3f5f3;
+	border-radius: 0upx;
+	border-top-left-radius: 50upx;
+	border-top-right-radius: 50upx;
+	font-size: 8upx;
+}
+.my-1 .my-2 .my-9 {
+	white-space: normal;
+	width: 702upx;
+	height: 172upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 29upx;
+	margin-left: 23upx;
+	float: left;
+	background-color: #ffffff;
+	border-radius: 0upx;
+	font-size: 8upx;
+	border-radius: 15rpx;
+}
+.my-1 .my-2 .my-9 .my-10 {
+	white-space: normal;
+	width: 278upx;
+	height: 149upx;
+	padding: 0upx;
+	margin-top: 15upx;
+	margin-left: 38upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 8upx;
+}
+.my-1 .my-2 .my-9 .my-10 .my-13 {
+	white-space: normal;
+	width: 171upx;
+	height: 40upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 6upx;
+	margin-left: 50upx;
+	float: left;
+	text-align: center;
+	justify-content: center;
+	border-radius: 0upx;
+	color: #646464;
+	font-size: 27upx;
+	line-height: 40upx;
+}
+.my-1 .my-2 .my-9 .my-10 .my-14 {
+	white-space: normal;
+	width: 171upx;
+	height: 36upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 7upx;
+	margin-left: 50upx;
+	float: left;
+	text-align: center;
+	justify-content: center;
+	border-radius: 0upx;
+	color: #646464;
+	font-size: 18upx;
+	line-height: 36upx;
+}
+.my-1 .my-2 .my-9 .my-10 .my-15 {
+	white-space: normal;
+	width: 211upx;
+	height: 37upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 6upx;
+	margin-left: 38upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 39upx;
+	line-height: 37upx;
+}
+.my-1 .my-2 .my-9 .my-10 .my-15 .my-16 {
+	white-space: normal;
+	width: 74upx;
+	height: 37upx;
+	padding: 0upx;
+	margin-top: 0upx;
+	margin-left: 11upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 36upx;
+	line-height: 37upx;
+}
+.my-1 .my-2 .my-9 .my-10 .my-15 .my-17 {
+	white-space: normal;
+	width: 74upx;
+	height: 37upx;
+	padding: 0upx;
+	margin-top: 0upx;
+	margin-left: 21upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 36upx;
+	line-height: 37upx;
+}
+.my-1 .my-2 .my-9 .my-11 {
+	white-space: normal;
+	width: 3upx;
+	height: 79upx;
+	padding: 0upx;
+	margin-top: 47upx;
+	margin-left: 32upx;
+	float: left;
+	background-color: #f1f5f1;
+	border-radius: 0upx;
+	font-size: 8upx;
+}
+.my-1 .my-2 .my-9 .my-12 {
+	white-space: normal;
+	width: 289upx;
+	height: 149upx;
+	padding: 0upx;
+	margin-top: 15upx;
+	margin-left: 40upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 8upx;
+}
+.my-1 .my-2 .my-9 .my-12 .my-18 {
+	white-space: normal;
+	width: 171upx;
+	height: 40upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 6upx;
+	margin-left: 47upx;
+	float: left;
+	text-align: center;
+	justify-content: center;
+	border-radius: 0upx;
+	color: #646464;
+	font-size: 27upx;
+	line-height: 40upx;
+}
+.my-1 .my-2 .my-9 .my-12 .my-19 {
+	white-space: normal;
+	width: 171upx;
+	height: 36upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 7upx;
+	margin-left: 47upx;
+	float: left;
+	text-align: center;
+	justify-content: center;
+	border-radius: 0upx;
+	color: #646464;
+	font-size: 17upx;
+	line-height: 36upx;
+}
+.my-1 .my-2 .my-9 .my-12 .my-20 {
+	white-space: normal;
+	width: 211upx;
+	height: 37upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 6upx;
+	margin-left: 35upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 39upx;
+	line-height: 37upx;
+}
+.my-1 .my-2 .my-9 .my-12 .my-20 .my-21 {
+	white-space: normal;
+	width: 74upx;
+	height: 37upx;
+	padding: 0upx;
+	margin-top: 0upx;
+	margin-left: 12upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 36upx;
+	line-height: 37upx;
+}
+.my-1 .my-2 .my-9 .my-12 .my-20 .my-22 {
+	white-space: normal;
+	width: 74upx;
+	height: 37upx;
+	padding: 0upx;
+	margin-top: 0upx;
+	margin-left: 20upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 36upx;
+	line-height: 37upx;
+}
+.my-1 .my-2 .my-23 {
+	white-space: normal;
+	width: 702upx;
+	height: 174upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 24upx;
+	margin-left: 23upx;
+	float: left;
+	background-color: #ffffff;
+	border-radius: 0upx;
+	font-size: 8upx;
+}
+.my-1 .my-2 .my-23 .my-24 {
+	white-space: normal;
+	width: 154upx;
+	height: 140upx;
+	padding: 0upx;
+	margin-top: 17upx;
+	margin-left: 14upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 8upx;
+}
+.my-1 .my-2 .my-23 .my-24 .my-25 {
+	white-space: normal;
+	width: 79upx;
+	height: 78upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 5upx;
+	margin-left: 32upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 8upx;
+	line-height: 78upx;
+}
+.my-1 .my-2 .my-23 .my-24 .my-26 {
+	white-space: normal;
+	width: 130upx;
+	height: 35upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 13upx;
+	margin-left: 7upx;
+	float: left;
+	text-align: center;
+	justify-content: center;
+	border-radius: 0upx;
+	color: #646464;
+	font-size: 29upx;
+	line-height: 35upx;
+}
+.my-1 .my-2 .my-23 .my-27 {
+	white-space: normal;
+	width: 154upx;
+	height: 140upx;
+	padding: 0upx;
+	margin-top: 17upx;
+	margin-left: 20upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 8upx;
+}
+.my-1 .my-2 .my-23 .my-27 .my-28 {
+	white-space: normal;
+	width: 79upx;
+	height: 78upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 5upx;
+	margin-left: 32upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 8upx;
+	line-height: 78upx;
+}
+.my-1 .my-2 .my-23 .my-27 .my-29 {
+	white-space: normal;
+	width: 130upx;
+	height: 35upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 13upx;
+	margin-left: 7upx;
+	float: left;
+	text-align: center;
+	justify-content: center;
+	border-radius: 0upx;
+	color: #646464;
+	font-size: 29upx;
+	line-height: 35upx;
+}
+.my-1 .my-2 .my-23 .my-30 {
+	white-space: normal;
+	width: 154upx;
+	height: 140upx;
+	padding: 0upx;
+	margin-top: 17upx;
+	margin-left: 22upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 8upx;
+}
+.my-1 .my-2 .my-23 .my-30 .my-31 {
+	white-space: normal;
+	width: 79upx;
+	height: 78upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 5upx;
+	margin-left: 32upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 8upx;
+	line-height: 78upx;
+}
+.my-1 .my-2 .my-23 .my-30 .my-32 {
+	white-space: normal;
+	width: 130upx;
+	height: 35upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 13upx;
+	margin-left: 7upx;
+	float: left;
+	text-align: center;
+	justify-content: center;
+	border-radius: 0upx;
+	color: #646464;
+	font-size: 29upx;
+	line-height: 35upx;
+}
+.my-1 .my-2 .my-23 .my-33 {
+	white-space: normal;
+	width: 154upx;
+	height: 140upx;
+	padding: 0upx;
+	margin-top: 17upx;
+	margin-left: 20upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 8upx;
+}
+.my-1 .my-2 .my-23 .my-33 .my-34 {
+	white-space: normal;
+	width: 79upx;
+	height: 78upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 5upx;
+	margin-left: 32upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 8upx;
+	line-height: 78upx;
+}
+.my-1 .my-2 .my-23 .my-33 .my-35 {
+	white-space: normal;
+	width: 130upx;
+	height: 35upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 13upx;
+	margin-left: 7upx;
+	float: left;
+	text-align: center;
+	justify-content: center;
+	border-radius: 0upx;
+	color: #646464;
+	font-size: 29upx;
+	line-height: 35upx;
+}
+.my-1 .my-2 .my-36 {
+	white-space: normal;
+	width: 702upx;
+	height: 372upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 24upx;
+	margin-left: 23upx;
+	float: left;
+	background-color: #ffffff;
+	border-radius: 0upx;
+	font-size: 8upx;
+	border-radius: 15rpx;
+}
+.my-1 .my-2 .my-36 .my-37 {
+	white-space: normal;
+	width: 651upx;
+	height: 95upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 43upx;
+	margin-left: 38upx;
+	float: left;
+	border-bottom-color: #e1e1e1;
+	border-bottom-width: 1upx;
+	border-bottom-style: solid;
+	border-radius: 0upx;
+	font-size: 8upx;
+}
+.my-1 .my-2 .my-36 .my-37 .my-38 {
+	white-space: normal;
+	width: 47upx;
+	height: 45upx;
+	padding: 0upx;
+	margin-top: 13upx;
+	margin-left: 2upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 44upx;
+	line-height: 45upx;
+}
+.my-1 .my-2 .my-36 .my-37 .my-39 {
+	white-space: normal;
+	width: 426upx;
+	height: 47upx;
+	padding: 0upx;
+	margin-top: 13upx;
+	margin-left: 18upx;
+	float: left;
+	border-radius: 0upx;
+	color: #646464;
+	font-size: 32upx;
+	line-height: 47upx;
+}
+.my-1 .my-2 .my-36 .my-37 .my-40 {
+	white-space: normal;
+	width: 30upx;
+	height: 32upx;
+	padding: 0upx;
+	margin-top: 20upx;
+	margin-left: 113upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 31upx;
+	line-height: 32upx;
+}
+.my-1 .my-2 .my-36 .my-41 {
+	white-space: normal;
+	width: 651upx;
+	height: 95upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 22upx;
+	margin-left: 38upx;
+	float: left;
+	border-bottom-color: #e1e1e1;
+	border-bottom-width: 1upx;
+	border-bottom-style: solid;
+	border-radius: 0upx;
+	font-size: 8upx;
+}
+.my-1 .my-2 .my-36 .my-41 .my-42 {
+	white-space: normal;
+	width: 47upx;
+	height: 45upx;
+	padding: 0upx;
+	margin-top: 13upx;
+	margin-left: 2upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 44upx;
+	line-height: 45upx;
+}
+.my-1 .my-2 .my-36 .my-41 .my-43 {
+	white-space: normal;
+	width: 426upx;
+	height: 47upx;
+	padding: 0upx;
+	margin-top: 13upx;
+	margin-left: 18upx;
+	float: left;
+	border-radius: 0upx;
+	color: #646464;
+	font-size: 32upx;
+	line-height: 47upx;
+}
+.my-1 .my-2 .my-36 .my-41 .my-44 {
+	white-space: normal;
+	width: 30upx;
+	height: 32upx;
+	padding: 0upx;
+	margin-top: 20upx;
+	margin-left: 113upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 31upx;
+	line-height: 32upx;
+}
+.my-1 .my-2 .my-36 .my-45 {
+	white-space: normal;
+	width: 651upx;
+	height: 95upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 20upx;
+	margin-left: 38upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 8upx;
+}
+.my-1 .my-2 .my-36 .my-45 .my-46 {
+	white-space: normal;
+	width: 47upx;
+	height: 45upx;
+	padding: 0upx;
+	margin-top: 13upx;
+	margin-left: 2upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 44upx;
+	line-height: 45upx;
+}
+.my-1 .my-2 .my-36 .my-45 .my-47 {
+	white-space: normal;
+	width: 426upx;
+	height: 47upx;
+	padding: 0upx;
+	margin-top: 13upx;
+	margin-left: 18upx;
+	float: left;
+	border-radius: 0upx;
+	color: #646464;
+	font-size: 32upx;
+	line-height: 47upx;
+}
+.my-1 .my-2 .my-36 .my-45 .my-48 {
+	white-space: normal;
+	width: 30upx;
+	height: 32upx;
+	padding: 0upx;
+	margin-top: 20upx;
+	margin-left: 113upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 31upx;
+	line-height: 32upx;
+}
+.my-1 .my-2 .my-49 {
+	white-space: normal;
+	width: 702upx;
+	height: 350upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 22upx;
+	margin-left: 23upx;
+	float: left;
+	background-color: #ffffff;
+	border-radius: 0upx;
+	font-size: 8upx;
+	border-radius: 15rpx;
+}
+.my-1 .my-2 .my-99 {
+	white-space: normal;
+	width: 702upx;
+	height: 100upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 44upx;
+	margin-left: 23upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 8upx;
+}
+.my-1 .my-2 .my-49 .my-50 {
+	white-space: normal;
+	width: 651upx;
+	height: 95upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 43upx;
+	margin-left: 38upx;
+	float: left;
+	border-bottom-color: #e1e1e1;
+	border-bottom-width: 1upx;
+	border-bottom-style: solid;
+	border-radius: 0upx;
+	font-size: 8upx;
+}
+.my-1 .my-2 .my-49 .my-50 .my-51 {
+	white-space: normal;
+	width: 47upx;
+	height: 45upx;
+	padding: 0upx;
+	margin-top: 13upx;
+	margin-left: 2upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 44upx;
+	line-height: 45upx;
+}
+.my-1 .my-2 .my-49 .my-50 .my-52 {
+	white-space: normal;
+	width: 426upx;
+	height: 47upx;
+	padding: 0upx;
+	margin-top: 13upx;
+	margin-left: 18upx;
+	float: left;
+	border-radius: 0upx;
+	color: #646464;
+	font-size: 32upx;
+	line-height: 47upx;
+}
+.my-1 .my-2 .my-49 .my-50 .my-53 {
+	white-space: normal;
+	width: 30upx;
+	height: 32upx;
+	padding: 0upx;
+	margin-top: 20upx;
+	margin-left: 113upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 31upx;
+	line-height: 32upx;
+}
+.my-1 .my-2 .my-49 .my-54 {
+	white-space: normal;
+	width: 651upx;
+	height: 95upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 22upx;
+	margin-left: 38upx;
+	float: left;
+	border-bottom-color: #e1e1e1;
+	border-bottom-width: 1upx;
+	border-bottom-style: solid;
+	border-radius: 0upx;
+	font-size: 8upx;
+}
+.my-1 .my-2 .my-49 .my-54 .my-55 {
+	white-space: normal;
+	width: 47upx;
+	height: 45upx;
+	padding: 0upx;
+	margin-top: 13upx;
+	margin-left: 2upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 44upx;
+	line-height: 45upx;
+}
+.my-1 .my-2 .my-49 .my-54 .my-56 {
+	white-space: normal;
+	width: 426upx;
+	height: 47upx;
+	padding: 0upx;
+	margin-top: 13upx;
+	margin-left: 18upx;
+	float: left;
+	border-radius: 0upx;
+	color: #646464;
+	font-size: 32upx;
+	line-height: 47upx;
+}
+.my-1 .my-2 .my-49 .my-54 .my-57 {
+	white-space: normal;
+	width: 30upx;
+	height: 32upx;
+	padding: 0upx;
+	margin-top: 20upx;
+	margin-left: 113upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 31upx;
+	line-height: 32upx;
+}
+.my-1 .my-2 .my-49 .my-58 {
+	white-space: normal;
+	width: 651upx;
+	height: 95upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 20upx;
+	margin-left: 38upx;
+	float: left;
+	border-bottom-color: #e1e1e1;
+	border-bottom-width: 1upx;
+	border-bottom-style: solid;
+	border-radius: 0upx;
+	font-size: 8upx;
+}
+.my-1 .my-2 .my-49 .my-58 .my-59 {
+	white-space: normal;
+	width: 47upx;
+	height: 45upx;
+	padding: 0upx;
+	margin-top: 13upx;
+	margin-left: 2upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 44upx;
+	line-height: 45upx;
+}
+.my-1 .my-2 .my-49 .my-58 .my-60 {
+	white-space: normal;
+	width: 426upx;
+	height: 47upx;
+	padding: 0upx;
+	margin-top: 13upx;
+	margin-left: 18upx;
+	float: left;
+	border-radius: 0upx;
+	color: #646464;
+	font-size: 32upx;
+	line-height: 47upx;
+}
+.my-1 .my-2 .my-49 .my-58 .my-61 {
+	white-space: normal;
+	width: 30upx;
+	height: 32upx;
+	padding: 0upx;
+	margin-top: 20upx;
+	margin-left: 113upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 31upx;
+	line-height: 32upx;
+}
+.my-1 .my-2 .my-49 .my-62 {
+	white-space: normal;
+	width: 651upx;
+	height: 95upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 22upx;
+	margin-left: 38upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 8upx;
+}
+.my-1 .my-2 .my-49 .my-62 .my-63 {
+	white-space: normal;
+	width: 47upx;
+	height: 45upx;
+	padding: 0upx;
+	margin-top: 13upx;
+	margin-left: 2upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 44upx;
+	line-height: 45upx;
+}
+.my-1 .my-2 .my-49 .my-62 .my-64 {
+	white-space: normal;
+	width: 426upx;
+	height: 47upx;
+	padding: 0upx;
+	margin-top: 13upx;
+	margin-left: 18upx;
+	float: left;
+	border-radius: 0upx;
+	color: #646464;
+	font-size: 31upx;
+	line-height: 47upx;
+}
+.my-1 .my-2 .my-49 .my-62 .my-65 {
+	white-space: normal;
+	width: 30upx;
+	height: 32upx;
+	padding: 0upx;
+	margin-top: 20upx;
+	margin-left: 113upx;
+	float: left;
+	border-radius: 0upx;
+	font-size: 31upx;
+	line-height: 32upx;
+}
+.my-1 .my-2 .my-66 {
+	white-space: normal;
+	width: 147upx;
+	height: 39upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 48upx;
+	margin-left: 301upx;
+	float: left;
+	text-align: center;
+	justify-content: center;
+	border-radius: 0upx;
+	color: #646464;
+	font-size: 29upx;
+	line-height: 39upx;
+}
+.my-1 .my-2 .my-67 {
+	white-space: normal;
+	width: 396upx;
+	height: 43upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 27upx;
+	margin-left: 172upx;
+	float: left;
+	text-align: center;
+	justify-content: center;
+	border-radius: 0upx;
+	color: #646464;
+	font-size: 22upx;
+	line-height: 43upx;
+}
+.my-1 .my-2 .my-68 {
+	white-space: normal;
+	width: 131upx;
+	height: 30upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 179upx;
+	margin-left: 309upx;
+	float: left;
+	text-align: center;
+	justify-content: center;
+	border-radius: 0upx;
+	text-decoration: underline;
+	color: #fd4746;
+	font-size: 25upx;
+	line-height: 30upx;
+}
+.my-1 .my-2 .my-69 {
+	white-space: normal;
+	width: 131upx;
+	height: 36upx;
+	padding: 0upx;
+	clear: both;
+	margin-top: 20upx;
+	margin-left: 309upx;
+	float: left;
+	text-align: center;
+	justify-content: center;
+	border-radius: 0upx;
+	text-decoration: underline;
+	color: #fd4746;
+	font-size: 25upx;
+	line-height: 36upx;
+}

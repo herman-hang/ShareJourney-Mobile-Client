@@ -27,6 +27,12 @@
 /* 垂直间距 */
 /* 透明度 */
 /* 文章场景相关 */
+/* 页面左右间距 */
+/* 文字尺寸 */
+/*文字颜色*/
+/* 边框颜色 */
+/* 图片加载中颜色 */
+/* 行为相关颜色 */
 page,
 page,
 #app {
@@ -183,6 +189,7 @@ input {
   background-color: #ffffff;
   border-radius: 0rpx;
   font-size: 8rpx;
+  border-radius: 15rpx;
 }
 .my-1 .my-2 .my-9 .my-10 {
   white-space: normal;
@@ -532,7 +539,7 @@ input {
 .my-1 .my-2 .my-36 {
   white-space: normal;
   width: 702rpx;
-  height: 384rpx;
+  height: 372rpx;
   padding: 0rpx;
   clear: both;
   margin-top: 24rpx;
@@ -541,6 +548,7 @@ input {
   background-color: #ffffff;
   border-radius: 0rpx;
   font-size: 8rpx;
+  border-radius: 15rpx;
 }
 .my-1 .my-2 .my-36 .my-37 {
   white-space: normal;
@@ -707,6 +715,7 @@ input {
   background-color: #ffffff;
   border-radius: 0rpx;
   font-size: 8rpx;
+  border-radius: 15rpx;
 }
 .my-1 .my-2 .my-99 {
   white-space: normal;

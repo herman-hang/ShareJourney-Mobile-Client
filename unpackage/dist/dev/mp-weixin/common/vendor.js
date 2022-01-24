@@ -805,9 +805,15 @@ var customize = cached(function (str) {
 
 function initTriggerEvent(mpInstance) {
   var oldTriggerEvent = mpInstance.triggerEvent;
-  mpInstance.triggerEvent = function (event) {for (var _len3 = arguments.length, args = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {args[_key3 - 1] = arguments[_key3];}
+  var newTriggerEvent = function newTriggerEvent(event) {for (var _len3 = arguments.length, args = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {args[_key3 - 1] = arguments[_key3];}
     return oldTriggerEvent.apply(mpInstance, [customize(event)].concat(args));
   };
+  try {
+    // 京东小程序 triggerEvent 为只读
+    mpInstance.triggerEvent = newTriggerEvent;
+  } catch (error) {
+    mpInstance._triggerEvent = newTriggerEvent;
+  }
 }
 
 function initHook(name, options, isComponent) {
@@ -1981,17 +1987,17 @@ function createPlugin(vm) {
   var appOptions = parseApp(vm);
   if (isFn(appOptions.onShow) && wx.onAppShow) {
     wx.onAppShow(function () {for (var _len7 = arguments.length, args = new Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {args[_key7] = arguments[_key7];}
-      appOptions.onShow.apply(vm, args);
+      vm.__call_hook('onShow', args);
     });
   }
   if (isFn(appOptions.onHide) && wx.onAppHide) {
     wx.onAppHide(function () {for (var _len8 = arguments.length, args = new Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {args[_key8] = arguments[_key8];}
-      appOptions.onHide.apply(vm, args);
+      vm.__call_hook('onHide', args);
     });
   }
   if (isFn(appOptions.onLaunch)) {
     var args = wx.getLaunchOptionsSync && wx.getLaunchOptionsSync();
-    appOptions.onLaunch.call(vm, args);
+    vm.__call_hook('onLaunch', args);
   }
   return vm;
 }
@@ -7941,7 +7947,7 @@ function internalMixin(Vue) {
 
   Vue.prototype.$emit = function(event) {
     if (this.$scope && event) {
-      this.$scope['triggerEvent'](event, {
+      (this.$scope['_triggerEvent'] || this.$scope['triggerEvent'])(event, {
         __args__: toArray(arguments, 1)
       });
     }
@@ -11249,18 +11255,28 @@ module.exports = function isAxiosError(payload) {
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });exports.getMoreListData = void 0; /**
-                                                                                                              * 加载更多列表数据
-                                                                                                              * @param {Object} resList 新列表数据
-                                                                                                              * @param {Object} oldList 旧列表数据
-                                                                                                              * @param {int} pageNo 当前页码
-                                                                                                              */
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.navTo = exports.getMoreListData = void 0; /**
+                                                                                                                              * 加载更多列表数据
+                                                                                                                              * @param {Object} resList 新列表数据
+                                                                                                                              * @param {Object} oldList 旧列表数据
+                                                                                                                              * @param {int} pageNo 当前页码
+                                                                                                                              */
 var getMoreListData = function getMoreListData(resList, oldList, pageNo) {
   // 如果是第一页需手动制空列表
   if (pageNo == 1) oldList.data = [];
   // 合并新数据
   return oldList.data.concat(resList.data);
-};exports.getMoreListData = getMoreListData;
+};
+
+/**
+    * 跳转
+    */exports.getMoreListData = getMoreListData;
+var navTo = function navTo(url) {
+  uni.navigateTo({
+    url: url });
+
+};exports.navTo = navTo;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
 /* 44 */
@@ -11295,9 +11311,19 @@ _axios.default.interceptors.response.use(function (res) {
   if (res.data.code === 0) {
     // 删除token
     db.del('token');
+    uni.showModal({
+      title: '温馨提示',
+      content: res.data.msg,
+      showCancel: false,
+      success: function success() {
+        uni.navigateTo({
+          url: 'pages/login/index' });
+
+      } });
+
   }
   // 响应存在Authorization则更新token
-  if (res.header.Authorization !== '' || res.header.Authorization !== null || res.header.Authorization !==
+  if (res.header.Authorization !== '' && res.header.Authorization !== null && res.header.Authorization !==
   undefined) {
     db.set('token', res.header.Authorization);
   }
@@ -11419,7 +11445,7 @@ function clear() {var sync = arguments.length > 0 && arguments[0] !== undefined 
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });exports.baseUrl = void 0; // 后端接口API(测试环境)
 
-var baseUrl = 'http://127.0.0.1:5566/admin/';exports.baseUrl = baseUrl;
+var baseUrl = 'http://127.0.0.1:5566/mobile/';exports.baseUrl = baseUrl;
 
 /***/ }),
 /* 47 */
@@ -11467,9 +11493,9 @@ _vue.default.filter('timestamp', function (originVal) {
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.toast = exports.error = exports.success = void 0; /**
-                                                                                                                                      * 显示成功提示框
-                                                                                                                                      */
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.loading = exports.toast = exports.confirm = exports.success = void 0; /**
+                                                                                                                                                          * 显示成功提示框
+                                                                                                                                                          */
 var success = function success(msg, callback) {
   uni.showToast({
     title: msg,
@@ -11483,22 +11509,24 @@ var success = function success(msg, callback) {
 };
 
 /**
-    * 显示失败提示框
+    * 显示确认框
     */exports.success = success;
-var error = function error(msg, callback) {
+var confirm = function confirm(msg, callback) {
   uni.showModal({
-    title: '友情提示',
+    title: '温馨提示',
     content: msg,
-    showCancel: false,
+    showCancel: true,
     success: function success(res) {
-      callback && callback();
+      if (res.confirm) {
+        callback && callback();
+      }
     } });
 
 };
 
 /**
     * 显示纯文字提示框
-    */exports.error = error;
+    */exports.confirm = confirm;
 var toast = function toast(msg) {var duration = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1500;
   uni.showToast({
     title: msg, // 提示的内容
@@ -11506,91 +11534,3659 @@ var toast = function toast(msg) {var duration = arguments.length > 1 && argument
     mask: true, // 是否显示透明蒙层，防止触摸穿透
     duration: duration // 提示的延迟时间，单位毫秒，默认：1500	
   });
-};exports.toast = toast;
+};
+
+/**
+    * 加载提示框
+    */exports.toast = toast;
+var loading = function loading(title) {
+  uni.showLoading({
+    title: title });
+
+};exports.loading = loading;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
 /* 49 */
-/*!***********************************************!*\
-  !*** C:/Users/IT/Desktop/共享旅途/mini/router.js ***!
-  \***********************************************/
+/*!*******************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/index.js ***!
+  \*******************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });Object.defineProperty(exports, "RouterMount", { enumerable: true, get: function get() {return _uniSimpleRouter.RouterMount;} });exports.router = void 0;var _uniSimpleRouter = __webpack_require__(/*! uni-simple-router */ 50);
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;
 
 
 
-var _app = __webpack_require__(/*! commom/app.js */ 43);function _toConsumableArray(arr) {return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();}function _nonIterableSpread() {throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _iterableToArray(iter) {if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter);}function _arrayWithoutHoles(arr) {if (Array.isArray(arr)) return _arrayLikeToArray(arr);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) {arr2[i] = arr[i];}return arr2;}
 
 
-var router = (0, _uniSimpleRouter.createRouter)({
-  platform: "mp-weixin",
-  routes: _toConsumableArray([{"path":"/pages/index/index","aliasPath":"/"},{"path":"/pages/journey/list"},{"path":"/pages/message/list"},{"path":"/pages/mine/index"}]) });
+var _mixin = _interopRequireDefault(__webpack_require__(/*! ./libs/mixin/mixin.js */ 50));
 
-//全局路由前置守卫
-exports.router = router;router.beforeEach(function (to, from, next) {
-  console.log('当前路由:' + to.path);
-  // 不需要检测登录的路由
-  var noNeedLogin = [
-  '/pages/login/login',
-  '/pages/index/index',
-  '/pages/message/list',
-  '/pages/journey/list',
-  '/pages/mine/index'];
+var _mpMixin = _interopRequireDefault(__webpack_require__(/*! ./libs/mixin/mpMixin.js */ 51));
 
-  var token = uni.getStorageSync('token');
-  if (to.path === '/pages/login/login') {
-    // 访问登录路由，存在token直接跳转到首页
-    if (token) {
-      return next('/pages/index/index');
-    }
-  }
-  if (!token) {
-    if (noNeedLogin.indexOf(to.path) === -1) {
-      (0, _app.error)('登录超时，请重新登录！', function () {
-        return next('/pages/login/login');
-      });
-    }
-  }
-  next();
-});
-// 全局路由后置守卫
-// router.afterEach((to, from) => {
-// 	console.log('跳转结束')
-// })
+var _luchRequest = _interopRequireDefault(__webpack_require__(/*! ./libs/luch-request */ 52));
+
+
+var _route = _interopRequireDefault(__webpack_require__(/*! ./libs/util/route.js */ 70));
+
+var _colorGradient = _interopRequireDefault(__webpack_require__(/*! ./libs/function/colorGradient.js */ 74));
+
+
+var _test = _interopRequireDefault(__webpack_require__(/*! ./libs/function/test.js */ 75));
+
+var _debounce = _interopRequireDefault(__webpack_require__(/*! ./libs/function/debounce.js */ 76));
+
+var _throttle = _interopRequireDefault(__webpack_require__(/*! ./libs/function/throttle.js */ 77));
+
+var _index = _interopRequireDefault(__webpack_require__(/*! ./libs/function/index.js */ 78));
+
+
+var _config = _interopRequireDefault(__webpack_require__(/*! ./libs/config/config.js */ 79));
+
+var _props = _interopRequireDefault(__webpack_require__(/*! ./libs/config/props.js */ 80));
+
+var _zIndex = _interopRequireDefault(__webpack_require__(/*! ./libs/config/zIndex.js */ 170));
+
+var _color = _interopRequireDefault(__webpack_require__(/*! ./libs/config/color.js */ 128));
+
+var _platform = _interopRequireDefault(__webpack_require__(/*! ./libs/function/platform */ 171));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function ownKeys(object, enumerableOnly) {var keys = Object.keys(object);if (Object.getOwnPropertySymbols) {var symbols = Object.getOwnPropertySymbols(object);if (enumerableOnly) symbols = symbols.filter(function (sym) {return Object.getOwnPropertyDescriptor(object, sym).enumerable;});keys.push.apply(keys, symbols);}return keys;}function _objectSpread(target) {for (var i = 1; i < arguments.length; i++) {var source = arguments[i] != null ? arguments[i] : {};if (i % 2) {ownKeys(Object(source), true).forEach(function (key) {_defineProperty(target, key, source[key]);});} else if (Object.getOwnPropertyDescriptors) {Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));} else {ownKeys(Object(source)).forEach(function (key) {Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));});}}return target;}function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;} // 看到此报错，是因为没有配置vue.config.js的【transpileDependencies】，详见：https://www.uviewui.com/components/npmSetting.html#_5-cli模式额外配置
+var pleaseSetTranspileDependencies = {},babelTest = pleaseSetTranspileDependencies === null || pleaseSetTranspileDependencies === void 0 ? void 0 : pleaseSetTranspileDependencies.test; // 引入全局mixin
+var $u = _objectSpread(_objectSpread({
+  route: _route.default,
+  date: _index.default.timeFormat, // 另名date
+  colorGradient: _colorGradient.default.colorGradient,
+  hexToRgb: _colorGradient.default.hexToRgb,
+  rgbToHex: _colorGradient.default.rgbToHex,
+  colorToRgba: _colorGradient.default.colorToRgba,
+  test: _test.default,
+  type: ['primary', 'success', 'error', 'warning', 'info'],
+  http: new _luchRequest.default(),
+  config: _config.default, // uView配置信息相关，比如版本号
+  zIndex: _zIndex.default,
+  debounce: _debounce.default,
+  throttle: _throttle.default,
+  mixin: _mixin.default,
+  mpMixin: _mpMixin.default,
+  props: _props.default },
+_index.default), {}, {
+  color: _color.default,
+  platform: _platform.default });
+
+
+// $u挂载到uni对象上
+uni.$u = $u;
+
+var install = function install(Vue) {
+  // 时间格式化，同时两个名称，date和timeFormat
+  Vue.filter('timeFormat', function (timestamp, format) {return uni.$u.timeFormat(timestamp, format);});
+  Vue.filter('date', function (timestamp, format) {return uni.$u.timeFormat(timestamp, format);});
+  // 将多久以前的方法，注入到全局过滤器
+  Vue.filter('timeFrom', function (timestamp, format) {return uni.$u.timeFrom(timestamp, format);});
+  // 同时挂载到uni和Vue.prototype中
+
+  // 只有vue，挂载到Vue.prototype才有意义，因为nvue中全局Vue.prototype和Vue.mixin是无效的
+  Vue.prototype.$u = $u;
+  Vue.mixin(_mixin.default);
+
+};var _default =
+
+{
+  install: install };exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
 /* 50 */
+/*!******************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/mixin/mixin.js ***!
+  \******************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(uni) {module.exports = {
+  // 定义每个组件都可能需要用到的外部样式以及类名
+  props: {
+    // 每个组件都有的父组件传递的样式，可以为字符串或者对象形式
+    customStyle: {
+      type: [Object, String],
+      default: function _default() {return {};} },
+
+    customClass: {
+      type: String,
+      default: '' },
+
+    // 跳转的页面路径
+    url: {
+      type: String,
+      default: '' },
+
+    // 页面跳转的类型
+    linkType: {
+      type: String,
+      default: 'navigateTo' } },
+
+
+  data: function data() {
+    return {};
+  },
+  onLoad: function onLoad() {
+    // getRect挂载到$u上，因为这方法需要使用in(this)，所以无法把它独立成一个单独的文件导出
+    this.$u.getRect = this.$uGetRect;
+  },
+  created: function created() {
+    // 组件当中，只有created声明周期，为了能在组件使用，故也在created中将方法挂载到$u
+    this.$u.getRect = this.$uGetRect;
+  },
+  computed: {
+    // 在2.x版本中，将会把$u挂载到uni对象下，导致在模板中无法使用uni.$u.xxx形式
+    // 所以这里通过computed计算属性将其附加到this.$u上，就可以在模板或者js中使用uni.$u.xxx
+    // 只在nvue环境通过此方式引入完整的$u，其他平台会出现性能问题，非nvue则按需引入（主要原因是props过大）
+    $u: function $u() {
+
+      // 在非nvue端，移除props，http，mixin等对象，避免在小程序setData时数据过大影响性能
+      return uni.$u.deepMerge(uni.$u, {
+        props: undefined,
+        http: undefined,
+        mixin: undefined });
+
+
+
+
+
+    },
+    /**
+       * 生成bem规则类名
+       * 由于微信小程序，H5，nvue之间绑定class的差异，无法通过:class="[bem()]"的形式进行同用
+       * 故采用如下折中做法，最后返回的是数组，类似['a', 'b', 'c']的形式
+       * @param {String} name 组件名称
+       * @param {Array} fixed 一直会存在的类名
+       * @param {Array} change 会根据变量值为true或者false而出现或者隐藏的类名
+       * @return Array
+       */
+    bem: function bem() {
+      return function (name, fixed, change) {var _this = this;
+        // 类名前缀
+        var prefix = "u-".concat(name, "--");
+        var classes = {};
+        if (fixed) {
+          fixed.map(function (item) {
+            // 这里的类名，会一直存在
+            classes[prefix + _this[item]] = true;
+          });
+        }
+        if (change) {
+          change.map(function (item) {
+            // 这里的类名，会根据this[item]的值为true或者false，而进行添加或者移除某一个类
+            _this[item] ? classes[prefix + item] = _this[item] : delete classes[prefix + item];
+          });
+        }
+        return Object.keys(classes);
+      };
+    } },
+
+  methods: {
+    // 跳转某一个页面
+    openPage: function openPage() {var urlKey = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'url';
+      var url = this[urlKey];
+      if (url) {
+        // 执行类似uni.navigateTo的方法
+        uni[this.linkType]({
+          url: url });
+
+      }
+    },
+    // 查询节点信息
+    // 目前此方法在支付宝小程序中无法获取组件跟接点的尺寸，为支付宝的bug(2020-07-21)
+    // 解决办法为在组件根部再套一个没有任何作用的view元素
+    $uGetRect: function $uGetRect(selector, all) {var _this2 = this;
+      return new Promise(function (resolve) {
+        uni.createSelectorQuery().
+        in(_this2)[all ? 'selectAll' : 'select'](selector).
+        boundingClientRect(function (rect) {
+          if (all && Array.isArray(rect) && rect.length) {
+            resolve(rect);
+          }
+          if (!all && rect) {
+            resolve(rect);
+          }
+        }).
+        exec();
+      });
+    },
+    getParentData: function getParentData() {var _this3 = this;var parentName = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+      // 避免在created中去定义parent变量
+      if (!this.parent) this.parent = {};
+      // 这里的本质原理是，通过获取父组件实例(也即类似u-radio的父组件u-radio-group的this)
+      // 将父组件this中对应的参数，赋值给本组件(u-radio的this)的parentData对象中对应的属性
+      // 之所以需要这么做，是因为所有端中，头条小程序不支持通过this.parent.xxx去监听父组件参数的变化
+      // 此处并不会自动更新子组件的数据，而是依赖父组件u-radio-group去监听data的变化，手动调用更新子组件的方法去重新获取
+      this.parent = uni.$u.$parent.call(this, parentName);
+      if (this.parent.children) {
+        // 如果父组件的children不存在本组件的实例，才将本实例添加到父组件的children中
+        this.parent.children.indexOf(this) === -1 && this.parent.children.push(this);
+      }
+      if (this.parent && this.parentData) {
+        // 历遍parentData中的属性，将parent中的同名属性赋值给parentData
+        Object.keys(this.parentData).map(function (key) {
+          _this3.parentData[key] = _this3.parent[key];
+        });
+      }
+    },
+    // 阻止事件冒泡
+    preventEvent: function preventEvent(e) {
+      e && typeof e.stopPropagation === 'function' && e.stopPropagation();
+    },
+    // 空操作
+    noop: function noop(e) {
+      this.preventEvent(e);
+    } },
+
+  onReachBottom: function onReachBottom() {
+    uni.$emit('uOnReachBottom');
+  },
+  beforeDestroy: function beforeDestroy() {var _this4 = this;
+    // 判断当前页面是否存在parent和chldren，一般在checkbox和checkbox-group父子联动的场景会有此情况
+    // 组件销毁时，移除子组件在父组件children数组中的实例，释放资源，避免数据混乱
+    if (this.parent && uni.$u.test.array(this.parent.children)) {
+      // 组件销毁时，移除父组件中的children数组中对应的实例
+      var childrenList = this.parent.children;
+      childrenList.map(function (child, index) {
+        // 如果相等，则移除
+        if (child === _this4) {
+          childrenList.splice(index, 1);
+        }
+      });
+    }
+  } };
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 51 */
+/*!********************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/mixin/mpMixin.js ***!
+  \********************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+
+  // 将自定义节点设置成虚拟的，更加接近Vue组件的表现，能更好的使用flex属性
+  options: {
+    virtualHost: true } };exports.default = _default;
+
+/***/ }),
+/* 52 */
+/*!*************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/luch-request/index.js ***!
+  \*************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _Request = _interopRequireDefault(__webpack_require__(/*! ./core/Request */ 53));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}var _default =
+
+_Request.default;exports.default = _default;
+
+/***/ }),
+/* 53 */
+/*!********************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/luch-request/core/Request.js ***!
+  \********************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;
+
+
+
+
+
+
+
+
+
+
+
+
+var _dispatchRequest = _interopRequireDefault(__webpack_require__(/*! ./dispatchRequest */ 54));
+var _InterceptorManager = _interopRequireDefault(__webpack_require__(/*! ./InterceptorManager */ 62));
+var _mergeConfig = _interopRequireDefault(__webpack_require__(/*! ./mergeConfig */ 63));
+var _defaults = _interopRequireDefault(__webpack_require__(/*! ./defaults */ 64));
+var _utils = __webpack_require__(/*! ../utils */ 57);
+var _clone = _interopRequireDefault(__webpack_require__(/*! ../utils/clone */ 65));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function ownKeys(object, enumerableOnly) {var keys = Object.keys(object);if (Object.getOwnPropertySymbols) {var symbols = Object.getOwnPropertySymbols(object);if (enumerableOnly) symbols = symbols.filter(function (sym) {return Object.getOwnPropertyDescriptor(object, sym).enumerable;});keys.push.apply(keys, symbols);}return keys;}function _objectSpread(target) {for (var i = 1; i < arguments.length; i++) {var source = arguments[i] != null ? arguments[i] : {};if (i % 2) {ownKeys(Object(source), true).forEach(function (key) {_defineProperty(target, key, source[key]);});} else if (Object.getOwnPropertyDescriptors) {Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));} else {ownKeys(Object(source)).forEach(function (key) {Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));});}}return target;}function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);return Constructor;}var
+
+Request = /*#__PURE__*/function () {
+  /**
+                                    * @param {Object} arg - 全局配置
+                                    * @param {String} arg.baseURL - 全局根路径
+                                    * @param {Object} arg.header - 全局header
+                                    * @param {String} arg.method = [GET|POST|PUT|DELETE|CONNECT|HEAD|OPTIONS|TRACE] - 全局默认请求方式
+                                    * @param {String} arg.dataType = [json] - 全局默认的dataType
+                                    * @param {String} arg.responseType = [text|arraybuffer] - 全局默认的responseType。支付宝小程序不支持
+                                    * @param {Object} arg.custom - 全局默认的自定义参数
+                                    * @param {Number} arg.timeout - 全局默认的超时时间，单位 ms。默认60000。H5(HBuilderX 2.9.9+)、APP(HBuilderX 2.9.9+)、微信小程序（2.10.0）、支付宝小程序
+                                    * @param {Boolean} arg.sslVerify - 全局默认的是否验证 ssl 证书。默认true.仅App安卓端支持（HBuilderX 2.3.3+）
+                                    * @param {Boolean} arg.withCredentials - 全局默认的跨域请求时是否携带凭证（cookies）。默认false。仅H5支持（HBuilderX 2.6.15+）
+                                    * @param {Boolean} arg.firstIpv4 - 全DNS解析时优先使用ipv4。默认false。仅 App-Android 支持 (HBuilderX 2.8.0+)
+                                    * @param {Function(statusCode):Boolean} arg.validateStatus - 全局默认的自定义验证器。默认statusCode >= 200 && statusCode < 300
+                                    */
+  function Request() {var arg = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};_classCallCheck(this, Request);
+    if (!(0, _utils.isPlainObject)(arg)) {
+      arg = {};
+      console.warn('设置全局参数必须接收一个Object');
+    }
+    this.config = (0, _clone.default)(_objectSpread(_objectSpread({}, _defaults.default), arg));
+    this.interceptors = {
+      request: new _InterceptorManager.default(),
+      response: new _InterceptorManager.default() };
+
+  }
+
+  /**
+    * @Function
+    * @param {Request~setConfigCallback} f - 设置全局默认配置
+    */_createClass(Request, [{ key: "setConfig", value: function setConfig(
+    f) {
+      this.config = f(this.config);
+    } }, { key: "middleware", value: function middleware(
+
+    config) {
+      config = (0, _mergeConfig.default)(this.config, config);
+      var chain = [_dispatchRequest.default, undefined];
+      var promise = Promise.resolve(config);
+
+      this.interceptors.request.forEach(function (interceptor) {
+        chain.unshift(interceptor.fulfilled, interceptor.rejected);
+      });
+
+      this.interceptors.response.forEach(function (interceptor) {
+        chain.push(interceptor.fulfilled, interceptor.rejected);
+      });
+
+      while (chain.length) {
+        promise = promise.then(chain.shift(), chain.shift());
+      }
+
+      return promise;
+    }
+
+    /**
+      * @Function
+      * @param {Object} config - 请求配置项
+      * @prop {String} options.url - 请求路径
+      * @prop {Object} options.data - 请求参数
+      * @prop {Object} [options.responseType = config.responseType] [text|arraybuffer] - 响应的数据类型
+      * @prop {Object} [options.dataType = config.dataType] - 如果设为 json，会尝试对返回的数据做一次 JSON.parse
+      * @prop {Object} [options.header = config.header] - 请求header
+      * @prop {Object} [options.method = config.method] - 请求方法
+      * @returns {Promise<unknown>}
+      */ }, { key: "request", value: function request()
+    {var config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      return this.middleware(config);
+    } }, { key: "get", value: function get(
+
+    url) {var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      return this.middleware(_objectSpread({
+        url: url,
+        method: 'GET' },
+      options));
+
+    } }, { key: "post", value: function post(
+
+    url, data) {var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+      return this.middleware(_objectSpread({
+        url: url,
+        data: data,
+        method: 'POST' },
+      options));
+
+    } }, { key: "put", value: function put(
+
+
+    url, data) {var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+      return this.middleware(_objectSpread({
+        url: url,
+        data: data,
+        method: 'PUT' },
+      options));
+
+    } }, { key: "delete", value: function _delete(
+
+
+
+
+    url, data) {var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+      return this.middleware(_objectSpread({
+        url: url,
+        data: data,
+        method: 'DELETE' },
+      options));
+
+    } }, { key: "connect", value: function connect(
+
+
+
+
+    url, data) {var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+      return this.middleware(_objectSpread({
+        url: url,
+        data: data,
+        method: 'CONNECT' },
+      options));
+
+    } }, { key: "head", value: function head(
+
+
+
+
+    url, data) {var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+      return this.middleware(_objectSpread({
+        url: url,
+        data: data,
+        method: 'HEAD' },
+      options));
+
+    } }, { key: "options", value: function options(
+
+
+
+
+    url, data) {var _options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+      return this.middleware(_objectSpread({
+        url: url,
+        data: data,
+        method: 'OPTIONS' },
+      _options));
+
+    } }, { key: "trace", value: function trace(
+
+
+
+
+    url, data) {var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+      return this.middleware(_objectSpread({
+        url: url,
+        data: data,
+        method: 'TRACE' },
+      options));
+
+    } }, { key: "upload", value: function upload(
+
+
+
+    url) {var config = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      config.url = url;
+      config.method = 'UPLOAD';
+      return this.middleware(config);
+    } }, { key: "download", value: function download(
+
+    url) {var config = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      config.url = url;
+      config.method = 'DOWNLOAD';
+      return this.middleware(config);
+    } }]);return Request;}();
+
+
+/**
+                               * setConfig回调
+                               * @return {Object} - 返回操作后的config
+                               * @callback Request~setConfigCallback
+                               * @param {Object} config - 全局默认config
+                               */exports.default = Request;
+
+/***/ }),
+/* 54 */
+/*!****************************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/luch-request/core/dispatchRequest.js ***!
+  \****************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _index = _interopRequireDefault(__webpack_require__(/*! ../adapters/index */ 55));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}var _default =
+
+function _default(config) {return (0, _index.default)(config);};exports.default = _default;
+
+/***/ }),
+/* 55 */
 /*!**********************************************************************************************!*\
-  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/uni-simple-router/dist/uni-simple-router.js ***!
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/luch-request/adapters/index.js ***!
   \**********************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(uni) {!function (e, t) { true ? module.exports = t() : undefined;}(self, function () {return e = { 779: function _(e, t, r) {var o = r(173);e.exports = function e(t, r, n) {return o(r) || (n = r || n, r = []), n = n || {}, t instanceof RegExp ? function (e, t) {var r = e.source.match(/\((?!\?)/g);if (r) for (var o = 0; o < r.length; o++) {t.push({ name: o, prefix: null, delimiter: null, optional: !1, repeat: !1, partial: !1, asterisk: !1, pattern: null });}return c(e, t);}(t, r) : o(t) ? function (t, r, o) {for (var n = [], a = 0; a < t.length; a++) {n.push(e(t[a], r, o).source);}return c(new RegExp("(?:" + n.join("|") + ")", s(o)), r);}(t, r, n) : function (e, t, r) {return f(a(e, r), t, r);}(t, r, n);}, e.exports.parse = a, e.exports.compile = function (e, t) {return u(a(e, t), t);}, e.exports.tokensToFunction = u, e.exports.tokensToRegExp = f;var n = new RegExp(["(\\\\.)", "([\\/.])?(?:(?:\\:(\\w+)(?:\\(((?:\\\\.|[^\\\\()])+)\\))?|\\(((?:\\\\.|[^\\\\()])+)\\))([+*?])?|(\\*))"].join("|"), "g");function a(e, t) {for (var r, o = [], a = 0, i = 0, u = "", c = t && t.delimiter || "/"; null != (r = n.exec(e));) {var s = r[0],f = r[1],h = r.index;if (u += e.slice(i, h), i = h + s.length, f) u += f[1];else {var v = e[i],y = r[2],g = r[3],d = r[4],m = r[5],b = r[6],O = r[7];u && (o.push(u), u = "");var P = null != y && null != v && v !== y,k = "+" === b || "*" === b,j = "?" === b || "*" === b,w = r[2] || c,R = d || m;o.push({ name: g || a++, prefix: y || "", delimiter: w, optional: j, repeat: k, partial: P, asterisk: !!O, pattern: R ? p(R) : O ? ".*" : "[^" + l(w) + "]+?" });}}return i < e.length && (u += e.substr(i)), u && o.push(u), o;}function i(e) {return encodeURI(e).replace(/[\/?#]/g, function (e) {return "%" + e.charCodeAt(0).toString(16).toUpperCase();});}function u(e, t) {for (var r = new Array(e.length), n = 0; n < e.length; n++) {"object" == typeof e[n] && (r[n] = new RegExp("^(?:" + e[n].pattern + ")$", s(t)));}return function (t, n) {for (var a = "", u = t || {}, l = (n || {}).pretty ? i : encodeURIComponent, p = 0; p < e.length; p++) {var c = e[p];if ("string" != typeof c) {var s,f = u[c.name];if (null == f) {if (c.optional) {c.partial && (a += c.prefix);continue;}throw new TypeError('Expected "' + c.name + '" to be defined');}if (o(f)) {if (!c.repeat) throw new TypeError('Expected "' + c.name + '" to not repeat, but received `' + JSON.stringify(f) + "`");if (0 === f.length) {if (c.optional) continue;throw new TypeError('Expected "' + c.name + '" to not be empty');}for (var h = 0; h < f.length; h++) {if (s = l(f[h]), !r[p].test(s)) throw new TypeError('Expected all "' + c.name + '" to match "' + c.pattern + '", but received `' + JSON.stringify(s) + "`");a += (0 === h ? c.prefix : c.delimiter) + s;}} else {if (s = c.asterisk ? encodeURI(f).replace(/[?#]/g, function (e) {return "%" + e.charCodeAt(0).toString(16).toUpperCase();}) : l(f), !r[p].test(s)) throw new TypeError('Expected "' + c.name + '" to match "' + c.pattern + '", but received "' + s + '"');a += c.prefix + s;}} else a += c;}return a;};}function l(e) {return e.replace(/([.+*?=^!:${}()[\]|\/\\])/g, "\\$1");}function p(e) {return e.replace(/([=!:$\/()])/g, "\\$1");}function c(e, t) {return e.keys = t, e;}function s(e) {return e && e.sensitive ? "" : "i";}function f(e, t, r) {o(t) || (r = t || r, t = []);for (var n = (r = r || {}).strict, a = !1 !== r.end, i = "", u = 0; u < e.length; u++) {var p = e[u];if ("string" == typeof p) i += l(p);else {var f = l(p.prefix),h = "(?:" + p.pattern + ")";t.push(p), p.repeat && (h += "(?:" + f + h + ")*"), i += h = p.optional ? p.partial ? f + "(" + h + ")?" : "(?:" + f + "(" + h + "))?" : f + "(" + h + ")";}}var v = l(r.delimiter || "/"),y = i.slice(-v.length) === v;return n || (i = (y ? i.slice(0, -v.length) : i) + "(?:" + v + "(?=$))?"), i += a ? "$" : n && y ? "" : "(?=" + v + "|$)", c(new RegExp("^" + i, s(r)), t);}}, 173: function _(e) {e.exports = Array.isArray || function (e) {return "[object Array]" == Object.prototype.toString.call(e);};}, 844: function _(e, t, r) {"use strict";var o = this && this.__assign || function () {return (o = Object.assign || function (e) {for (var t, r = 1, o = arguments.length; r < o; r++) {for (var n in t = arguments[r]) {Object.prototype.hasOwnProperty.call(t, n) && (e[n] = t[n]);}}return e;}).apply(this, arguments);};Object.defineProperty(t, "__esModule", { value: !0 }), t.buildVueRouter = t.buildVueRoutes = void 0;var n = r(366),a = r(883),i = r(789),u = r(169);t.buildVueRoutes = function (e, t) {for (var r = e.routesMap, o = r.pathMap, l = r.finallyPathList, p = Object.keys(t), c = 0; c < p.length; c++) {var s = p[c],f = o[s],h = t[s];if (f) {var v = i.getRoutePath(f, e).finallyPath;if (v instanceof Array) throw new Error("非 vueRouterDev 模式下，alias、aliasPath、path 无法提供数组类型！ " + JSON.stringify(f));null != f.name && (h.name = f.name);var y = h.path,g = h.alias;delete h.alias, h.path = v, "/" === y && null != g && (h.alias = g, h.path = y), f.beforeEnter && (h.beforeEnter = function (t, r, o) {u.onTriggerEachHook(t, r, e, n.hookToggle.enterHooks, o);});} else a.warn(s + " 路由地址在路由表中未找到，确定是否传递漏啦", e, !0);}return l.includes("*") && (t["*"] = o["*"]), t;}, t.buildVueRouter = function (e, t, r) {var n;n = "[object Array]" === i.getDataType(r) ? r : Object.values(r);var a = e.options.h5,u = a.scrollBehavior,l = a.fallback,p = t.options.scrollBehavior;t.options.scrollBehavior = function (e, t, r) {return p && p(e, t, r), u(e, t, r);}, t.fallback = l;var c = new t.constructor(o(o({}, e.options.h5), { base: t.options.base, mode: t.options.mode, routes: n }));t.matcher = c.matcher;};}, 147: function _(e, t) {"use strict";var _r,o = this && this.__extends || (_r = function r(e, t) {return (_r = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function (e, t) {e.__proto__ = t;} || function (e, t) {for (var r in t) {Object.prototype.hasOwnProperty.call(t, r) && (e[r] = t[r]);}})(e, t);}, function (e, t) {function o() {this.constructor = e;}_r(e, t), e.prototype = null === t ? Object.create(t) : (o.prototype = t.prototype, new o());});Object.defineProperty(t, "__esModule", { value: !0 }), t.proxyH5Mount = t.proxyEachHook = t.MyArray = void 0;var n = function (e) {function t(r, o, n, a) {var i = e.call(this) || this;return i.router = r, i.vueEachArray = o, i.myEachHook = n, i.hookName = a, Object.setPrototypeOf(i, t.prototype), i;}return o(t, e), t.prototype.push = function (e) {var t = this;this.vueEachArray.push(e);var r = this.length;this[this.length] = function (e, o, n) {r > 0 ? t.vueEachArray[r](e, o, function () {n && n();}) : t.myEachHook(e, o, function (a) {!1 === a ? n(!1) : t.vueEachArray[r](e, o, function (e) {n(a);});}, t.router, !0);};}, t;}(Array);t.MyArray = n, t.proxyEachHook = function (e, t) {for (var r = ["beforeHooks", "afterHooks"], o = 0; o < r.length; o++) {var a = r[o],i = e.lifeCycle[a][0];if (i) {var u = t[a];t[a] = new n(e, u, i, a);}}}, t.proxyH5Mount = function (e) {var t;if (0 === e.mount.length) {if (null === (t = e.options.h5) || void 0 === t ? void 0 : t.vueRouterDev) return;navigator.userAgent.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/) && setTimeout(function () {if (document.getElementsByTagName("uni-page").length > 0) return !1;window.location.reload();}, 0);} else e.mount[0].app.$mount(), e.mount = [];};}, 814: function _(e, t) {"use strict";var r = this && this.__assign || function () {return (r = Object.assign || function (e) {for (var t, r = 1, o = arguments.length; r < o; r++) {for (var n in t = arguments[r]) {Object.prototype.hasOwnProperty.call(t, n) && (e[n] = t[n]);}}return e;}).apply(this, arguments);};Object.defineProperty(t, "__esModule", { value: !0 }), t.tabIndexSelect = t.runtimeQuit = t.registerLoddingPage = void 0;var o = null,n = null;t.registerLoddingPage = function (e) {if (e.options.registerLoadingPage) {var t = e.options.APP,o = t.loadingPageHook,n = t.loadingPageStyle;o(new plus.nativeObj.View("router-loadding", r({ top: "0px", left: "0px", height: "100%", width: "100%" }, n())));}}, t.runtimeQuit = function (e) {void 0 === e && (e = "再按一次退出应用");var t = +new Date();o ? t - o < 1e3 && plus.runtime.quit() : (o = t, uni.showToast({ title: e, icon: "none", position: "bottom", duration: 1e3 }), setTimeout(function () {o = null;}, 1e3));}, t.tabIndexSelect = function (e, t) {if (!__uniConfig.tabBar || !Array.isArray(__uniConfig.tabBar.list)) return !1;for (var r = __uniConfig.tabBar.list, o = [], a = 0, i = 0; i < r.length; i++) {var u = r[i];if ("/" + u.pagePath !== e.path && "/" + u.pagePath !== t.path || (u.pagePath === t.path && (a = i), o.push(u)), 2 === o.length) break;}return 2 === o.length && (null == n && (n = uni.requireNativePlugin("uni-tabview")), n.switchSelect({ index: a }), !0);};}, 334: function _(e, t) {"use strict";Object.defineProperty(t, "__esModule", { value: !0 }), t.getEnterPath = void 0, t.getEnterPath = function (e, t) {switch (t.options.platform) {case "mp-alipay":case "mp-weixin":case "mp-toutiao":case "mp-qq":return e.$options.mpInstance.route;case "mp-baidu":return e.$options.mpInstance.is || e.$options.mpInstance.pageinstance.route;}return e.$options.mpInstance.route;};}, 282: function _(e, t, r) {"use strict";Object.defineProperty(t, "__esModule", { value: !0 }), t.proxyHookName = t.proxyHookDeps = t.lifeCycle = t.baseConfig = t.mpPlatformReg = void 0;var o = r(883);t.mpPlatformReg = "(^mp-weixin$)|(^mp-baidu$)|(^mp-alipay$)|(^mp-toutiao$)|(^mp-qq$)|(^mp-360$)", t.baseConfig = { h5: { paramsToQuery: !1, vueRouterDev: !1, vueNext: !1, mode: "hash", base: "/", linkActiveClass: "router-link-active", linkExactActiveClass: "router-link-exact-active", scrollBehavior: function scrollBehavior(e, t, r) {return { x: 0, y: 0 };}, fallback: !0 }, APP: { registerLoadingPage: !0, loadingPageStyle: function loadingPageStyle() {return JSON.parse('{"backgroundColor":"#FFF"}');}, loadingPageHook: function loadingPageHook(e) {e.show();}, launchedHook: function launchedHook() {plus.navigator.closeSplashscreen();}, animation: {} }, applet: { animationDuration: 300 }, platform: "h5", keepUniOriginNav: !1, debugger: !1, routerBeforeEach: function routerBeforeEach(e, t, r) {r();}, routerAfterEach: function routerAfterEach(e, t) {}, routerErrorEach: function routerErrorEach(e, t) {t.$lockStatus = !1, o.err(e, t, !0);}, detectBeforeLock: function detectBeforeLock(e, t, r) {}, routes: [{ path: "/choose-location" }, { path: "/open-location" }, { path: "/preview-image" }] }, t.lifeCycle = { beforeHooks: [], afterHooks: [], routerBeforeHooks: [], routerAfterHooks: [], routerErrorHooks: [] }, t.proxyHookDeps = { resetIndex: [], hooks: {}, options: {} }, t.proxyHookName = ["onLaunch", "onShow", "onHide", "onError", "onInit", "onLoad", "onReady", "onUnload", "onResize", "created", "beforeMount", "mounted", "beforeDestroy", "destroyed"];}, 801: function _(e, t, r) {"use strict";Object.defineProperty(t, "__esModule", { value: !0 }), t.createRouteMap = void 0;var o = r(883),n = r(789);t.createRouteMap = function (e, t) {var r = { finallyPathList: [], finallyPathMap: Object.create(null), aliasPathMap: Object.create(null), pathMap: Object.create(null), vueRouteMap: Object.create(null), nameMap: Object.create(null) };return t.forEach(function (t) {var a = n.getRoutePath(t, e),i = a.finallyPath,u = a.aliasPath,l = a.path;if (null == l) throw new Error("请提供一个完整的路由对象，包括以绝对路径开始的 ‘path’ 字符串 " + JSON.stringify(t));if (i instanceof Array && !e.options.h5.vueRouterDev && "h5" === e.options.platform) throw new Error("非 vueRouterDev 模式下，route.alias 目前无法提供数组类型！ " + JSON.stringify(t));var p = i,c = u;"h5" !== e.options.platform && 0 !== p.indexOf("/") && "*" !== l && o.warn("当前路由对象下，route：" + JSON.stringify(t) + " 是否缺少了前缀 ‘/’", e, !0), r.finallyPathMap[p] || (r.finallyPathMap[p] = t, r.aliasPathMap[c] = t, r.pathMap[l] = t, r.finallyPathList.push(p), null != t.name && (r.nameMap[t.name] = t));}), r;};}, 662: function _(e, t, r) {"use strict";Object.defineProperty(t, "__esModule", { value: !0 }), t.registerEachHooks = t.registerRouterHooks = t.registerHook = void 0;var o = r(366),n = r(169);function a(e, t) {e[0] = t;}t.registerHook = a, t.registerRouterHooks = function (e, t) {return a(e.routerBeforeHooks, function (e, r, o) {t.routerBeforeEach(e, r, o);}), a(e.routerAfterHooks, function (e, r) {t.routerAfterEach(e, r);}), a(e.routerErrorHooks, function (e, r) {t.routerErrorEach(e, r);}), e;}, t.registerEachHooks = function (e, t, r) {a(e.lifeCycle[t], function (e, a, i, u, l) {l ? n.onTriggerEachHook(e, a, u, o.hookToggle[t], i) : r(e, a, i);});};}, 460: function _(e, t, r) {"use strict";var o = this && this.__assign || function () {return (o = Object.assign || function (e) {for (var t, r = 1, o = arguments.length; r < o; r++) {for (var n in t = arguments[r]) {Object.prototype.hasOwnProperty.call(t, n) && (e[n] = t[n]);}}return e;}).apply(this, arguments);};Object.defineProperty(t, "__esModule", { value: !0 }), t.initMixins = t.getMixins = void 0;var n = r(801),a = r(844),i = r(147),u = r(814),l = r(845),p = r(890),c = r(789),s = r(334),f = r(282),h = !1,v = !1,y = { app: !1, page: "" };function g(e, t) {var r = t.options.platform;return new RegExp(f.mpPlatformReg, "g").test(r) && (r = "app-lets"), { h5: { beforeCreate: function beforeCreate() {var e;if (this.$options.router) {t.$route = this.$options.router;var r = [];(null === (e = t.options.h5) || void 0 === e ? void 0 : e.vueRouterDev) ? r = t.options.routes : (r = n.createRouteMap(t, this.$options.router.options.routes).finallyPathMap, t.routesMap.vueRouteMap = r, a.buildVueRoutes(t, r)), a.buildVueRouter(t, this.$options.router, r), i.proxyEachHook(t, this.$options.router);}} }, "app-plus": { beforeCreate: function beforeCreate() {h || (h = !0, l.proxyPageHook(this, t, "app"), u.registerLoddingPage(t));} }, "app-lets": { beforeCreate: function beforeCreate() {c.voidFun("UNI-SIMPLE-ROUTER");var e = !0,r = this.$options.mpType;v || ("component" === r ? e = c.assertParentChild(y.page, this) : "page" === r ? (y[r] = s.getEnterPath(this, t), t.enterPath = y[r]) : y[r] = !0, e && l.proxyPageHook(this, t, r));}, onLoad: function onLoad() {c.voidFun("UNI-SIMPLE-ROUTER"), !v && c.assertParentChild(y.page, this) && (v = !0, p.forceGuardEach(t));} } }[r];}t.getMixins = g, t.initMixins = function (e, t) {var r = n.createRouteMap(t, t.options.routes);t.routesMap = r, e.mixin(o({}, g(0, t)));};}, 789: function _(e, t, r) {"use strict";var o = this && this.__assign || function () {return (o = Object.assign || function (e) {for (var t, r = 1, o = arguments.length; r < o; r++) {for (var n in t = arguments[r]) {Object.prototype.hasOwnProperty.call(t, n) && (e[n] = t[n]);}}return e;}).apply(this, arguments);},n = this && this.__rest || function (e, t) {var r = {};for (var o in e) {Object.prototype.hasOwnProperty.call(e, o) && t.indexOf(o) < 0 && (r[o] = e[o]);}if (null != e && "function" == typeof Object.getOwnPropertySymbols) {var n = 0;for (o = Object.getOwnPropertySymbols(e); n < o.length; n++) {t.indexOf(o[n]) < 0 && Object.prototype.propertyIsEnumerable.call(e, o[n]) && (r[o[n]] = e[o[n]]);}}return r;},a = this && this.__spreadArrays || function () {for (var e = 0, t = 0, r = arguments.length; t < r; t++) {e += arguments[t].length;}var o = Array(e),n = 0;for (t = 0; t < r; t++) {for (var a = arguments[t], i = 0, u = a.length; i < u; i++, n++) {o[n] = a[i];}}return o;};Object.defineProperty(t, "__esModule", { value: !0 }), t.deepDecodeQuery = t.resolveAbsolutePath = t.assertParentChild = t.lockDetectWarn = t.deepClone = t.baseClone = t.assertDeepObject = t.paramsToQuery = t.forMatNextToFrom = t.urlToJson = t.getUniCachePage = t.copyData = t.getDataType = t.routesForMapRoute = t.notRouteTo404 = t.getWildcardRule = t.assertNewOptions = t.getRoutePath = t.notDeepClearNull = t.mergeConfig = t.timeOut = t.def = t.voidFun = void 0;var i = r(282),u = r(169),l = r(883),p = r(890),c = r(779);function s(e, t) {for (var r = Object.create(null), n = Object.keys(e).concat(["resolveQuery", "parseQuery"]), i = 0; i < n.length; i += 1) {var u = n[i];null != t[u] ? t[u].constructor === Object ? r[u] = o(o({}, e[u]), t[u]) : r[u] = "routes" === u ? a(e[u], t[u]) : t[u] : r[u] = e[u];}return r;}function f(e, t) {var r = e.aliasPath || e.alias || e.path;return "h5" !== t.options.platform && (r = e.path), { finallyPath: r, aliasPath: e.aliasPath || e.path, path: e.path, alias: e.alias };}function h(e, t) {var r = e.routesMap.finallyPathMap["*"];if (r) return r;throw t && u.ERRORHOOK[0](t, e), new Error("当前路由表匹配规则已全部匹配完成，未找到满足的匹配规则。你可以使用 '*' 通配符捕捉最后的异常");}function v(e) {return Object.prototype.toString.call(e);}function y(e, t) {if (null == e) t = e;else for (var r = 0, o = Object.keys(e); r < o.length; r++) {var n = o[r],a = n;e[n] !== e && ("object" == typeof e[n] ? (t[a] = "[object Array]" === v(e[n]) ? [] : {}, t[a] = y(e[n], t[a])) : t[a] = e[n]);}return t;}function g(e) {var t = "[object Array]" === v(e) ? [] : {};return y(e, t), t;}t.voidFun = function () {for (var e = [], t = 0; t < arguments.length; t++) {e[t] = arguments[t];}}, t.def = function (e, t, r) {Object.defineProperty(e, t, { get: function get() {return r();} });}, t.timeOut = function (e) {return new Promise(function (t) {setTimeout(function () {t();}, e);});}, t.mergeConfig = s, t.notDeepClearNull = function (e) {for (var t in e) {null == e[t] && delete e[t];}return e;}, t.getRoutePath = f, t.assertNewOptions = function (e) {var t,r = e.platform,o = e.routes;if (null == r) throw new Error("你在实例化路由时必须传递 'platform'");if (null == o || 0 === o.length) throw new Error("你在实例化路由时必须传递 routes 为空，这是无意义的。");return "h5" === e.platform && (null === (t = e.h5) || void 0 === t ? void 0 : t.vueRouterDev) && (i.baseConfig.routes = []), s(i.baseConfig, e);}, t.getWildcardRule = h, t.notRouteTo404 = function (e, t, r, o) {if ("*" !== t.path) return t;var n = t.redirect;if (void 0 === n) throw new Error(" *  通配符必须配合 redirect 使用。redirect: string | Location | Function");var a = n;return "function" == typeof a && (a = a(r)), p.navjump(a, e, o, void 0, void 0, void 0, !1);}, t.routesForMapRoute = function e(t, r, o, n) {var a;if (void 0 === n && (n = !1), null === (a = t.options.h5) || void 0 === a ? void 0 : a.vueRouterDev) return { path: r };for (var i = r.split("?")[0], u = "", l = t.routesMap, p = 0; p < o.length; p++) {for (var s = l[o[p]], f = 0, y = Object.entries(s); f < y.length; f++) {var g = y[f],d = g[0],m = g[1];if ("*" !== d) {var b = m,O = d;if ("[object Array]" === v(s) && (O = b), null != c(O).exec(i)) return "[object String]" === v(b) ? l.finallyPathMap[b] : b;} else "" === u && (u = "*");}}if (n) return {};if (l.aliasPathMap) {var P = e(t, r, ["aliasPathMap"], !0);if (Object.keys(P).length > 0) return P;}if ("" !== u) return h(t);throw new Error(r + " 路径无法在路由表中找到！检查跳转路径及路由表");}, t.getDataType = v, t.copyData = function (e) {return JSON.parse(JSON.stringify(e));}, t.getUniCachePage = function (e) {var t = getCurrentPages();if (null == e) return t;if (0 === t.length) return t;var r = t.reverse()[e];return null == r ? [] : r;}, t.urlToJson = function (e) {var t = {},r = e.split("?"),o = r[0],n = r[1];if (null != n) for (var a = 0, i = n.split("&"); a < i.length; a++) {var u = i[a].split("=");t[u[0]] = u[1];}return { path: o, query: t };}, t.forMatNextToFrom = function (e, t, r) {var o = [t, r],n = o[0],a = o[1];if ("h5" === e.options.platform) {var i = e.options.h5,u = i.vueNext,l = i.vueRouterDev;u || l || (n = p.createRoute(e, void 0, n), a = p.createRoute(e, void 0, a));} else n = p.createRoute(e, void 0, g(n)), a = p.createRoute(e, void 0, g(a));return { matTo: n, matFrom: a };}, t.paramsToQuery = function (e, t) {var r;if ("h5" === e.options.platform && !(null === (r = e.options.h5) || void 0 === r ? void 0 : r.paramsToQuery)) return t;if ("[object Object]" === v(t)) {var a = t,i = a.name,l = a.params,p = n(a, ["name", "params"]),c = l;if ("h5" !== e.options.platform && null == c && (c = {}), null != i && null != c) {var s = e.routesMap.nameMap[i];null == s && (s = h(e, { type: 2, msg: "命名路由为：" + i + " 的路由，无法在路由表中找到！", toRule: t }));var y = f(s, e).finallyPath;if (!y.includes(":")) return o(o({}, p), { path: y, query: c });u.ERRORHOOK[0]({ type: 2, msg: "动态路由：" + y + " 无法使用 paramsToQuery！", toRule: t }, e);}}return t;}, t.assertDeepObject = function (e) {var t = null;try {t = JSON.stringify(e).match(/\{|\[|\}|\]/g);} catch (e) {l.warnLock("传递的参数解析对象失败。" + e);}return null != t && t.length > 3;}, t.baseClone = y, t.deepClone = g, t.lockDetectWarn = function (e, t, r, o, n, a) {if (void 0 === n && (n = {}), "afterHooks" === a) o();else {var i = e.options.detectBeforeLock;i && i(e, t, r), e.$lockStatus ? e.options.routerErrorEach({ type: 2, msg: "当前页面正在处于跳转状态，请稍后再进行跳转....", NAVTYPE: r, uniActualData: n }, e) : o();}}, t.assertParentChild = function (e, t) {for (; null != t.$parent;) {var r = t.$parent.$mp;if (r.page && r.page.is === e) return !0;t = t.$parent;}try {if (t.$mp.page.is === e || t.$mp.page.route === e) return !0;} catch (e) {return !1;}return !1;}, t.resolveAbsolutePath = function (e, t) {var r = /^\/?([^\?\s]+)(\?.+)?$/,o = e.trim();if (!r.test(o)) throw new Error("【" + e + "】 路径错误，请提供完整的路径(10001)。");var n = o.match(r);if (null == n) throw new Error("【" + e + "】 路径错误，请提供完整的路径(10002)。");var a = n[2] || "";if (/^\.\/[^\.]+/.test(o)) return (t.currentRoute.path + e).replace(/[^\/]+\.\//, "");var i = n[1].replace(/\//g, "\\/").replace(/\.\./g, "[^\\/]+").replace(/\./g, "\\."),u = new RegExp("^\\/" + i + "$"),l = t.options.routes.filter(function (e) {return u.test(e.path);});if (1 !== l.length) throw new Error("【" + e + "】 路径错误，尝试转成绝对路径失败，请手动转成绝对路径(10003)。");return l[0].path + a;}, t.deepDecodeQuery = function e(t) {for (var r = "[object Array]" === v(t) ? [] : {}, o = Object.keys(t), n = 0; n < o.length; n++) {var a = o[n],i = t[a];if ("string" == typeof i) try {var u = JSON.parse(decodeURIComponent(i));"object" != typeof u && (u = i), r[a] = u;} catch (e) {try {r[a] = decodeURIComponent(i);} catch (e) {r[a] = i;}} else if ("object" == typeof i) {var l = e(i);r[a] = l;} else r[a] = i;}return r;};}, 883: function _(e, t) {"use strict";function r(e, t, r, o) {if (void 0 === o && (o = !1), !o) {var n = "[object Object]" === t.toString();if (!1 === t) return !1;if (n && !1 === t[e]) return !1;}return console[e](r), !0;}Object.defineProperty(t, "__esModule", { value: !0 }), t.warnLock = t.log = t.warn = t.err = t.isLog = void 0, t.isLog = r, t.err = function (e, t, o) {r("error", t.options.debugger, e, o);}, t.warn = function (e, t, o) {r("warn", t.options.debugger, e, o);}, t.log = function (e, t, o) {r("log", t.options.debugger, e, o);}, t.warnLock = function (e) {console.warn(e);};}, 607: function _(e, t, r) {"use strict";var o = this && this.__createBinding || (Object.create ? function (e, t, r, o) {void 0 === o && (o = r), Object.defineProperty(e, o, { enumerable: !0, get: function get() {return t[r];} });} : function (e, t, r, o) {void 0 === o && (o = r), e[o] = t[r];}),n = this && this.__exportStar || function (e, t) {for (var r in e) {"default" === r || Object.prototype.hasOwnProperty.call(t, r) || o(t, e, r);}};Object.defineProperty(t, "__esModule", { value: !0 }), t.createRouter = t.RouterMount = t.runtimeQuit = void 0, n(r(366), t), n(r(309), t);var a = r(814);Object.defineProperty(t, "runtimeQuit", { enumerable: !0, get: function get() {return a.runtimeQuit;} });var i = r(963);Object.defineProperty(t, "RouterMount", { enumerable: !0, get: function get() {return i.RouterMount;} }), Object.defineProperty(t, "createRouter", { enumerable: !0, get: function get() {return i.createRouter;} });}, 366: function _(e, t) {"use strict";var r, o, n;Object.defineProperty(t, "__esModule", { value: !0 }), t.rewriteMethodToggle = t.navtypeToggle = t.hookToggle = void 0, (n = t.hookToggle || (t.hookToggle = {})).beforeHooks = "beforeEach", n.afterHooks = "afterEach", n.enterHooks = "beforeEnter", (o = t.navtypeToggle || (t.navtypeToggle = {})).push = "navigateTo", o.replace = "redirectTo", o.replaceAll = "reLaunch", o.pushTab = "switchTab", o.back = "navigateBack", (r = t.rewriteMethodToggle || (t.rewriteMethodToggle = {})).navigateTo = "push", r.navigate = "push", r.redirectTo = "replace", r.reLaunch = "replaceAll", r.switchTab = "pushTab", r.navigateBack = "back";}, 309: function _(e, t) {"use strict";Object.defineProperty(t, "__esModule", { value: !0 });}, 169: function _(e, t, r) {"use strict";var o = this && this.__rest || function (e, t) {var r = {};for (var o in e) {Object.prototype.hasOwnProperty.call(e, o) && t.indexOf(o) < 0 && (r[o] = e[o]);}if (null != e && "function" == typeof Object.getOwnPropertySymbols) {var n = 0;for (o = Object.getOwnPropertySymbols(e); n < o.length; n++) {t.indexOf(o[n]) < 0 && Object.prototype.propertyIsEnumerable.call(e, o[n]) && (r[o[n]] = e[o[n]]);}}return r;};Object.defineProperty(t, "__esModule", { value: !0 }), t.loopCallHook = t.transitionTo = t.onTriggerEachHook = t.callHook = t.callBeforeRouteLeave = t.HOOKLIST = t.ERRORHOOK = void 0;var n = r(789),a = r(890),i = r(147),u = r(814);function l(e, t, r, o) {var a,i = n.getUniCachePage(0);if (Object.keys(i).length > 0) {var u = void 0;switch ("h5" === e.options.platform ? u = i.$options.beforeRouteLeave : null != i.$vm && (u = i.$vm.$options.beforeRouteLeave), n.getDataType(u)) {case "[object Array]":a = (a = u[0]).bind(i);break;case "[object Function]":a = u.bind(i.$vm);}}return p(a, t, r, e, o);}function p(e, t, r, o, n, a) {void 0 === a && (a = !0), null != e && e instanceof Function ? !0 === a ? e(t, r, n, o, !1) : (e(t, r, function () {}, o, !1), n()) : n();}function c(e, t, r, o, a, i) {var u = n.forMatNextToFrom(e, t, r),l = u.matTo,p = u.matFrom;"h5" === e.options.platform ? s(a, 0, i, e, l, p, o) : s(a.slice(0, 4), 0, function () {i(function () {s(a.slice(4), 0, n.voidFun, e, l, p, o);});}, e, l, p, o);}function s(e, r, i, l, p, c, f) {var h = n.routesForMapRoute(l, p.path, ["finallyPathMap", "pathMap"]);if (e.length - 1 < r) return i();var v = e[r],y = t.ERRORHOOK[0];v(l, p, c, h, function (t) {if ("app-plus" === l.options.platform && (!1 !== t && "string" != typeof t && "object" != typeof t || u.tabIndexSelect(p, c)), !1 === t) "h5" === l.options.platform && i(!1), y({ type: 0, msg: "管道函数传递 false 导航被终止!", matTo: p, matFrom: c, nextTo: t }, l);else if ("string" == typeof t || "object" == typeof t) {var n = f,h = t;if ("object" == typeof t) {var v = t.NAVTYPE;h = o(t, ["NAVTYPE"]), null != v && (n = v);}a.navjump(h, l, n, { from: c, next: i });} else null == t ? (r++, s(e, r, i, l, p, c, f)) : y({ type: 1, msg: "管道函数传递未知类型，无法被识别。导航被终止！", matTo: p, matFrom: c, nextTo: t }, l);});}t.ERRORHOOK = [function (e, t) {return t.lifeCycle.routerErrorHooks[0](e, t);}], t.HOOKLIST = [function (e, t, r, o, n) {return p(e.lifeCycle.routerBeforeHooks[0], t, r, e, n);}, function (e, t, r, o, n) {return l(e, t, r, n);}, function (e, t, r, o, n) {return p(e.lifeCycle.beforeHooks[0], t, r, e, n);}, function (e, t, r, o, n) {return p(o.beforeEnter, t, r, e, n);}, function (e, t, r, o, n) {return p(e.lifeCycle.afterHooks[0], t, r, e, n, !1);}, function (e, t, r, o, n) {return e.$lockStatus = !1, "h5" === e.options.platform && i.proxyH5Mount(e), p(e.lifeCycle.routerAfterHooks[0], t, r, e, n, !1);}], t.callBeforeRouteLeave = l, t.callHook = p, t.onTriggerEachHook = function (e, r, o, n, a) {var i = [];switch (n) {case "beforeEach":i = t.HOOKLIST.slice(0, 3);break;case "afterEach":i = t.HOOKLIST.slice(4);break;case "beforeEnter":i = t.HOOKLIST.slice(3, 4);}c(o, e, r, "push", i, a);}, t.transitionTo = c, t.loopCallHook = s;}, 890: function _(e, t, r) {"use strict";var o = this && this.__assign || function () {return (o = Object.assign || function (e) {for (var t, r = 1, o = arguments.length; r < o; r++) {for (var n in t = arguments[r]) {Object.prototype.hasOwnProperty.call(t, n) && (e[n] = t[n]);}}return e;}).apply(this, arguments);},n = this && this.__rest || function (e, t) {var r = {};for (var o in e) {Object.prototype.hasOwnProperty.call(e, o) && t.indexOf(o) < 0 && (r[o] = e[o]);}if (null != e && "function" == typeof Object.getOwnPropertySymbols) {var n = 0;for (o = Object.getOwnPropertySymbols(e); n < o.length; n++) {t.indexOf(o[n]) < 0 && Object.prototype.propertyIsEnumerable.call(e, o[n]) && (r[o[n]] = e[o[n]]);}}return r;};Object.defineProperty(t, "__esModule", { value: !0 }), t.createRoute = t.forceGuardEach = t.backOptionsBuild = t.navjump = t.lockNavjump = void 0;var a = r(366),i = r(99),u = r(789),l = r(169),p = r(845),c = r(169);function s(e, t, r, o, n) {u.lockDetectWarn(t, e, r, function () {"h5" !== t.options.platform && (t.$lockStatus = !0), f(e, t, r, void 0, o, n);}, n);}function f(e, t, r, n, s, f, v) {if (void 0 === v && (v = !0), "back" === r) {var y;if (y = "string" == typeof e ? +e : e.delta || 1, "h5" === t.options.platform) {t.$route.go(-y);var g = (f || { success: u.voidFun }).success || u.voidFun,d = (f || { complete: u.voidFun }).complete || u.voidFun;return g({ errMsg: "navigateBack:ok" }), void d({ errMsg: "navigateBack:ok" });}e = h(t, y, f);}var m = i.queryPageToMap(e, t).rule;m.type = a.navtypeToggle[r];var b = u.paramsToQuery(t, m),O = i.resolveQuery(b, t);if ("h5" === t.options.platform) {if ("push" !== r && (r = "replace"), null != n) n.next(o({ replace: "push" !== r }, O));else if ("push" === r && Reflect.has(O, "events")) {if (Reflect.has(O, "name")) throw new Error("在h5端上使用 'push'、'navigateTo' 跳转时，如果包含 events 不允许使用 name 跳转，因为 name 实现了动态路由。请更换为 path 或者 url 跳转！");uni.navigateTo(O, !0, u.voidFun, s);} else t.$route[r](O, O.success || u.voidFun, O.fail || u.voidFun);} else {var P = { path: "" };if (null == n) {var k = u.routesForMapRoute(t, O.path, ["finallyPathMap", "pathMap"]);k = u.notRouteTo404(t, k, O, r), O = o(o(o(o({}, k), { params: {} }), O), { path: k.path }), P = p.createToFrom(O, t);} else P = n.from;if (p.createFullPath(O, P), !1 === v) return O;l.transitionTo(t, O, P, r, c.HOOKLIST, function (e) {uni[a.navtypeToggle[r]](O, !0, e, s);});}}function h(e, t, r) {void 0 === r && (r = {});var n = v(e, t, void 0, o({ NAVTYPE: "back" }, r)),a = o(o({}, r), { path: n.path, query: n.query, delta: t });if ("[object Object]" === u.getDataType(r)) {var i = r,l = i.animationDuration,p = i.animationType;null != l && (a.animationDuration = l), null != p && (a.animationType = p);var c = r.from;null != c && (a.BACKTYPE = c);}return a;}function v(e, t, r, l) {void 0 === t && (t = 0), void 0 === l && (l = {});var p = { name: "", meta: {}, path: "", fullPath: "", NAVTYPE: "", query: {}, params: {}, BACKTYPE: (r || { BACKTYPE: "" }).BACKTYPE || "" };if (19970806 === t) return p;if ("h5" === e.options.platform) {var c = { path: "" };c = null != r ? r : e.$route.currentRoute;var s = u.copyData(c.params);delete s.__id__;var f = i.parseQuery(o(o({}, s), u.copyData(c.query)), e);c = o(o({}, c), { query: f }), p.path = c.path, p.fullPath = c.fullPath || "", p.query = u.deepDecodeQuery(c.query || {}), p.NAVTYPE = a.rewriteMethodToggle[c.type || "reLaunch"];} else {var h = {};if (null != r) h = o(o({}, r), { openType: r.type });else {var v = u.getUniCachePage(t);if (0 === Object.keys(v).length) {var y = l.NAVTYPE,g = n(l, ["NAVTYPE"]),d = "不存在的页面栈，请确保有足够的页面可用，当前 level:" + t;throw e.options.routerErrorEach({ type: 3, msg: d, NAVTYPE: y, level: t, uniActualData: g }, e), new Error(d);}var m = v.options || {};h = o(o({}, v.$page || {}), { query: u.deepDecodeQuery(m), fullPath: decodeURIComponent((v.$page || {}).fullPath || "/" + v.route) }), "app-plus" !== e.options.platform && (h.path = "/" + v.route);}var b = h.openType;p.query = h.query, p.path = h.path, p.fullPath = h.fullPath, p.NAVTYPE = a.rewriteMethodToggle[b || "reLaunch"];}var O = u.routesForMapRoute(e, p.path, ["finallyPathMap", "pathMap"]),P = o(o({}, p), O);return P.query = i.parseQuery(P.query, e), P;}t.lockNavjump = s, t.navjump = f, t.backOptionsBuild = h, t.forceGuardEach = function (e, t, r) {if (void 0 === t && (t = "replaceAll"), void 0 === r && (r = !1), "h5" === e.options.platform) throw new Error("在h5端上使用：forceGuardEach 是无意义的，目前 forceGuardEach 仅支持在非h5端上使用");var o = u.getUniCachePage(0);0 === Object.keys(o).length && e.options.routerErrorEach({ type: 3, NAVTYPE: t, uniActualData: {}, level: 0, msg: "不存在的页面栈，请确保有足够的页面可用，当前 level:0" }, e);var n = o,a = n.route,i = n.options;s({ path: "/" + a, query: u.deepDecodeQuery(i || {}) }, e, t, r);}, t.createRoute = v;}, 845: function _(e, t, r) {"use strict";Object.defineProperty(t, "__esModule", { value: !0 }), t.resetPageHook = t.resetAndCallPageHook = t.proxyPageHook = t.createFullPath = t.createToFrom = void 0;var o = r(282),n = r(789),a = r(890),i = r(99);function u(e) {for (var t = e.proxyHookDeps, r = 0, o = Object.entries(t.hooks); r < o.length; r++) {(0, o[r][1].resetHook)();}}t.createToFrom = function (e, t) {var r = n.getUniCachePage(0);return "[object Array]" === n.getDataType(r) ? n.deepClone(e) : a.createRoute(t);}, t.createFullPath = function (e, t) {if (null == e.fullPath) {var r = i.stringifyQuery(e.query);e.fullPath = e.path + r;}null == t.fullPath && (r = i.stringifyQuery(t.query), t.fullPath = t.path + r);}, t.proxyPageHook = function (e, t, r) {for (var n = t.proxyHookDeps, a = e.$options, i = function i(_i) {var u = o.proxyHookName[_i],l = a[u];if (l) for (var p = function p(o) {if (l[o].toString().includes("UNI-SIMPLE-ROUTER")) return "continue";var a = Object.keys(n.hooks).length + 1,i = function i() {for (var e = [], t = 0; t < arguments.length; t++) {e[t] = arguments[t];}n.resetIndex.push(a), n.options[a] = e;},u = l.splice(o, 1, i)[0];n.hooks[a] = { proxyHook: i, callHook: function callHook(o) {if (t.enterPath.replace(/^\//, "") === o.replace(/^\//, "") || "app" === r) {var i = n.options[a];u.apply(e, i);}}, resetHook: function resetHook() {l.splice(o, 1, u);} };}, c = 0; c < l.length; c++) {p(c);}}, u = 0; u < o.proxyHookName.length; u++) {i(u);}}, t.resetAndCallPageHook = function (e, t, r) {void 0 === r && (r = !0);var o = t.trim().match(/^(\/?[^\?\s]+)(\?[\s\S]*$)?$/);if (null == o) throw new Error("还原hook失败。请检查 【" + t + "】 路径是否正确。");t = o[1];for (var n = e.proxyHookDeps, a = n.resetIndex, i = 0; i < a.length; i++) {var l = a[i];(0, n.hooks[l].callHook)(t);}r && u(e);}, t.resetPageHook = u;}, 99: function _(e, t, r) {"use strict";var o = this && this.__assign || function () {return (o = Object.assign || function (e) {for (var t, r = 1, o = arguments.length; r < o; r++) {for (var n in t = arguments[r]) {Object.prototype.hasOwnProperty.call(t, n) && (e[n] = t[n]);}}return e;}).apply(this, arguments);};Object.defineProperty(t, "__esModule", { value: !0 }), t.stringifyQuery = t.parseQuery = t.resolveQuery = t.queryPageToMap = void 0;var n = r(789),a = r(169),i = r(883),u = /[!'()*]/g,l = function l(e) {return "%" + e.charCodeAt(0).toString(16);},p = /%2C/g,c = function c(e) {return encodeURIComponent(e).replace(u, l).replace(p, ",");};t.queryPageToMap = function (e, t) {var r = {},i = "",u = e.success,l = e.fail;if ("[object Object]" === n.getDataType(e)) {var p = e;if (null != p.path) {var c = n.urlToJson(p.path),s = c.path,f = c.query;i = n.routesForMapRoute(t, s, ["finallyPathList", "pathMap"]), r = o(o({}, f), e.query || {}), p.path = s, p.query = r, delete e.params;} else null != p.name ? null == (i = t.routesMap.nameMap[p.name]) ? i = n.getWildcardRule(t, { type: 2, msg: "命名路由为：" + p.name + " 的路由，无法在路由表中找到！", toRule: e }) : (r = e.params || {}, delete e.query) : i = n.getWildcardRule(t, { type: 2, msg: e + " 解析失败，请检测当前路由表下是否有包含。", toRule: e });} else e = n.urlToJson(e), i = n.routesForMapRoute(t, e.path, ["finallyPathList", "pathMap"]), r = e.query;if ("h5" === t.options.platform) {n.getRoutePath(i, t).finallyPath.includes(":") && null == e.name && a.ERRORHOOK[0]({ type: 2, msg: "当有设置 alias或者aliasPath 为动态路由时，不允许使用 path 跳转。请使用 name 跳转！", route: i }, t);var h = e.complete,v = e.success,y = e.fail;if ("[object Function]" === n.getDataType(h)) {var g = function g(e, t) {"[object Function]" === n.getDataType(t) && t.apply(this, e), h.apply(this, e);};u = function u() {for (var e = [], t = 0; t < arguments.length; t++) {e[t] = arguments[t];}g.call(this, e, v);}, l = function l() {for (var e = [], t = 0; t < arguments.length; t++) {e[t] = arguments[t];}g.call(this, e, y);};}}var d = e;return "[object Function]" === n.getDataType(d.success) && (d.success = u), "[object Function]" === n.getDataType(d.fail) && (d.fail = l), { rule: d, route: i, query: r };}, t.resolveQuery = function (e, t) {var r = "query";null != e.params && (r = "params"), null != e.query && (r = "query");var o = n.copyData(e[r] || {}),a = t.options.resolveQuery;if (a) {var u = a(o);"[object Object]" !== n.getDataType(u) ? i.warn("请按格式返回参数： resolveQuery?:(jsonQuery:{[propName: string]: any;})=>{[propName: string]: any;}", t) : e[r] = u;} else {if (!n.assertDeepObject(o)) return e;var l = JSON.stringify(o);e[r] = { query: l };}return e;}, t.parseQuery = function (e, t) {var r = t.options.parseQuery;if (r) e = r(n.copyData(e)), "[object Object]" !== n.getDataType(e) && i.warn("请按格式返回参数： parseQuery?:(jsonQuery:{[propName: string]: any;})=>{[propName: string]: any;}", t);else if (Reflect.get(e, "query")) {var o = Reflect.get(e, "query");if ("string" == typeof o) try {o = JSON.parse(o);} catch (e) {i.warn("尝试解析深度对象失败，按原样输出。" + e, t);}if ("object" == typeof o) return n.deepDecodeQuery(o);}return e;}, t.stringifyQuery = function (e) {var t = e ? Object.keys(e).map(function (t) {var r = e[t];if (void 0 === r) return "";if (null === r) return c(t);if (Array.isArray(r)) {var o = [];return r.forEach(function (e) {void 0 !== e && (null === e ? o.push(c(t)) : o.push(c(t) + "=" + c(e)));}), o.join("&");}return c(t) + "=" + c(r);}).filter(function (e) {return e.length > 0;}).join("&") : null;return t ? "?" + t : "";};}, 314: function _(e, t, r) {"use strict";Object.defineProperty(t, "__esModule", { value: !0 }), t.rewriteMethod = void 0;var o = r(366),n = r(789),a = r(883),i = r(809),u = ["navigateTo", "redirectTo", "reLaunch", "switchTab", "navigateBack"];t.rewriteMethod = function (e) {!1 === e.options.keepUniOriginNav && u.forEach(function (t) {var r = uni[t];uni[t] = function (u, l, p, c) {void 0 === l && (l = !1), l ? i.uniOriginJump(e, r, t, u, p, c) : ("app-plus" === e.options.platform && 0 === Object.keys(e.appMain).length && (e.appMain = { NAVTYPE: t, path: u.url }), function (e, t, r) {if ("app-plus" === r.options.platform) {var i = null;e && (i = e.openType), null != i && "appLaunch" === i && (t = "reLaunch");}if ("reLaunch" === t && '{"url":"/"}' === JSON.stringify(e) && (a.warn("uni-app 原生方法：reLaunch({url:'/'}) 默认被重写啦！你可以使用 this.$Router.replaceAll() 或者 uni.reLaunch({url:'/?xxx=xxx'})", r, !0), t = "navigateBack", e = { from: "backbutton" }), "navigateBack" === t) {var u = 1;null == e && (e = { delta: 1 }), "[object Number]" === n.getDataType(e.delta) && (u = e.delta), r.back(u, e);} else {var l = o.rewriteMethodToggle[t],p = e.url;if (!p.startsWith("/")) {var c = n.resolveAbsolutePath(p, r);p = c, e.url = c;}if ("switchTab" === t) {var s = n.routesForMapRoute(r, p, ["pathMap", "finallyPathList"]),f = n.getRoutePath(s, r).finallyPath;if ("[object Array]" === n.getDataType(f) && a.warn("uni-app 原生方法跳转路径为：" + p + "。此路为是tab页面时，不允许设置 alias 为数组的情况，并且不能为动态路由！当然你可以通过通配符*解决！", r, !0), "*" === f && a.warn("uni-app 原生方法跳转路径为：" + p + "。在路由表中找不到相关路由表！当然你可以通过通配符*解决！", r, !0), "h5" === r.options.platform) {var h = e.success;e.success = function () {for (var t = [], r = 0; r < arguments.length; r++) {t[r] = arguments[r];}null == h || h.apply(null, t), n.timeOut(150).then(function () {var t = e.detail || {};if (Object.keys(t).length > 0 && Reflect.has(t, "index")) {var r = n.getUniCachePage(0);if (0 === Object.keys(r).length) return !1;var o = r,a = o.$options.onTabItemTap;if (a) for (var i = 0; i < a.length; i++) {a[i].call(o, t);}}});};}p = f;}var v = e,y = v.events,g = v.success,d = v.fail,m = v.complete,b = v.animationType,O = { path: p, events: y, success: g, fail: d, complete: m, animationDuration: v.animationDuration, animationType: b };r[l](n.notDeepClearNull(O));}}(u, t, e));};});};}, 963: function _(e, t, r) {"use strict";var o = this && this.__assign || function () {return (o = Object.assign || function (e) {for (var t, r = 1, o = arguments.length; r < o; r++) {for (var n in t = arguments[r]) {Object.prototype.hasOwnProperty.call(t, n) && (e[n] = t[n]);}}return e;}).apply(this, arguments);};Object.defineProperty(t, "__esModule", { value: !0 }), t.createRouter = t.RouterMount = void 0;var n = r(282),a = r(789),i = r(662),u = r(460),l = r(890),p = r(314),c = function c() {},s = new Promise(function (e) {return c = e;});t.createRouter = function (e) {var t = a.assertNewOptions(e),r = { options: t, mount: [], Vue: null, proxyHookDeps: n.proxyHookDeps, appMain: {}, enterPath: "", $route: null, $lockStatus: !1, routesMap: {}, lifeCycle: i.registerRouterHooks(n.lifeCycle, t), push: function push(e) {l.lockNavjump(e, r, "push");}, replace: function replace(e) {l.lockNavjump(e, r, "replace");}, replaceAll: function replaceAll(e) {l.lockNavjump(e, r, "replaceAll");}, pushTab: function pushTab(e) {l.lockNavjump(e, r, "pushTab");}, back: function back(e, t) {void 0 === e && (e = 1), "[object Object]" !== a.getDataType(t) ? t = { from: "navigateBack" } : Reflect.has(t, "from") || (t = o(o({}, t), { from: "navigateBack" })), l.lockNavjump(e + "", r, "back", void 0, t);}, forceGuardEach: function forceGuardEach(e, t) {l.forceGuardEach(r, e, t);}, beforeEach: function beforeEach(e) {i.registerEachHooks(r, "beforeHooks", e);}, afterEach: function afterEach(e) {i.registerEachHooks(r, "afterHooks", e);}, install: function install(e) {r.Vue = e, p.rewriteMethod(this), u.initMixins(e, this), Object.defineProperty(e.prototype, "$Router", { get: function get() {var e = r;return Object.defineProperty(this, "$Router", { value: e, writable: !1, configurable: !1, enumerable: !1 }), Object.seal(e);} }), Object.defineProperty(e.prototype, "$Route", { get: function get() {return l.createRoute(r);} }), Object.defineProperty(e.prototype, "$AppReady", { get: function get() {return "h5" === r.options.platform ? Promise.resolve() : s;}, set: function set(e) {!0 === e && c();} });} };return a.def(r, "currentRoute", function () {return l.createRoute(r);}), r.beforeEach(function (e, t, r) {return r();}), r.afterEach(function () {}), r;}, t.RouterMount = function (e, t, r) {if (void 0 === r && (r = "#app"), "[object Array]" !== a.getDataType(t.mount)) throw new Error("挂载路由失败，router.app 应该为数组类型。当前类型：" + typeof t.mount);if (t.mount.push({ app: e, el: r }), "h5" === t.options.platform) {var o = t.$route;o.replace({ path: o.currentRoute.fullPath });}};}, 809: function _(e, t, r) {"use strict";var o = this && this.__assign || function () {return (o = Object.assign || function (e) {for (var t, r = 1, o = arguments.length; r < o; r++) {for (var n in t = arguments[r]) {Object.prototype.hasOwnProperty.call(t, n) && (e[n] = t[n]);}}return e;}).apply(this, arguments);},n = this && this.__awaiter || function (e, t, r, o) {return new (r || (r = Promise))(function (n, a) {function i(e) {try {l(o.next(e));} catch (e) {a(e);}}function u(e) {try {l(o.throw(e));} catch (e) {a(e);}}function l(e) {var t;e.done ? n(e.value) : (t = e.value, t instanceof r ? t : new r(function (e) {e(t);})).then(i, u);}l((o = o.apply(e, t || [])).next());});},a = this && this.__generator || function (e, t) {var r,o,n,a,i = { label: 0, sent: function sent() {if (1 & n[0]) throw n[1];return n[1];}, trys: [], ops: [] };return a = { next: u(0), throw: u(1), return: u(2) }, "function" == typeof Symbol && (a[Symbol.iterator] = function () {return this;}), a;function u(a) {return function (u) {return function (a) {if (r) throw new TypeError("Generator is already executing.");for (; i;) {try {if (r = 1, o && (n = 2 & a[0] ? o.return : a[0] ? o.throw || ((n = o.return) && n.call(o), 0) : o.next) && !(n = n.call(o, a[1])).done) return n;switch (o = 0, n && (a = [2 & a[0], n.value]), a[0]) {case 0:case 1:n = a;break;case 4:return i.label++, { value: a[1], done: !1 };case 5:i.label++, o = a[1], a = [0];continue;case 7:a = i.ops.pop(), i.trys.pop();continue;default:if (!((n = (n = i.trys).length > 0 && n[n.length - 1]) || 6 !== a[0] && 2 !== a[0])) {i = 0;continue;}if (3 === a[0] && (!n || a[1] > n[0] && a[1] < n[3])) {i.label = a[1];break;}if (6 === a[0] && i.label < n[1]) {i.label = n[1], n = a;break;}if (n && i.label < n[2]) {i.label = n[2], i.ops.push(a);break;}n[2] && i.ops.pop(), i.trys.pop();continue;}a = t.call(e, i);} catch (e) {a = [6, e], o = 0;} finally {r = n = 0;}}if (5 & a[0]) throw a[1];return { value: a[0] ? a[1] : void 0, done: !0 };}([a, u]);};}},i = this && this.__rest || function (e, t) {var r = {};for (var o in e) {Object.prototype.hasOwnProperty.call(e, o) && t.indexOf(o) < 0 && (r[o] = e[o]);}if (null != e && "function" == typeof Object.getOwnPropertySymbols) {var n = 0;for (o = Object.getOwnPropertySymbols(e); n < o.length; n++) {t.indexOf(o[n]) < 0 && Object.prototype.propertyIsEnumerable.call(e, o[n]) && (r[o[n]] = e[o[n]]);}}return r;};Object.defineProperty(t, "__esModule", { value: !0 }), t.formatOriginURLQuery = t.uniOriginJump = void 0;var u = r(99),l = r(789),p = r(282),c = r(845),s = 0,f = "reLaunch";function h(e, t, r) {var n,a = t.url,i = t.path,p = t.query,c = t.animationType,s = t.animationDuration,f = t.events,h = t.success,v = t.fail,y = t.complete,g = t.delta,d = t.animation,m = u.stringifyQuery(p || {}),b = "" === m ? i || a : (i || a) + m,O = {};return "app-plus" === e.options.platform && "navigateBack" !== r && (O = (null === (n = e.options.APP) || void 0 === n ? void 0 : n.animation) || {}, O = o(o({}, O), d || {})), l.notDeepClearNull({ delta: g, url: b, animationType: c || O.animationType, animationDuration: s || O.animationDuration, events: f, success: h, fail: v, complete: y });}t.uniOriginJump = function (e, t, r, u, v, y) {var g = h(e, u, r),d = g.complete,m = i(g, ["complete"]),b = e.options.platform;null != y && !1 === y ? (0 === s && (s++, "h5" !== b && (c.resetAndCallPageHook(e, m.url), e.Vue.prototype.$AppReady = !0)), d && d.apply(null, { msg: "forceGuardEach强制触发并且不执行跳转" }), v && v.apply(null, { msg: "forceGuardEach强制触发并且不执行跳转" })) : (0 === s && ("app-plus" === b ? c.resetAndCallPageHook(e, m.url) : new RegExp(p.mpPlatformReg, "g").test(b) && c.resetAndCallPageHook(e, m.url, !1)), t(o(o({}, m), { from: u.BACKTYPE, complete: function complete() {for (var t, o, i, u, h = [], y = 0; y < arguments.length; y++) {h[y] = arguments[y];}return n(this, void 0, void 0, function () {var n, y, g;return a(this, function (a) {switch (a.label) {case 0:return 0 === s && (s++, "h5" !== b && (new RegExp(p.mpPlatformReg, "g").test(b) && c.resetPageHook(e), e.Vue.prototype.$AppReady = !0, "app-plus" === b && ((n = plus.nativeObj.View.getViewById("router-loadding")) && n.close(), (y = null === (t = e.options.APP) || void 0 === t ? void 0 : t.launchedHook) && y()))), g = 0, new RegExp(p.mpPlatformReg, "g").test(b) ? g = null === (o = e.options.applet) || void 0 === o ? void 0 : o.animationDuration : "app-plus" === b && "navigateBack" === r && "navigateTo" === f && (g = null === (u = null === (i = e.options.APP) || void 0 === i ? void 0 : i.animation) || void 0 === u ? void 0 : u.animationDuration), "navigateTo" !== r && "navigateBack" !== r || 0 === g ? [3, 2] : [4, l.timeOut(g)];case 1:a.sent(), a.label = 2;case 2:return f = r, d && d.apply(null, h), v && v.apply(null, h), [2];}});});} })));}, t.formatOriginURLQuery = h;} }, t = {}, function r(o) {if (t[o]) return t[o].exports;var n = t[o] = { exports: {} };return e[o].call(n.exports, n, n.exports, r), n.exports;}(607);var e, t;});
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _buildURL = _interopRequireDefault(__webpack_require__(/*! ../helpers/buildURL */ 56));
+var _buildFullPath = _interopRequireDefault(__webpack_require__(/*! ../core/buildFullPath */ 58));
+var _settle = _interopRequireDefault(__webpack_require__(/*! ../core/settle */ 61));
+var _utils = __webpack_require__(/*! ../utils */ 57);function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function ownKeys(object, enumerableOnly) {var keys = Object.keys(object);if (Object.getOwnPropertySymbols) {var symbols = Object.getOwnPropertySymbols(object);if (enumerableOnly) symbols = symbols.filter(function (sym) {return Object.getOwnPropertyDescriptor(object, sym).enumerable;});keys.push.apply(keys, symbols);}return keys;}function _objectSpread(target) {for (var i = 1; i < arguments.length; i++) {var source = arguments[i] != null ? arguments[i] : {};if (i % 2) {ownKeys(Object(source), true).forEach(function (key) {_defineProperty(target, key, source[key]);});} else if (Object.getOwnPropertyDescriptors) {Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));} else {ownKeys(Object(source)).forEach(function (key) {Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));});}}return target;}function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}
+
+/**
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           * 返回可选值存在的配置
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           * @param {Array} keys - 可选值数组
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           * @param {Object} config2 - 配置
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           * @return {{}} - 存在的配置项
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           */
+var mergeKeys = function mergeKeys(keys, config2) {
+  var config = {};
+  keys.forEach(function (prop) {
+    if (!(0, _utils.isUndefined)(config2[prop])) {
+      config[prop] = config2[prop];
+    }
+  });
+  return config;
+};var _default =
+function _default(config) {return new Promise(function (resolve, reject) {
+    var fullPath = (0, _buildURL.default)((0, _buildFullPath.default)(config.baseURL, config.url), config.params);
+    var _config = {
+      url: fullPath,
+      header: config.header,
+      complete: function complete(response) {
+        config.fullPath = fullPath;
+        response.config = config;
+        try {
+          // 对可能字符串不是json 的情况容错
+          if (typeof response.data === 'string') {
+            response.data = JSON.parse(response.data);
+          }
+          // eslint-disable-next-line no-empty
+        } catch (e) {
+        }
+        (0, _settle.default)(resolve, reject, response);
+      } };
+
+    var requestTask;
+    if (config.method === 'UPLOAD') {
+      delete _config.header['content-type'];
+      delete _config.header['Content-Type'];
+      var otherConfig = {
+
+
+
+        filePath: config.filePath,
+        name: config.name };
+
+      var optionalKeys = [
+
+
+
+
+
+
+
+
+
+      'formData'];
+
+      requestTask = uni.uploadFile(_objectSpread(_objectSpread(_objectSpread({}, _config), otherConfig), mergeKeys(optionalKeys, config)));
+    } else if (config.method === 'DOWNLOAD') {
+
+
+
+
+
+      requestTask = uni.downloadFile(_config);
+    } else {
+      var _optionalKeys = [
+      'data',
+      'method',
+
+      'timeout',
+
+      'dataType',
+
+      'responseType'];
+
+
+
+
+
+
+
+
+
+
+
+      requestTask = uni.request(_objectSpread(_objectSpread({}, _config), mergeKeys(_optionalKeys, config)));
+    }
+    if (config.getTask) {
+      config.getTask(requestTask, config);
+    }
+  });};exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
-/* 51 */,
-/* 52 */,
-/* 53 */,
-/* 54 */,
-/* 55 */,
-/* 56 */,
+/* 56 */
+/*!************************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/luch-request/helpers/buildURL.js ***!
+  \************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = buildURL;
+
+var utils = _interopRequireWildcard(__webpack_require__(/*! ../utils */ 57));function _getRequireWildcardCache() {if (typeof WeakMap !== "function") return null;var cache = new WeakMap();_getRequireWildcardCache = function _getRequireWildcardCache() {return cache;};return cache;}function _interopRequireWildcard(obj) {if (obj && obj.__esModule) {return obj;}if (obj === null || typeof obj !== "object" && typeof obj !== "function") {return { default: obj };}var cache = _getRequireWildcardCache();if (cache && cache.has(obj)) {return cache.get(obj);}var newObj = {};var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;for (var key in obj) {if (Object.prototype.hasOwnProperty.call(obj, key)) {var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;if (desc && (desc.get || desc.set)) {Object.defineProperty(newObj, key, desc);} else {newObj[key] = obj[key];}}}newObj.default = obj;if (cache) {cache.set(obj, newObj);}return newObj;}
+
+function encode(val) {
+  return encodeURIComponent(val).
+  replace(/%40/gi, '@').
+  replace(/%3A/gi, ':').
+  replace(/%24/g, '$').
+  replace(/%2C/gi, ',').
+  replace(/%20/g, '+').
+  replace(/%5B/gi, '[').
+  replace(/%5D/gi, ']');
+}
+
+/**
+   * Build a URL by appending params to the end
+   *
+   * @param {string} url The base of the url (e.g., http://www.google.com)
+   * @param {object} [params] The params to be appended
+   * @returns {string} The formatted url
+   */
+function buildURL(url, params) {
+  /* eslint no-param-reassign:0 */
+  if (!params) {
+    return url;
+  }
+
+  var serializedParams;
+  if (utils.isURLSearchParams(params)) {
+    serializedParams = params.toString();
+  } else {
+    var parts = [];
+
+    utils.forEach(params, function (val, key) {
+      if (val === null || typeof val === 'undefined') {
+        return;
+      }
+
+      if (utils.isArray(val)) {
+        key = "".concat(key, "[]");
+      } else {
+        val = [val];
+      }
+
+      utils.forEach(val, function (v) {
+        if (utils.isDate(v)) {
+          v = v.toISOString();
+        } else if (utils.isObject(v)) {
+          v = JSON.stringify(v);
+        }
+        parts.push("".concat(encode(key), "=").concat(encode(v)));
+      });
+    });
+
+    serializedParams = parts.join('&');
+  }
+
+  if (serializedParams) {
+    var hashmarkIndex = url.indexOf('#');
+    if (hashmarkIndex !== -1) {
+      url = url.slice(0, hashmarkIndex);
+    }
+
+    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;
+  }
+
+  return url;
+}
+
+/***/ }),
 /* 57 */
+/*!*************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/luch-request/utils.js ***!
+  \*************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+// utils is a library of generic helper functions non-specific to axios
+Object.defineProperty(exports, "__esModule", { value: true });exports.isArray = isArray;exports.isObject = isObject;exports.isDate = isDate;exports.isURLSearchParams = isURLSearchParams;exports.forEach = forEach;exports.isBoolean = isBoolean;exports.isPlainObject = isPlainObject;exports.deepMerge = deepMerge;exports.isUndefined = isUndefined;var
+toString = Object.prototype.toString;
+
+/**
+                                       * Determine if a value is an Array
+                                       *
+                                       * @param {Object} val The value to test
+                                       * @returns {boolean} True if value is an Array, otherwise false
+                                       */
+function isArray(val) {
+  return toString.call(val) === '[object Array]';
+}
+
+/**
+   * Determine if a value is an Object
+   *
+   * @param {Object} val The value to test
+   * @returns {boolean} True if value is an Object, otherwise false
+   */
+function isObject(val) {
+  return val !== null && typeof val === 'object';
+}
+
+/**
+   * Determine if a value is a Date
+   *
+   * @param {Object} val The value to test
+   * @returns {boolean} True if value is a Date, otherwise false
+   */
+function isDate(val) {
+  return toString.call(val) === '[object Date]';
+}
+
+/**
+   * Determine if a value is a URLSearchParams object
+   *
+   * @param {Object} val The value to test
+   * @returns {boolean} True if value is a URLSearchParams object, otherwise false
+   */
+function isURLSearchParams(val) {
+  return typeof URLSearchParams !== 'undefined' && val instanceof URLSearchParams;
+}
+
+/**
+   * Iterate over an Array or an Object invoking a function for each item.
+   *
+   * If `obj` is an Array callback will be called passing
+   * the value, index, and complete array for each item.
+   *
+   * If 'obj' is an Object callback will be called passing
+   * the value, key, and complete object for each property.
+   *
+   * @param {Object|Array} obj The object to iterate
+   * @param {Function} fn The callback to invoke for each item
+   */
+function forEach(obj, fn) {
+  // Don't bother if no value provided
+  if (obj === null || typeof obj === 'undefined') {
+    return;
+  }
+
+  // Force an array if not already something iterable
+  if (typeof obj !== 'object') {
+    /* eslint no-param-reassign:0 */
+    obj = [obj];
+  }
+
+  if (isArray(obj)) {
+    // Iterate over array values
+    for (var i = 0, l = obj.length; i < l; i++) {
+      fn.call(null, obj[i], i, obj);
+    }
+  } else {
+    // Iterate over object keys
+    for (var key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        fn.call(null, obj[key], key, obj);
+      }
+    }
+  }
+}
+
+/**
+   * 是否为boolean 值
+   * @param val
+   * @returns {boolean}
+   */
+function isBoolean(val) {
+  return typeof val === 'boolean';
+}
+
+/**
+   * 是否为真正的对象{} new Object
+   * @param {any} obj - 检测的对象
+   * @returns {boolean}
+   */
+function isPlainObject(obj) {
+  return Object.prototype.toString.call(obj) === '[object Object]';
+}
+
+/**
+   * Function equal to merge with the difference being that no reference
+   * to original objects is kept.
+   *
+   * @see merge
+   * @param {Object} obj1 Object to merge
+   * @returns {Object} Result of all merge properties
+   */
+function deepMerge() /* obj1, obj2, obj3, ... */{
+  var result = {};
+  function assignValue(val, key) {
+    if (typeof result[key] === 'object' && typeof val === 'object') {
+      result[key] = deepMerge(result[key], val);
+    } else if (typeof val === 'object') {
+      result[key] = deepMerge({}, val);
+    } else {
+      result[key] = val;
+    }
+  }
+  for (var i = 0, l = arguments.length; i < l; i++) {
+    forEach(arguments[i], assignValue);
+  }
+  return result;
+}
+
+function isUndefined(val) {
+  return typeof val === 'undefined';
+}
+
+/***/ }),
+/* 58 */
+/*!**************************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/luch-request/core/buildFullPath.js ***!
+  \**************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = buildFullPath;
+
+var _isAbsoluteURL = _interopRequireDefault(__webpack_require__(/*! ../helpers/isAbsoluteURL */ 59));
+var _combineURLs = _interopRequireDefault(__webpack_require__(/*! ../helpers/combineURLs */ 60));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
+
+/**
+                                                                                                                                                                            * Creates a new URL by combining the baseURL with the requestedURL,
+                                                                                                                                                                            * only when the requestedURL is not already an absolute URL.
+                                                                                                                                                                            * If the requestURL is absolute, this function returns the requestedURL untouched.
+                                                                                                                                                                            *
+                                                                                                                                                                            * @param {string} baseURL The base URL
+                                                                                                                                                                            * @param {string} requestedURL Absolute or relative URL to combine
+                                                                                                                                                                            * @returns {string} The combined full path
+                                                                                                                                                                            */
+function buildFullPath(baseURL, requestedURL) {
+  if (baseURL && !(0, _isAbsoluteURL.default)(requestedURL)) {
+    return (0, _combineURLs.default)(baseURL, requestedURL);
+  }
+  return requestedURL;
+}
+
+/***/ }),
+/* 59 */
+/*!*****************************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/luch-request/helpers/isAbsoluteURL.js ***!
+  \*****************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/**
+               * Determines whether the specified URL is absolute
+               *
+               * @param {string} url The URL to test
+               * @returns {boolean} True if the specified URL is absolute, otherwise false
+               */Object.defineProperty(exports, "__esModule", { value: true });exports.default = isAbsoluteURL;
+function isAbsoluteURL(url) {
+  // A URL is considered absolute if it begins with "<scheme>://" or "//" (protocol-relative URL).
+  // RFC 3986 defines scheme name as a sequence of characters beginning with a letter and followed
+  // by any combination of letters, digits, plus, period, or hyphen.
+  return /^([a-z][a-z\d+\-.]*:)?\/\//i.test(url);
+}
+
+/***/ }),
+/* 60 */
+/*!***************************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/luch-request/helpers/combineURLs.js ***!
+  \***************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/**
+               * Creates a new URL by combining the specified URLs
+               *
+               * @param {string} baseURL The base URL
+               * @param {string} relativeURL The relative URL
+               * @returns {string} The combined URL
+               */Object.defineProperty(exports, "__esModule", { value: true });exports.default = combineURLs;
+function combineURLs(baseURL, relativeURL) {
+  return relativeURL ? "".concat(
+  baseURL.replace(/\/+$/, ''), "/").concat(relativeURL.replace(/^\/+/, '')) :
+  baseURL;
+}
+
+/***/ }),
+/* 61 */
+/*!*******************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/luch-request/core/settle.js ***!
+  \*******************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = settle; /**
+                                                                                                      * Resolve or reject a Promise based on response status.
+                                                                                                      *
+                                                                                                      * @param {Function} resolve A function that resolves the promise.
+                                                                                                      * @param {Function} reject A function that rejects the promise.
+                                                                                                      * @param {object} response The response.
+                                                                                                      */
+function settle(resolve, reject, response) {var
+  validateStatus = response.config.validateStatus;
+  var status = response.statusCode;
+  if (status && (!validateStatus || validateStatus(status))) {
+    resolve(response);
+  } else {
+    reject(response);
+  }
+}
+
+/***/ }),
+/* 62 */
+/*!*******************************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/luch-request/core/InterceptorManager.js ***!
+  \*******************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;
+
+function InterceptorManager() {
+  this.handlers = [];
+}
+
+/**
+   * Add a new interceptor to the stack
+   *
+   * @param {Function} fulfilled The function to handle `then` for a `Promise`
+   * @param {Function} rejected The function to handle `reject` for a `Promise`
+   *
+   * @return {Number} An ID used to remove interceptor later
+   */
+InterceptorManager.prototype.use = function use(fulfilled, rejected) {
+  this.handlers.push({
+    fulfilled: fulfilled,
+    rejected: rejected });
+
+  return this.handlers.length - 1;
+};
+
+/**
+    * Remove an interceptor from the stack
+    *
+    * @param {Number} id The ID that was returned by `use`
+    */
+InterceptorManager.prototype.eject = function eject(id) {
+  if (this.handlers[id]) {
+    this.handlers[id] = null;
+  }
+};
+
+/**
+    * Iterate over all the registered interceptors
+    *
+    * This method is particularly useful for skipping over any
+    * interceptors that may have become `null` calling `eject`.
+    *
+    * @param {Function} fn The function to call for each interceptor
+    */
+InterceptorManager.prototype.forEach = function forEach(fn) {
+  this.handlers.forEach(function (h) {
+    if (h !== null) {
+      fn(h);
+    }
+  });
+};var _default =
+
+InterceptorManager;exports.default = _default;
+
+/***/ }),
+/* 63 */
+/*!************************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/luch-request/core/mergeConfig.js ***!
+  \************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _utils = __webpack_require__(/*! ../utils */ 57);function ownKeys(object, enumerableOnly) {var keys = Object.keys(object);if (Object.getOwnPropertySymbols) {var symbols = Object.getOwnPropertySymbols(object);if (enumerableOnly) symbols = symbols.filter(function (sym) {return Object.getOwnPropertyDescriptor(object, sym).enumerable;});keys.push.apply(keys, symbols);}return keys;}function _objectSpread(target) {for (var i = 1; i < arguments.length; i++) {var source = arguments[i] != null ? arguments[i] : {};if (i % 2) {ownKeys(Object(source), true).forEach(function (key) {_defineProperty(target, key, source[key]);});} else if (Object.getOwnPropertyDescriptors) {Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));} else {ownKeys(Object(source)).forEach(function (key) {Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));});}}return target;}function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}
+
+/**
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  * 合并局部配置优先的配置，如果局部有该配置项则用局部，如果全局有该配置项则用全局
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  * @param {Array} keys - 配置项
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  * @param {Object} globalsConfig - 当前的全局配置
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  * @param {Object} config2 - 局部配置
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  * @return {{}}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  */
+var mergeKeys = function mergeKeys(keys, globalsConfig, config2) {
+  var config = {};
+  keys.forEach(function (prop) {
+    if (!(0, _utils.isUndefined)(config2[prop])) {
+      config[prop] = config2[prop];
+    } else if (!(0, _utils.isUndefined)(globalsConfig[prop])) {
+      config[prop] = globalsConfig[prop];
+    }
+  });
+  return config;
+};
+/**
+    *
+    * @param globalsConfig - 当前实例的全局配置
+    * @param config2 - 当前的局部配置
+    * @return - 合并后的配置
+    */var _default =
+function _default(globalsConfig) {var config2 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  var method = config2.method || globalsConfig.method || 'GET';
+  var config = {
+    baseURL: globalsConfig.baseURL || '',
+    method: method,
+    url: config2.url || '',
+    params: config2.params || {},
+    custom: _objectSpread(_objectSpread({}, globalsConfig.custom || {}), config2.custom || {}),
+    header: (0, _utils.deepMerge)(globalsConfig.header || {}, config2.header || {}) };
+
+  var defaultToConfig2Keys = ['getTask', 'validateStatus'];
+  config = _objectSpread(_objectSpread({}, config), mergeKeys(defaultToConfig2Keys, globalsConfig, config2));
+
+  // eslint-disable-next-line no-empty
+  if (method === 'DOWNLOAD') {
+
+
+
+
+
+
+
+  } else if (method === 'UPLOAD') {
+    delete config.header['content-type'];
+    delete config.header['Content-Type'];
+    var uploadKeys = [
+
+
+
+
+
+
+
+
+
+    'filePath',
+    'name',
+
+
+
+    'formData'];
+
+    uploadKeys.forEach(function (prop) {
+      if (!(0, _utils.isUndefined)(config2[prop])) {
+        config[prop] = config2[prop];
+      }
+    });
+
+
+
+
+
+  } else {
+    var defaultsKeys = [
+    'data',
+
+    'timeout',
+
+    'dataType',
+
+    'responseType'];
+
+
+
+
+
+
+
+
+
+
+
+    config = _objectSpread(_objectSpread({}, config), mergeKeys(defaultsKeys, globalsConfig, config2));
+  }
+
+  return config;
+};exports.default = _default;
+
+/***/ }),
+/* 64 */
+/*!*********************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/luch-request/core/defaults.js ***!
+  \*********************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /**
+                                                                                                      * 默认的全局配置
+                                                                                                      */var _default =
+
+{
+  baseURL: '',
+  header: {},
+  method: 'GET',
+  dataType: 'json',
+
+  responseType: 'text',
+
+  custom: {},
+
+  timeout: 60000,
+
+
+
+
+
+
+
+
+
+
+  validateStatus: function validateStatus(status) {
+    return status >= 200 && status < 300;
+  } };exports.default = _default;
+
+/***/ }),
+/* 65 */
+/*!*******************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/luch-request/utils/clone.js ***!
+  \*******************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(Buffer) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /* eslint-disable */
+var clone = function () {
+  'use strict';
+
+  function _instanceof(obj, type) {
+    return type != null && obj instanceof type;
+  }
+
+  var nativeMap;
+  try {
+    nativeMap = Map;
+  } catch (_) {
+    // maybe a reference error because no `Map`. Give it a dummy value that no
+    // value will ever be an instanceof.
+    nativeMap = function nativeMap() {};
+  }
+
+  var nativeSet;
+  try {
+    nativeSet = Set;
+  } catch (_) {
+    nativeSet = function nativeSet() {};
+  }
+
+  var nativePromise;
+  try {
+    nativePromise = Promise;
+  } catch (_) {
+    nativePromise = function nativePromise() {};
+  }
+
+  /**
+     * Clones (copies) an Object using deep copying.
+     *
+     * This function supports circular references by default, but if you are certain
+     * there are no circular references in your object, you can save some CPU time
+     * by calling clone(obj, false).
+     *
+     * Caution: if `circular` is false and `parent` contains circular references,
+     * your program may enter an infinite loop and crash.
+     *
+     * @param `parent` - the object to be cloned
+     * @param `circular` - set to true if the object to be cloned may contain
+     *    circular references. (optional - true by default)
+     * @param `depth` - set to a number if the object is only to be cloned to
+     *    a particular depth. (optional - defaults to Infinity)
+     * @param `prototype` - sets the prototype to be used when cloning an object.
+     *    (optional - defaults to parent prototype).
+     * @param `includeNonEnumerable` - set to true if the non-enumerable properties
+     *    should be cloned as well. Non-enumerable properties on the prototype
+     *    chain will be ignored. (optional - false by default)
+     */
+  function clone(parent, circular, depth, prototype, includeNonEnumerable) {
+    if (typeof circular === 'object') {
+      depth = circular.depth;
+      prototype = circular.prototype;
+      includeNonEnumerable = circular.includeNonEnumerable;
+      circular = circular.circular;
+    }
+    // maintain two arrays for circular references, where corresponding parents
+    // and children have the same index
+    var allParents = [];
+    var allChildren = [];
+
+    var useBuffer = typeof Buffer != 'undefined';
+
+    if (typeof circular == 'undefined')
+    circular = true;
+
+    if (typeof depth == 'undefined')
+    depth = Infinity;
+
+    // recurse this function so we don't reset allParents and allChildren
+    function _clone(parent, depth) {
+      // cloning null always returns null
+      if (parent === null)
+      return null;
+
+      if (depth === 0)
+      return parent;
+
+      var child;
+      var proto;
+      if (typeof parent != 'object') {
+        return parent;
+      }
+
+      if (_instanceof(parent, nativeMap)) {
+        child = new nativeMap();
+      } else if (_instanceof(parent, nativeSet)) {
+        child = new nativeSet();
+      } else if (_instanceof(parent, nativePromise)) {
+        child = new nativePromise(function (resolve, reject) {
+          parent.then(function (value) {
+            resolve(_clone(value, depth - 1));
+          }, function (err) {
+            reject(_clone(err, depth - 1));
+          });
+        });
+      } else if (clone.__isArray(parent)) {
+        child = [];
+      } else if (clone.__isRegExp(parent)) {
+        child = new RegExp(parent.source, __getRegExpFlags(parent));
+        if (parent.lastIndex) child.lastIndex = parent.lastIndex;
+      } else if (clone.__isDate(parent)) {
+        child = new Date(parent.getTime());
+      } else if (useBuffer && Buffer.isBuffer(parent)) {
+        if (Buffer.from) {
+          // Node.js >= 5.10.0
+          child = Buffer.from(parent);
+        } else {
+          // Older Node.js versions
+          child = new Buffer(parent.length);
+          parent.copy(child);
+        }
+        return child;
+      } else if (_instanceof(parent, Error)) {
+        child = Object.create(parent);
+      } else {
+        if (typeof prototype == 'undefined') {
+          proto = Object.getPrototypeOf(parent);
+          child = Object.create(proto);
+        } else
+        {
+          child = Object.create(prototype);
+          proto = prototype;
+        }
+      }
+
+      if (circular) {
+        var index = allParents.indexOf(parent);
+
+        if (index != -1) {
+          return allChildren[index];
+        }
+        allParents.push(parent);
+        allChildren.push(child);
+      }
+
+      if (_instanceof(parent, nativeMap)) {
+        parent.forEach(function (value, key) {
+          var keyChild = _clone(key, depth - 1);
+          var valueChild = _clone(value, depth - 1);
+          child.set(keyChild, valueChild);
+        });
+      }
+      if (_instanceof(parent, nativeSet)) {
+        parent.forEach(function (value) {
+          var entryChild = _clone(value, depth - 1);
+          child.add(entryChild);
+        });
+      }
+
+      for (var i in parent) {
+        var attrs = Object.getOwnPropertyDescriptor(parent, i);
+        if (attrs) {
+          child[i] = _clone(parent[i], depth - 1);
+        }
+
+        try {
+          var objProperty = Object.getOwnPropertyDescriptor(parent, i);
+          if (objProperty.set === 'undefined') {
+            // no setter defined. Skip cloning this property
+            continue;
+          }
+          child[i] = _clone(parent[i], depth - 1);
+        } catch (e) {
+          if (e instanceof TypeError) {
+            // when in strict mode, TypeError will be thrown if child[i] property only has a getter
+            // we can't do anything about this, other than inform the user that this property cannot be set.
+            continue;
+          } else if (e instanceof ReferenceError) {
+            //this may happen in non strict mode
+            continue;
+          }
+        }
+
+      }
+
+      if (Object.getOwnPropertySymbols) {
+        var symbols = Object.getOwnPropertySymbols(parent);
+        for (var i = 0; i < symbols.length; i++) {
+          // Don't need to worry about cloning a symbol because it is a primitive,
+          // like a number or string.
+          var symbol = symbols[i];
+          var descriptor = Object.getOwnPropertyDescriptor(parent, symbol);
+          if (descriptor && !descriptor.enumerable && !includeNonEnumerable) {
+            continue;
+          }
+          child[symbol] = _clone(parent[symbol], depth - 1);
+          Object.defineProperty(child, symbol, descriptor);
+        }
+      }
+
+      if (includeNonEnumerable) {
+        var allPropertyNames = Object.getOwnPropertyNames(parent);
+        for (var i = 0; i < allPropertyNames.length; i++) {
+          var propertyName = allPropertyNames[i];
+          var descriptor = Object.getOwnPropertyDescriptor(parent, propertyName);
+          if (descriptor && descriptor.enumerable) {
+            continue;
+          }
+          child[propertyName] = _clone(parent[propertyName], depth - 1);
+          Object.defineProperty(child, propertyName, descriptor);
+        }
+      }
+
+      return child;
+    }
+
+    return _clone(parent, depth);
+  }
+
+  /**
+     * Simple flat clone using prototype, accepts only objects, usefull for property
+     * override on FLAT configuration object (no nested props).
+     *
+     * USE WITH CAUTION! This may not behave as you wish if you do not know how this
+     * works.
+     */
+  clone.clonePrototype = function clonePrototype(parent) {
+    if (parent === null)
+    return null;
+
+    var c = function c() {};
+    c.prototype = parent;
+    return new c();
+  };
+
+  // private utility functions
+
+  function __objToStr(o) {
+    return Object.prototype.toString.call(o);
+  }
+  clone.__objToStr = __objToStr;
+
+  function __isDate(o) {
+    return typeof o === 'object' && __objToStr(o) === '[object Date]';
+  }
+  clone.__isDate = __isDate;
+
+  function __isArray(o) {
+    return typeof o === 'object' && __objToStr(o) === '[object Array]';
+  }
+  clone.__isArray = __isArray;
+
+  function __isRegExp(o) {
+    return typeof o === 'object' && __objToStr(o) === '[object RegExp]';
+  }
+  clone.__isRegExp = __isRegExp;
+
+  function __getRegExpFlags(re) {
+    var flags = '';
+    if (re.global) flags += 'g';
+    if (re.ignoreCase) flags += 'i';
+    if (re.multiline) flags += 'm';
+    return flags;
+  }
+  clone.__getRegExpFlags = __getRegExpFlags;
+
+  return clone;
+}();var _default =
+
+clone;exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../../../../../../HBuilderX/plugins/uniapp-cli/node_modules/buffer/index.js */ 66).Buffer))
+
+/***/ }),
+/* 66 */
+/*!**************************************!*\
+  !*** ./node_modules/buffer/index.js ***!
+  \**************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(global) {/*!
+ * The buffer module from node.js, for the browser.
+ *
+ * @author   Feross Aboukhadijeh <http://feross.org>
+ * @license  MIT
+ */
+/* eslint-disable no-proto */
+
+
+
+var base64 = __webpack_require__(/*! base64-js */ 67)
+var ieee754 = __webpack_require__(/*! ieee754 */ 68)
+var isArray = __webpack_require__(/*! isarray */ 69)
+
+exports.Buffer = Buffer
+exports.SlowBuffer = SlowBuffer
+exports.INSPECT_MAX_BYTES = 50
+
+/**
+ * If `Buffer.TYPED_ARRAY_SUPPORT`:
+ *   === true    Use Uint8Array implementation (fastest)
+ *   === false   Use Object implementation (most compatible, even IE6)
+ *
+ * Browsers that support typed arrays are IE 10+, Firefox 4+, Chrome 7+, Safari 5.1+,
+ * Opera 11.6+, iOS 4.2+.
+ *
+ * Due to various browser bugs, sometimes the Object implementation will be used even
+ * when the browser supports typed arrays.
+ *
+ * Note:
+ *
+ *   - Firefox 4-29 lacks support for adding new properties to `Uint8Array` instances,
+ *     See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438.
+ *
+ *   - Chrome 9-10 is missing the `TypedArray.prototype.subarray` function.
+ *
+ *   - IE10 has a broken `TypedArray.prototype.subarray` function which returns arrays of
+ *     incorrect length in some situations.
+
+ * We detect these buggy browsers and set `Buffer.TYPED_ARRAY_SUPPORT` to `false` so they
+ * get the Object implementation, which is slower but behaves correctly.
+ */
+Buffer.TYPED_ARRAY_SUPPORT = global.TYPED_ARRAY_SUPPORT !== undefined
+  ? global.TYPED_ARRAY_SUPPORT
+  : typedArraySupport()
+
+/*
+ * Export kMaxLength after typed array support is determined.
+ */
+exports.kMaxLength = kMaxLength()
+
+function typedArraySupport () {
+  try {
+    var arr = new Uint8Array(1)
+    arr.__proto__ = {__proto__: Uint8Array.prototype, foo: function () { return 42 }}
+    return arr.foo() === 42 && // typed array instances can be augmented
+        typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
+        arr.subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
+  } catch (e) {
+    return false
+  }
+}
+
+function kMaxLength () {
+  return Buffer.TYPED_ARRAY_SUPPORT
+    ? 0x7fffffff
+    : 0x3fffffff
+}
+
+function createBuffer (that, length) {
+  if (kMaxLength() < length) {
+    throw new RangeError('Invalid typed array length')
+  }
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    // Return an augmented `Uint8Array` instance, for best performance
+    that = new Uint8Array(length)
+    that.__proto__ = Buffer.prototype
+  } else {
+    // Fallback: Return an object instance of the Buffer class
+    if (that === null) {
+      that = new Buffer(length)
+    }
+    that.length = length
+  }
+
+  return that
+}
+
+/**
+ * The Buffer constructor returns instances of `Uint8Array` that have their
+ * prototype changed to `Buffer.prototype`. Furthermore, `Buffer` is a subclass of
+ * `Uint8Array`, so the returned instances will have all the node `Buffer` methods
+ * and the `Uint8Array` methods. Square bracket notation works as expected -- it
+ * returns a single octet.
+ *
+ * The `Uint8Array` prototype remains unmodified.
+ */
+
+function Buffer (arg, encodingOrOffset, length) {
+  if (!Buffer.TYPED_ARRAY_SUPPORT && !(this instanceof Buffer)) {
+    return new Buffer(arg, encodingOrOffset, length)
+  }
+
+  // Common case.
+  if (typeof arg === 'number') {
+    if (typeof encodingOrOffset === 'string') {
+      throw new Error(
+        'If encoding is specified then the first argument must be a string'
+      )
+    }
+    return allocUnsafe(this, arg)
+  }
+  return from(this, arg, encodingOrOffset, length)
+}
+
+Buffer.poolSize = 8192 // not used by this implementation
+
+// TODO: Legacy, not needed anymore. Remove in next major version.
+Buffer._augment = function (arr) {
+  arr.__proto__ = Buffer.prototype
+  return arr
+}
+
+function from (that, value, encodingOrOffset, length) {
+  if (typeof value === 'number') {
+    throw new TypeError('"value" argument must not be a number')
+  }
+
+  if (typeof ArrayBuffer !== 'undefined' && value instanceof ArrayBuffer) {
+    return fromArrayBuffer(that, value, encodingOrOffset, length)
+  }
+
+  if (typeof value === 'string') {
+    return fromString(that, value, encodingOrOffset)
+  }
+
+  return fromObject(that, value)
+}
+
+/**
+ * Functionally equivalent to Buffer(arg, encoding) but throws a TypeError
+ * if value is a number.
+ * Buffer.from(str[, encoding])
+ * Buffer.from(array)
+ * Buffer.from(buffer)
+ * Buffer.from(arrayBuffer[, byteOffset[, length]])
+ **/
+Buffer.from = function (value, encodingOrOffset, length) {
+  return from(null, value, encodingOrOffset, length)
+}
+
+if (Buffer.TYPED_ARRAY_SUPPORT) {
+  Buffer.prototype.__proto__ = Uint8Array.prototype
+  Buffer.__proto__ = Uint8Array
+  if (typeof Symbol !== 'undefined' && Symbol.species &&
+      Buffer[Symbol.species] === Buffer) {
+    // Fix subarray() in ES2016. See: https://github.com/feross/buffer/pull/97
+    Object.defineProperty(Buffer, Symbol.species, {
+      value: null,
+      configurable: true
+    })
+  }
+}
+
+function assertSize (size) {
+  if (typeof size !== 'number') {
+    throw new TypeError('"size" argument must be a number')
+  } else if (size < 0) {
+    throw new RangeError('"size" argument must not be negative')
+  }
+}
+
+function alloc (that, size, fill, encoding) {
+  assertSize(size)
+  if (size <= 0) {
+    return createBuffer(that, size)
+  }
+  if (fill !== undefined) {
+    // Only pay attention to encoding if it's a string. This
+    // prevents accidentally sending in a number that would
+    // be interpretted as a start offset.
+    return typeof encoding === 'string'
+      ? createBuffer(that, size).fill(fill, encoding)
+      : createBuffer(that, size).fill(fill)
+  }
+  return createBuffer(that, size)
+}
+
+/**
+ * Creates a new filled Buffer instance.
+ * alloc(size[, fill[, encoding]])
+ **/
+Buffer.alloc = function (size, fill, encoding) {
+  return alloc(null, size, fill, encoding)
+}
+
+function allocUnsafe (that, size) {
+  assertSize(size)
+  that = createBuffer(that, size < 0 ? 0 : checked(size) | 0)
+  if (!Buffer.TYPED_ARRAY_SUPPORT) {
+    for (var i = 0; i < size; ++i) {
+      that[i] = 0
+    }
+  }
+  return that
+}
+
+/**
+ * Equivalent to Buffer(num), by default creates a non-zero-filled Buffer instance.
+ * */
+Buffer.allocUnsafe = function (size) {
+  return allocUnsafe(null, size)
+}
+/**
+ * Equivalent to SlowBuffer(num), by default creates a non-zero-filled Buffer instance.
+ */
+Buffer.allocUnsafeSlow = function (size) {
+  return allocUnsafe(null, size)
+}
+
+function fromString (that, string, encoding) {
+  if (typeof encoding !== 'string' || encoding === '') {
+    encoding = 'utf8'
+  }
+
+  if (!Buffer.isEncoding(encoding)) {
+    throw new TypeError('"encoding" must be a valid string encoding')
+  }
+
+  var length = byteLength(string, encoding) | 0
+  that = createBuffer(that, length)
+
+  var actual = that.write(string, encoding)
+
+  if (actual !== length) {
+    // Writing a hex string, for example, that contains invalid characters will
+    // cause everything after the first invalid character to be ignored. (e.g.
+    // 'abxxcd' will be treated as 'ab')
+    that = that.slice(0, actual)
+  }
+
+  return that
+}
+
+function fromArrayLike (that, array) {
+  var length = array.length < 0 ? 0 : checked(array.length) | 0
+  that = createBuffer(that, length)
+  for (var i = 0; i < length; i += 1) {
+    that[i] = array[i] & 255
+  }
+  return that
+}
+
+function fromArrayBuffer (that, array, byteOffset, length) {
+  array.byteLength // this throws if `array` is not a valid ArrayBuffer
+
+  if (byteOffset < 0 || array.byteLength < byteOffset) {
+    throw new RangeError('\'offset\' is out of bounds')
+  }
+
+  if (array.byteLength < byteOffset + (length || 0)) {
+    throw new RangeError('\'length\' is out of bounds')
+  }
+
+  if (byteOffset === undefined && length === undefined) {
+    array = new Uint8Array(array)
+  } else if (length === undefined) {
+    array = new Uint8Array(array, byteOffset)
+  } else {
+    array = new Uint8Array(array, byteOffset, length)
+  }
+
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    // Return an augmented `Uint8Array` instance, for best performance
+    that = array
+    that.__proto__ = Buffer.prototype
+  } else {
+    // Fallback: Return an object instance of the Buffer class
+    that = fromArrayLike(that, array)
+  }
+  return that
+}
+
+function fromObject (that, obj) {
+  if (Buffer.isBuffer(obj)) {
+    var len = checked(obj.length) | 0
+    that = createBuffer(that, len)
+
+    if (that.length === 0) {
+      return that
+    }
+
+    obj.copy(that, 0, 0, len)
+    return that
+  }
+
+  if (obj) {
+    if ((typeof ArrayBuffer !== 'undefined' &&
+        obj.buffer instanceof ArrayBuffer) || 'length' in obj) {
+      if (typeof obj.length !== 'number' || isnan(obj.length)) {
+        return createBuffer(that, 0)
+      }
+      return fromArrayLike(that, obj)
+    }
+
+    if (obj.type === 'Buffer' && isArray(obj.data)) {
+      return fromArrayLike(that, obj.data)
+    }
+  }
+
+  throw new TypeError('First argument must be a string, Buffer, ArrayBuffer, Array, or array-like object.')
+}
+
+function checked (length) {
+  // Note: cannot use `length < kMaxLength()` here because that fails when
+  // length is NaN (which is otherwise coerced to zero.)
+  if (length >= kMaxLength()) {
+    throw new RangeError('Attempt to allocate Buffer larger than maximum ' +
+                         'size: 0x' + kMaxLength().toString(16) + ' bytes')
+  }
+  return length | 0
+}
+
+function SlowBuffer (length) {
+  if (+length != length) { // eslint-disable-line eqeqeq
+    length = 0
+  }
+  return Buffer.alloc(+length)
+}
+
+Buffer.isBuffer = function isBuffer (b) {
+  return !!(b != null && b._isBuffer)
+}
+
+Buffer.compare = function compare (a, b) {
+  if (!Buffer.isBuffer(a) || !Buffer.isBuffer(b)) {
+    throw new TypeError('Arguments must be Buffers')
+  }
+
+  if (a === b) return 0
+
+  var x = a.length
+  var y = b.length
+
+  for (var i = 0, len = Math.min(x, y); i < len; ++i) {
+    if (a[i] !== b[i]) {
+      x = a[i]
+      y = b[i]
+      break
+    }
+  }
+
+  if (x < y) return -1
+  if (y < x) return 1
+  return 0
+}
+
+Buffer.isEncoding = function isEncoding (encoding) {
+  switch (String(encoding).toLowerCase()) {
+    case 'hex':
+    case 'utf8':
+    case 'utf-8':
+    case 'ascii':
+    case 'latin1':
+    case 'binary':
+    case 'base64':
+    case 'ucs2':
+    case 'ucs-2':
+    case 'utf16le':
+    case 'utf-16le':
+      return true
+    default:
+      return false
+  }
+}
+
+Buffer.concat = function concat (list, length) {
+  if (!isArray(list)) {
+    throw new TypeError('"list" argument must be an Array of Buffers')
+  }
+
+  if (list.length === 0) {
+    return Buffer.alloc(0)
+  }
+
+  var i
+  if (length === undefined) {
+    length = 0
+    for (i = 0; i < list.length; ++i) {
+      length += list[i].length
+    }
+  }
+
+  var buffer = Buffer.allocUnsafe(length)
+  var pos = 0
+  for (i = 0; i < list.length; ++i) {
+    var buf = list[i]
+    if (!Buffer.isBuffer(buf)) {
+      throw new TypeError('"list" argument must be an Array of Buffers')
+    }
+    buf.copy(buffer, pos)
+    pos += buf.length
+  }
+  return buffer
+}
+
+function byteLength (string, encoding) {
+  if (Buffer.isBuffer(string)) {
+    return string.length
+  }
+  if (typeof ArrayBuffer !== 'undefined' && typeof ArrayBuffer.isView === 'function' &&
+      (ArrayBuffer.isView(string) || string instanceof ArrayBuffer)) {
+    return string.byteLength
+  }
+  if (typeof string !== 'string') {
+    string = '' + string
+  }
+
+  var len = string.length
+  if (len === 0) return 0
+
+  // Use a for loop to avoid recursion
+  var loweredCase = false
+  for (;;) {
+    switch (encoding) {
+      case 'ascii':
+      case 'latin1':
+      case 'binary':
+        return len
+      case 'utf8':
+      case 'utf-8':
+      case undefined:
+        return utf8ToBytes(string).length
+      case 'ucs2':
+      case 'ucs-2':
+      case 'utf16le':
+      case 'utf-16le':
+        return len * 2
+      case 'hex':
+        return len >>> 1
+      case 'base64':
+        return base64ToBytes(string).length
+      default:
+        if (loweredCase) return utf8ToBytes(string).length // assume utf8
+        encoding = ('' + encoding).toLowerCase()
+        loweredCase = true
+    }
+  }
+}
+Buffer.byteLength = byteLength
+
+function slowToString (encoding, start, end) {
+  var loweredCase = false
+
+  // No need to verify that "this.length <= MAX_UINT32" since it's a read-only
+  // property of a typed array.
+
+  // This behaves neither like String nor Uint8Array in that we set start/end
+  // to their upper/lower bounds if the value passed is out of range.
+  // undefined is handled specially as per ECMA-262 6th Edition,
+  // Section 13.3.3.7 Runtime Semantics: KeyedBindingInitialization.
+  if (start === undefined || start < 0) {
+    start = 0
+  }
+  // Return early if start > this.length. Done here to prevent potential uint32
+  // coercion fail below.
+  if (start > this.length) {
+    return ''
+  }
+
+  if (end === undefined || end > this.length) {
+    end = this.length
+  }
+
+  if (end <= 0) {
+    return ''
+  }
+
+  // Force coersion to uint32. This will also coerce falsey/NaN values to 0.
+  end >>>= 0
+  start >>>= 0
+
+  if (end <= start) {
+    return ''
+  }
+
+  if (!encoding) encoding = 'utf8'
+
+  while (true) {
+    switch (encoding) {
+      case 'hex':
+        return hexSlice(this, start, end)
+
+      case 'utf8':
+      case 'utf-8':
+        return utf8Slice(this, start, end)
+
+      case 'ascii':
+        return asciiSlice(this, start, end)
+
+      case 'latin1':
+      case 'binary':
+        return latin1Slice(this, start, end)
+
+      case 'base64':
+        return base64Slice(this, start, end)
+
+      case 'ucs2':
+      case 'ucs-2':
+      case 'utf16le':
+      case 'utf-16le':
+        return utf16leSlice(this, start, end)
+
+      default:
+        if (loweredCase) throw new TypeError('Unknown encoding: ' + encoding)
+        encoding = (encoding + '').toLowerCase()
+        loweredCase = true
+    }
+  }
+}
+
+// The property is used by `Buffer.isBuffer` and `is-buffer` (in Safari 5-7) to detect
+// Buffer instances.
+Buffer.prototype._isBuffer = true
+
+function swap (b, n, m) {
+  var i = b[n]
+  b[n] = b[m]
+  b[m] = i
+}
+
+Buffer.prototype.swap16 = function swap16 () {
+  var len = this.length
+  if (len % 2 !== 0) {
+    throw new RangeError('Buffer size must be a multiple of 16-bits')
+  }
+  for (var i = 0; i < len; i += 2) {
+    swap(this, i, i + 1)
+  }
+  return this
+}
+
+Buffer.prototype.swap32 = function swap32 () {
+  var len = this.length
+  if (len % 4 !== 0) {
+    throw new RangeError('Buffer size must be a multiple of 32-bits')
+  }
+  for (var i = 0; i < len; i += 4) {
+    swap(this, i, i + 3)
+    swap(this, i + 1, i + 2)
+  }
+  return this
+}
+
+Buffer.prototype.swap64 = function swap64 () {
+  var len = this.length
+  if (len % 8 !== 0) {
+    throw new RangeError('Buffer size must be a multiple of 64-bits')
+  }
+  for (var i = 0; i < len; i += 8) {
+    swap(this, i, i + 7)
+    swap(this, i + 1, i + 6)
+    swap(this, i + 2, i + 5)
+    swap(this, i + 3, i + 4)
+  }
+  return this
+}
+
+Buffer.prototype.toString = function toString () {
+  var length = this.length | 0
+  if (length === 0) return ''
+  if (arguments.length === 0) return utf8Slice(this, 0, length)
+  return slowToString.apply(this, arguments)
+}
+
+Buffer.prototype.equals = function equals (b) {
+  if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
+  if (this === b) return true
+  return Buffer.compare(this, b) === 0
+}
+
+Buffer.prototype.inspect = function inspect () {
+  var str = ''
+  var max = exports.INSPECT_MAX_BYTES
+  if (this.length > 0) {
+    str = this.toString('hex', 0, max).match(/.{2}/g).join(' ')
+    if (this.length > max) str += ' ... '
+  }
+  return '<Buffer ' + str + '>'
+}
+
+Buffer.prototype.compare = function compare (target, start, end, thisStart, thisEnd) {
+  if (!Buffer.isBuffer(target)) {
+    throw new TypeError('Argument must be a Buffer')
+  }
+
+  if (start === undefined) {
+    start = 0
+  }
+  if (end === undefined) {
+    end = target ? target.length : 0
+  }
+  if (thisStart === undefined) {
+    thisStart = 0
+  }
+  if (thisEnd === undefined) {
+    thisEnd = this.length
+  }
+
+  if (start < 0 || end > target.length || thisStart < 0 || thisEnd > this.length) {
+    throw new RangeError('out of range index')
+  }
+
+  if (thisStart >= thisEnd && start >= end) {
+    return 0
+  }
+  if (thisStart >= thisEnd) {
+    return -1
+  }
+  if (start >= end) {
+    return 1
+  }
+
+  start >>>= 0
+  end >>>= 0
+  thisStart >>>= 0
+  thisEnd >>>= 0
+
+  if (this === target) return 0
+
+  var x = thisEnd - thisStart
+  var y = end - start
+  var len = Math.min(x, y)
+
+  var thisCopy = this.slice(thisStart, thisEnd)
+  var targetCopy = target.slice(start, end)
+
+  for (var i = 0; i < len; ++i) {
+    if (thisCopy[i] !== targetCopy[i]) {
+      x = thisCopy[i]
+      y = targetCopy[i]
+      break
+    }
+  }
+
+  if (x < y) return -1
+  if (y < x) return 1
+  return 0
+}
+
+// Finds either the first index of `val` in `buffer` at offset >= `byteOffset`,
+// OR the last index of `val` in `buffer` at offset <= `byteOffset`.
+//
+// Arguments:
+// - buffer - a Buffer to search
+// - val - a string, Buffer, or number
+// - byteOffset - an index into `buffer`; will be clamped to an int32
+// - encoding - an optional encoding, relevant is val is a string
+// - dir - true for indexOf, false for lastIndexOf
+function bidirectionalIndexOf (buffer, val, byteOffset, encoding, dir) {
+  // Empty buffer means no match
+  if (buffer.length === 0) return -1
+
+  // Normalize byteOffset
+  if (typeof byteOffset === 'string') {
+    encoding = byteOffset
+    byteOffset = 0
+  } else if (byteOffset > 0x7fffffff) {
+    byteOffset = 0x7fffffff
+  } else if (byteOffset < -0x80000000) {
+    byteOffset = -0x80000000
+  }
+  byteOffset = +byteOffset  // Coerce to Number.
+  if (isNaN(byteOffset)) {
+    // byteOffset: it it's undefined, null, NaN, "foo", etc, search whole buffer
+    byteOffset = dir ? 0 : (buffer.length - 1)
+  }
+
+  // Normalize byteOffset: negative offsets start from the end of the buffer
+  if (byteOffset < 0) byteOffset = buffer.length + byteOffset
+  if (byteOffset >= buffer.length) {
+    if (dir) return -1
+    else byteOffset = buffer.length - 1
+  } else if (byteOffset < 0) {
+    if (dir) byteOffset = 0
+    else return -1
+  }
+
+  // Normalize val
+  if (typeof val === 'string') {
+    val = Buffer.from(val, encoding)
+  }
+
+  // Finally, search either indexOf (if dir is true) or lastIndexOf
+  if (Buffer.isBuffer(val)) {
+    // Special case: looking for empty string/buffer always fails
+    if (val.length === 0) {
+      return -1
+    }
+    return arrayIndexOf(buffer, val, byteOffset, encoding, dir)
+  } else if (typeof val === 'number') {
+    val = val & 0xFF // Search for a byte value [0-255]
+    if (Buffer.TYPED_ARRAY_SUPPORT &&
+        typeof Uint8Array.prototype.indexOf === 'function') {
+      if (dir) {
+        return Uint8Array.prototype.indexOf.call(buffer, val, byteOffset)
+      } else {
+        return Uint8Array.prototype.lastIndexOf.call(buffer, val, byteOffset)
+      }
+    }
+    return arrayIndexOf(buffer, [ val ], byteOffset, encoding, dir)
+  }
+
+  throw new TypeError('val must be string, number or Buffer')
+}
+
+function arrayIndexOf (arr, val, byteOffset, encoding, dir) {
+  var indexSize = 1
+  var arrLength = arr.length
+  var valLength = val.length
+
+  if (encoding !== undefined) {
+    encoding = String(encoding).toLowerCase()
+    if (encoding === 'ucs2' || encoding === 'ucs-2' ||
+        encoding === 'utf16le' || encoding === 'utf-16le') {
+      if (arr.length < 2 || val.length < 2) {
+        return -1
+      }
+      indexSize = 2
+      arrLength /= 2
+      valLength /= 2
+      byteOffset /= 2
+    }
+  }
+
+  function read (buf, i) {
+    if (indexSize === 1) {
+      return buf[i]
+    } else {
+      return buf.readUInt16BE(i * indexSize)
+    }
+  }
+
+  var i
+  if (dir) {
+    var foundIndex = -1
+    for (i = byteOffset; i < arrLength; i++) {
+      if (read(arr, i) === read(val, foundIndex === -1 ? 0 : i - foundIndex)) {
+        if (foundIndex === -1) foundIndex = i
+        if (i - foundIndex + 1 === valLength) return foundIndex * indexSize
+      } else {
+        if (foundIndex !== -1) i -= i - foundIndex
+        foundIndex = -1
+      }
+    }
+  } else {
+    if (byteOffset + valLength > arrLength) byteOffset = arrLength - valLength
+    for (i = byteOffset; i >= 0; i--) {
+      var found = true
+      for (var j = 0; j < valLength; j++) {
+        if (read(arr, i + j) !== read(val, j)) {
+          found = false
+          break
+        }
+      }
+      if (found) return i
+    }
+  }
+
+  return -1
+}
+
+Buffer.prototype.includes = function includes (val, byteOffset, encoding) {
+  return this.indexOf(val, byteOffset, encoding) !== -1
+}
+
+Buffer.prototype.indexOf = function indexOf (val, byteOffset, encoding) {
+  return bidirectionalIndexOf(this, val, byteOffset, encoding, true)
+}
+
+Buffer.prototype.lastIndexOf = function lastIndexOf (val, byteOffset, encoding) {
+  return bidirectionalIndexOf(this, val, byteOffset, encoding, false)
+}
+
+function hexWrite (buf, string, offset, length) {
+  offset = Number(offset) || 0
+  var remaining = buf.length - offset
+  if (!length) {
+    length = remaining
+  } else {
+    length = Number(length)
+    if (length > remaining) {
+      length = remaining
+    }
+  }
+
+  // must be an even number of digits
+  var strLen = string.length
+  if (strLen % 2 !== 0) throw new TypeError('Invalid hex string')
+
+  if (length > strLen / 2) {
+    length = strLen / 2
+  }
+  for (var i = 0; i < length; ++i) {
+    var parsed = parseInt(string.substr(i * 2, 2), 16)
+    if (isNaN(parsed)) return i
+    buf[offset + i] = parsed
+  }
+  return i
+}
+
+function utf8Write (buf, string, offset, length) {
+  return blitBuffer(utf8ToBytes(string, buf.length - offset), buf, offset, length)
+}
+
+function asciiWrite (buf, string, offset, length) {
+  return blitBuffer(asciiToBytes(string), buf, offset, length)
+}
+
+function latin1Write (buf, string, offset, length) {
+  return asciiWrite(buf, string, offset, length)
+}
+
+function base64Write (buf, string, offset, length) {
+  return blitBuffer(base64ToBytes(string), buf, offset, length)
+}
+
+function ucs2Write (buf, string, offset, length) {
+  return blitBuffer(utf16leToBytes(string, buf.length - offset), buf, offset, length)
+}
+
+Buffer.prototype.write = function write (string, offset, length, encoding) {
+  // Buffer#write(string)
+  if (offset === undefined) {
+    encoding = 'utf8'
+    length = this.length
+    offset = 0
+  // Buffer#write(string, encoding)
+  } else if (length === undefined && typeof offset === 'string') {
+    encoding = offset
+    length = this.length
+    offset = 0
+  // Buffer#write(string, offset[, length][, encoding])
+  } else if (isFinite(offset)) {
+    offset = offset | 0
+    if (isFinite(length)) {
+      length = length | 0
+      if (encoding === undefined) encoding = 'utf8'
+    } else {
+      encoding = length
+      length = undefined
+    }
+  // legacy write(string, encoding, offset, length) - remove in v0.13
+  } else {
+    throw new Error(
+      'Buffer.write(string, encoding, offset[, length]) is no longer supported'
+    )
+  }
+
+  var remaining = this.length - offset
+  if (length === undefined || length > remaining) length = remaining
+
+  if ((string.length > 0 && (length < 0 || offset < 0)) || offset > this.length) {
+    throw new RangeError('Attempt to write outside buffer bounds')
+  }
+
+  if (!encoding) encoding = 'utf8'
+
+  var loweredCase = false
+  for (;;) {
+    switch (encoding) {
+      case 'hex':
+        return hexWrite(this, string, offset, length)
+
+      case 'utf8':
+      case 'utf-8':
+        return utf8Write(this, string, offset, length)
+
+      case 'ascii':
+        return asciiWrite(this, string, offset, length)
+
+      case 'latin1':
+      case 'binary':
+        return latin1Write(this, string, offset, length)
+
+      case 'base64':
+        // Warning: maxLength not taken into account in base64Write
+        return base64Write(this, string, offset, length)
+
+      case 'ucs2':
+      case 'ucs-2':
+      case 'utf16le':
+      case 'utf-16le':
+        return ucs2Write(this, string, offset, length)
+
+      default:
+        if (loweredCase) throw new TypeError('Unknown encoding: ' + encoding)
+        encoding = ('' + encoding).toLowerCase()
+        loweredCase = true
+    }
+  }
+}
+
+Buffer.prototype.toJSON = function toJSON () {
+  return {
+    type: 'Buffer',
+    data: Array.prototype.slice.call(this._arr || this, 0)
+  }
+}
+
+function base64Slice (buf, start, end) {
+  if (start === 0 && end === buf.length) {
+    return base64.fromByteArray(buf)
+  } else {
+    return base64.fromByteArray(buf.slice(start, end))
+  }
+}
+
+function utf8Slice (buf, start, end) {
+  end = Math.min(buf.length, end)
+  var res = []
+
+  var i = start
+  while (i < end) {
+    var firstByte = buf[i]
+    var codePoint = null
+    var bytesPerSequence = (firstByte > 0xEF) ? 4
+      : (firstByte > 0xDF) ? 3
+      : (firstByte > 0xBF) ? 2
+      : 1
+
+    if (i + bytesPerSequence <= end) {
+      var secondByte, thirdByte, fourthByte, tempCodePoint
+
+      switch (bytesPerSequence) {
+        case 1:
+          if (firstByte < 0x80) {
+            codePoint = firstByte
+          }
+          break
+        case 2:
+          secondByte = buf[i + 1]
+          if ((secondByte & 0xC0) === 0x80) {
+            tempCodePoint = (firstByte & 0x1F) << 0x6 | (secondByte & 0x3F)
+            if (tempCodePoint > 0x7F) {
+              codePoint = tempCodePoint
+            }
+          }
+          break
+        case 3:
+          secondByte = buf[i + 1]
+          thirdByte = buf[i + 2]
+          if ((secondByte & 0xC0) === 0x80 && (thirdByte & 0xC0) === 0x80) {
+            tempCodePoint = (firstByte & 0xF) << 0xC | (secondByte & 0x3F) << 0x6 | (thirdByte & 0x3F)
+            if (tempCodePoint > 0x7FF && (tempCodePoint < 0xD800 || tempCodePoint > 0xDFFF)) {
+              codePoint = tempCodePoint
+            }
+          }
+          break
+        case 4:
+          secondByte = buf[i + 1]
+          thirdByte = buf[i + 2]
+          fourthByte = buf[i + 3]
+          if ((secondByte & 0xC0) === 0x80 && (thirdByte & 0xC0) === 0x80 && (fourthByte & 0xC0) === 0x80) {
+            tempCodePoint = (firstByte & 0xF) << 0x12 | (secondByte & 0x3F) << 0xC | (thirdByte & 0x3F) << 0x6 | (fourthByte & 0x3F)
+            if (tempCodePoint > 0xFFFF && tempCodePoint < 0x110000) {
+              codePoint = tempCodePoint
+            }
+          }
+      }
+    }
+
+    if (codePoint === null) {
+      // we did not generate a valid codePoint so insert a
+      // replacement char (U+FFFD) and advance only 1 byte
+      codePoint = 0xFFFD
+      bytesPerSequence = 1
+    } else if (codePoint > 0xFFFF) {
+      // encode to utf16 (surrogate pair dance)
+      codePoint -= 0x10000
+      res.push(codePoint >>> 10 & 0x3FF | 0xD800)
+      codePoint = 0xDC00 | codePoint & 0x3FF
+    }
+
+    res.push(codePoint)
+    i += bytesPerSequence
+  }
+
+  return decodeCodePointsArray(res)
+}
+
+// Based on http://stackoverflow.com/a/22747272/680742, the browser with
+// the lowest limit is Chrome, with 0x10000 args.
+// We go 1 magnitude less, for safety
+var MAX_ARGUMENTS_LENGTH = 0x1000
+
+function decodeCodePointsArray (codePoints) {
+  var len = codePoints.length
+  if (len <= MAX_ARGUMENTS_LENGTH) {
+    return String.fromCharCode.apply(String, codePoints) // avoid extra slice()
+  }
+
+  // Decode in chunks to avoid "call stack size exceeded".
+  var res = ''
+  var i = 0
+  while (i < len) {
+    res += String.fromCharCode.apply(
+      String,
+      codePoints.slice(i, i += MAX_ARGUMENTS_LENGTH)
+    )
+  }
+  return res
+}
+
+function asciiSlice (buf, start, end) {
+  var ret = ''
+  end = Math.min(buf.length, end)
+
+  for (var i = start; i < end; ++i) {
+    ret += String.fromCharCode(buf[i] & 0x7F)
+  }
+  return ret
+}
+
+function latin1Slice (buf, start, end) {
+  var ret = ''
+  end = Math.min(buf.length, end)
+
+  for (var i = start; i < end; ++i) {
+    ret += String.fromCharCode(buf[i])
+  }
+  return ret
+}
+
+function hexSlice (buf, start, end) {
+  var len = buf.length
+
+  if (!start || start < 0) start = 0
+  if (!end || end < 0 || end > len) end = len
+
+  var out = ''
+  for (var i = start; i < end; ++i) {
+    out += toHex(buf[i])
+  }
+  return out
+}
+
+function utf16leSlice (buf, start, end) {
+  var bytes = buf.slice(start, end)
+  var res = ''
+  for (var i = 0; i < bytes.length; i += 2) {
+    res += String.fromCharCode(bytes[i] + bytes[i + 1] * 256)
+  }
+  return res
+}
+
+Buffer.prototype.slice = function slice (start, end) {
+  var len = this.length
+  start = ~~start
+  end = end === undefined ? len : ~~end
+
+  if (start < 0) {
+    start += len
+    if (start < 0) start = 0
+  } else if (start > len) {
+    start = len
+  }
+
+  if (end < 0) {
+    end += len
+    if (end < 0) end = 0
+  } else if (end > len) {
+    end = len
+  }
+
+  if (end < start) end = start
+
+  var newBuf
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    newBuf = this.subarray(start, end)
+    newBuf.__proto__ = Buffer.prototype
+  } else {
+    var sliceLen = end - start
+    newBuf = new Buffer(sliceLen, undefined)
+    for (var i = 0; i < sliceLen; ++i) {
+      newBuf[i] = this[i + start]
+    }
+  }
+
+  return newBuf
+}
+
+/*
+ * Need to make sure that buffer isn't trying to write out of bounds.
+ */
+function checkOffset (offset, ext, length) {
+  if ((offset % 1) !== 0 || offset < 0) throw new RangeError('offset is not uint')
+  if (offset + ext > length) throw new RangeError('Trying to access beyond buffer length')
+}
+
+Buffer.prototype.readUIntLE = function readUIntLE (offset, byteLength, noAssert) {
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) checkOffset(offset, byteLength, this.length)
+
+  var val = this[offset]
+  var mul = 1
+  var i = 0
+  while (++i < byteLength && (mul *= 0x100)) {
+    val += this[offset + i] * mul
+  }
+
+  return val
+}
+
+Buffer.prototype.readUIntBE = function readUIntBE (offset, byteLength, noAssert) {
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) {
+    checkOffset(offset, byteLength, this.length)
+  }
+
+  var val = this[offset + --byteLength]
+  var mul = 1
+  while (byteLength > 0 && (mul *= 0x100)) {
+    val += this[offset + --byteLength] * mul
+  }
+
+  return val
+}
+
+Buffer.prototype.readUInt8 = function readUInt8 (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 1, this.length)
+  return this[offset]
+}
+
+Buffer.prototype.readUInt16LE = function readUInt16LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length)
+  return this[offset] | (this[offset + 1] << 8)
+}
+
+Buffer.prototype.readUInt16BE = function readUInt16BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length)
+  return (this[offset] << 8) | this[offset + 1]
+}
+
+Buffer.prototype.readUInt32LE = function readUInt32LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+
+  return ((this[offset]) |
+      (this[offset + 1] << 8) |
+      (this[offset + 2] << 16)) +
+      (this[offset + 3] * 0x1000000)
+}
+
+Buffer.prototype.readUInt32BE = function readUInt32BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+
+  return (this[offset] * 0x1000000) +
+    ((this[offset + 1] << 16) |
+    (this[offset + 2] << 8) |
+    this[offset + 3])
+}
+
+Buffer.prototype.readIntLE = function readIntLE (offset, byteLength, noAssert) {
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) checkOffset(offset, byteLength, this.length)
+
+  var val = this[offset]
+  var mul = 1
+  var i = 0
+  while (++i < byteLength && (mul *= 0x100)) {
+    val += this[offset + i] * mul
+  }
+  mul *= 0x80
+
+  if (val >= mul) val -= Math.pow(2, 8 * byteLength)
+
+  return val
+}
+
+Buffer.prototype.readIntBE = function readIntBE (offset, byteLength, noAssert) {
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) checkOffset(offset, byteLength, this.length)
+
+  var i = byteLength
+  var mul = 1
+  var val = this[offset + --i]
+  while (i > 0 && (mul *= 0x100)) {
+    val += this[offset + --i] * mul
+  }
+  mul *= 0x80
+
+  if (val >= mul) val -= Math.pow(2, 8 * byteLength)
+
+  return val
+}
+
+Buffer.prototype.readInt8 = function readInt8 (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 1, this.length)
+  if (!(this[offset] & 0x80)) return (this[offset])
+  return ((0xff - this[offset] + 1) * -1)
+}
+
+Buffer.prototype.readInt16LE = function readInt16LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length)
+  var val = this[offset] | (this[offset + 1] << 8)
+  return (val & 0x8000) ? val | 0xFFFF0000 : val
+}
+
+Buffer.prototype.readInt16BE = function readInt16BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length)
+  var val = this[offset + 1] | (this[offset] << 8)
+  return (val & 0x8000) ? val | 0xFFFF0000 : val
+}
+
+Buffer.prototype.readInt32LE = function readInt32LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+
+  return (this[offset]) |
+    (this[offset + 1] << 8) |
+    (this[offset + 2] << 16) |
+    (this[offset + 3] << 24)
+}
+
+Buffer.prototype.readInt32BE = function readInt32BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+
+  return (this[offset] << 24) |
+    (this[offset + 1] << 16) |
+    (this[offset + 2] << 8) |
+    (this[offset + 3])
+}
+
+Buffer.prototype.readFloatLE = function readFloatLE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+  return ieee754.read(this, offset, true, 23, 4)
+}
+
+Buffer.prototype.readFloatBE = function readFloatBE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+  return ieee754.read(this, offset, false, 23, 4)
+}
+
+Buffer.prototype.readDoubleLE = function readDoubleLE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 8, this.length)
+  return ieee754.read(this, offset, true, 52, 8)
+}
+
+Buffer.prototype.readDoubleBE = function readDoubleBE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 8, this.length)
+  return ieee754.read(this, offset, false, 52, 8)
+}
+
+function checkInt (buf, value, offset, ext, max, min) {
+  if (!Buffer.isBuffer(buf)) throw new TypeError('"buffer" argument must be a Buffer instance')
+  if (value > max || value < min) throw new RangeError('"value" argument is out of bounds')
+  if (offset + ext > buf.length) throw new RangeError('Index out of range')
+}
+
+Buffer.prototype.writeUIntLE = function writeUIntLE (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) {
+    var maxBytes = Math.pow(2, 8 * byteLength) - 1
+    checkInt(this, value, offset, byteLength, maxBytes, 0)
+  }
+
+  var mul = 1
+  var i = 0
+  this[offset] = value & 0xFF
+  while (++i < byteLength && (mul *= 0x100)) {
+    this[offset + i] = (value / mul) & 0xFF
+  }
+
+  return offset + byteLength
+}
+
+Buffer.prototype.writeUIntBE = function writeUIntBE (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) {
+    var maxBytes = Math.pow(2, 8 * byteLength) - 1
+    checkInt(this, value, offset, byteLength, maxBytes, 0)
+  }
+
+  var i = byteLength - 1
+  var mul = 1
+  this[offset + i] = value & 0xFF
+  while (--i >= 0 && (mul *= 0x100)) {
+    this[offset + i] = (value / mul) & 0xFF
+  }
+
+  return offset + byteLength
+}
+
+Buffer.prototype.writeUInt8 = function writeUInt8 (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 1, 0xff, 0)
+  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
+  this[offset] = (value & 0xff)
+  return offset + 1
+}
+
+function objectWriteUInt16 (buf, value, offset, littleEndian) {
+  if (value < 0) value = 0xffff + value + 1
+  for (var i = 0, j = Math.min(buf.length - offset, 2); i < j; ++i) {
+    buf[offset + i] = (value & (0xff << (8 * (littleEndian ? i : 1 - i)))) >>>
+      (littleEndian ? i : 1 - i) * 8
+  }
+}
+
+Buffer.prototype.writeUInt16LE = function writeUInt16LE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value & 0xff)
+    this[offset + 1] = (value >>> 8)
+  } else {
+    objectWriteUInt16(this, value, offset, true)
+  }
+  return offset + 2
+}
+
+Buffer.prototype.writeUInt16BE = function writeUInt16BE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 8)
+    this[offset + 1] = (value & 0xff)
+  } else {
+    objectWriteUInt16(this, value, offset, false)
+  }
+  return offset + 2
+}
+
+function objectWriteUInt32 (buf, value, offset, littleEndian) {
+  if (value < 0) value = 0xffffffff + value + 1
+  for (var i = 0, j = Math.min(buf.length - offset, 4); i < j; ++i) {
+    buf[offset + i] = (value >>> (littleEndian ? i : 3 - i) * 8) & 0xff
+  }
+}
+
+Buffer.prototype.writeUInt32LE = function writeUInt32LE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset + 3] = (value >>> 24)
+    this[offset + 2] = (value >>> 16)
+    this[offset + 1] = (value >>> 8)
+    this[offset] = (value & 0xff)
+  } else {
+    objectWriteUInt32(this, value, offset, true)
+  }
+  return offset + 4
+}
+
+Buffer.prototype.writeUInt32BE = function writeUInt32BE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 24)
+    this[offset + 1] = (value >>> 16)
+    this[offset + 2] = (value >>> 8)
+    this[offset + 3] = (value & 0xff)
+  } else {
+    objectWriteUInt32(this, value, offset, false)
+  }
+  return offset + 4
+}
+
+Buffer.prototype.writeIntLE = function writeIntLE (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) {
+    var limit = Math.pow(2, 8 * byteLength - 1)
+
+    checkInt(this, value, offset, byteLength, limit - 1, -limit)
+  }
+
+  var i = 0
+  var mul = 1
+  var sub = 0
+  this[offset] = value & 0xFF
+  while (++i < byteLength && (mul *= 0x100)) {
+    if (value < 0 && sub === 0 && this[offset + i - 1] !== 0) {
+      sub = 1
+    }
+    this[offset + i] = ((value / mul) >> 0) - sub & 0xFF
+  }
+
+  return offset + byteLength
+}
+
+Buffer.prototype.writeIntBE = function writeIntBE (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) {
+    var limit = Math.pow(2, 8 * byteLength - 1)
+
+    checkInt(this, value, offset, byteLength, limit - 1, -limit)
+  }
+
+  var i = byteLength - 1
+  var mul = 1
+  var sub = 0
+  this[offset + i] = value & 0xFF
+  while (--i >= 0 && (mul *= 0x100)) {
+    if (value < 0 && sub === 0 && this[offset + i + 1] !== 0) {
+      sub = 1
+    }
+    this[offset + i] = ((value / mul) >> 0) - sub & 0xFF
+  }
+
+  return offset + byteLength
+}
+
+Buffer.prototype.writeInt8 = function writeInt8 (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 1, 0x7f, -0x80)
+  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
+  if (value < 0) value = 0xff + value + 1
+  this[offset] = (value & 0xff)
+  return offset + 1
+}
+
+Buffer.prototype.writeInt16LE = function writeInt16LE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value & 0xff)
+    this[offset + 1] = (value >>> 8)
+  } else {
+    objectWriteUInt16(this, value, offset, true)
+  }
+  return offset + 2
+}
+
+Buffer.prototype.writeInt16BE = function writeInt16BE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 8)
+    this[offset + 1] = (value & 0xff)
+  } else {
+    objectWriteUInt16(this, value, offset, false)
+  }
+  return offset + 2
+}
+
+Buffer.prototype.writeInt32LE = function writeInt32LE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value & 0xff)
+    this[offset + 1] = (value >>> 8)
+    this[offset + 2] = (value >>> 16)
+    this[offset + 3] = (value >>> 24)
+  } else {
+    objectWriteUInt32(this, value, offset, true)
+  }
+  return offset + 4
+}
+
+Buffer.prototype.writeInt32BE = function writeInt32BE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
+  if (value < 0) value = 0xffffffff + value + 1
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 24)
+    this[offset + 1] = (value >>> 16)
+    this[offset + 2] = (value >>> 8)
+    this[offset + 3] = (value & 0xff)
+  } else {
+    objectWriteUInt32(this, value, offset, false)
+  }
+  return offset + 4
+}
+
+function checkIEEE754 (buf, value, offset, ext, max, min) {
+  if (offset + ext > buf.length) throw new RangeError('Index out of range')
+  if (offset < 0) throw new RangeError('Index out of range')
+}
+
+function writeFloat (buf, value, offset, littleEndian, noAssert) {
+  if (!noAssert) {
+    checkIEEE754(buf, value, offset, 4, 3.4028234663852886e+38, -3.4028234663852886e+38)
+  }
+  ieee754.write(buf, value, offset, littleEndian, 23, 4)
+  return offset + 4
+}
+
+Buffer.prototype.writeFloatLE = function writeFloatLE (value, offset, noAssert) {
+  return writeFloat(this, value, offset, true, noAssert)
+}
+
+Buffer.prototype.writeFloatBE = function writeFloatBE (value, offset, noAssert) {
+  return writeFloat(this, value, offset, false, noAssert)
+}
+
+function writeDouble (buf, value, offset, littleEndian, noAssert) {
+  if (!noAssert) {
+    checkIEEE754(buf, value, offset, 8, 1.7976931348623157E+308, -1.7976931348623157E+308)
+  }
+  ieee754.write(buf, value, offset, littleEndian, 52, 8)
+  return offset + 8
+}
+
+Buffer.prototype.writeDoubleLE = function writeDoubleLE (value, offset, noAssert) {
+  return writeDouble(this, value, offset, true, noAssert)
+}
+
+Buffer.prototype.writeDoubleBE = function writeDoubleBE (value, offset, noAssert) {
+  return writeDouble(this, value, offset, false, noAssert)
+}
+
+// copy(targetBuffer, targetStart=0, sourceStart=0, sourceEnd=buffer.length)
+Buffer.prototype.copy = function copy (target, targetStart, start, end) {
+  if (!start) start = 0
+  if (!end && end !== 0) end = this.length
+  if (targetStart >= target.length) targetStart = target.length
+  if (!targetStart) targetStart = 0
+  if (end > 0 && end < start) end = start
+
+  // Copy 0 bytes; we're done
+  if (end === start) return 0
+  if (target.length === 0 || this.length === 0) return 0
+
+  // Fatal error conditions
+  if (targetStart < 0) {
+    throw new RangeError('targetStart out of bounds')
+  }
+  if (start < 0 || start >= this.length) throw new RangeError('sourceStart out of bounds')
+  if (end < 0) throw new RangeError('sourceEnd out of bounds')
+
+  // Are we oob?
+  if (end > this.length) end = this.length
+  if (target.length - targetStart < end - start) {
+    end = target.length - targetStart + start
+  }
+
+  var len = end - start
+  var i
+
+  if (this === target && start < targetStart && targetStart < end) {
+    // descending copy from end
+    for (i = len - 1; i >= 0; --i) {
+      target[i + targetStart] = this[i + start]
+    }
+  } else if (len < 1000 || !Buffer.TYPED_ARRAY_SUPPORT) {
+    // ascending copy from start
+    for (i = 0; i < len; ++i) {
+      target[i + targetStart] = this[i + start]
+    }
+  } else {
+    Uint8Array.prototype.set.call(
+      target,
+      this.subarray(start, start + len),
+      targetStart
+    )
+  }
+
+  return len
+}
+
+// Usage:
+//    buffer.fill(number[, offset[, end]])
+//    buffer.fill(buffer[, offset[, end]])
+//    buffer.fill(string[, offset[, end]][, encoding])
+Buffer.prototype.fill = function fill (val, start, end, encoding) {
+  // Handle string cases:
+  if (typeof val === 'string') {
+    if (typeof start === 'string') {
+      encoding = start
+      start = 0
+      end = this.length
+    } else if (typeof end === 'string') {
+      encoding = end
+      end = this.length
+    }
+    if (val.length === 1) {
+      var code = val.charCodeAt(0)
+      if (code < 256) {
+        val = code
+      }
+    }
+    if (encoding !== undefined && typeof encoding !== 'string') {
+      throw new TypeError('encoding must be a string')
+    }
+    if (typeof encoding === 'string' && !Buffer.isEncoding(encoding)) {
+      throw new TypeError('Unknown encoding: ' + encoding)
+    }
+  } else if (typeof val === 'number') {
+    val = val & 255
+  }
+
+  // Invalid ranges are not set to a default, so can range check early.
+  if (start < 0 || this.length < start || this.length < end) {
+    throw new RangeError('Out of range index')
+  }
+
+  if (end <= start) {
+    return this
+  }
+
+  start = start >>> 0
+  end = end === undefined ? this.length : end >>> 0
+
+  if (!val) val = 0
+
+  var i
+  if (typeof val === 'number') {
+    for (i = start; i < end; ++i) {
+      this[i] = val
+    }
+  } else {
+    var bytes = Buffer.isBuffer(val)
+      ? val
+      : utf8ToBytes(new Buffer(val, encoding).toString())
+    var len = bytes.length
+    for (i = 0; i < end - start; ++i) {
+      this[i + start] = bytes[i % len]
+    }
+  }
+
+  return this
+}
+
+// HELPER FUNCTIONS
+// ================
+
+var INVALID_BASE64_RE = /[^+\/0-9A-Za-z-_]/g
+
+function base64clean (str) {
+  // Node strips out invalid characters like \n and \t from the string, base64-js does not
+  str = stringtrim(str).replace(INVALID_BASE64_RE, '')
+  // Node converts strings with length < 2 to ''
+  if (str.length < 2) return ''
+  // Node allows for non-padded base64 strings (missing trailing ===), base64-js does not
+  while (str.length % 4 !== 0) {
+    str = str + '='
+  }
+  return str
+}
+
+function stringtrim (str) {
+  if (str.trim) return str.trim()
+  return str.replace(/^\s+|\s+$/g, '')
+}
+
+function toHex (n) {
+  if (n < 16) return '0' + n.toString(16)
+  return n.toString(16)
+}
+
+function utf8ToBytes (string, units) {
+  units = units || Infinity
+  var codePoint
+  var length = string.length
+  var leadSurrogate = null
+  var bytes = []
+
+  for (var i = 0; i < length; ++i) {
+    codePoint = string.charCodeAt(i)
+
+    // is surrogate component
+    if (codePoint > 0xD7FF && codePoint < 0xE000) {
+      // last char was a lead
+      if (!leadSurrogate) {
+        // no lead yet
+        if (codePoint > 0xDBFF) {
+          // unexpected trail
+          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+          continue
+        } else if (i + 1 === length) {
+          // unpaired lead
+          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+          continue
+        }
+
+        // valid lead
+        leadSurrogate = codePoint
+
+        continue
+      }
+
+      // 2 leads in a row
+      if (codePoint < 0xDC00) {
+        if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+        leadSurrogate = codePoint
+        continue
+      }
+
+      // valid surrogate pair
+      codePoint = (leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00) + 0x10000
+    } else if (leadSurrogate) {
+      // valid bmp char, but last char was a lead
+      if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+    }
+
+    leadSurrogate = null
+
+    // encode utf8
+    if (codePoint < 0x80) {
+      if ((units -= 1) < 0) break
+      bytes.push(codePoint)
+    } else if (codePoint < 0x800) {
+      if ((units -= 2) < 0) break
+      bytes.push(
+        codePoint >> 0x6 | 0xC0,
+        codePoint & 0x3F | 0x80
+      )
+    } else if (codePoint < 0x10000) {
+      if ((units -= 3) < 0) break
+      bytes.push(
+        codePoint >> 0xC | 0xE0,
+        codePoint >> 0x6 & 0x3F | 0x80,
+        codePoint & 0x3F | 0x80
+      )
+    } else if (codePoint < 0x110000) {
+      if ((units -= 4) < 0) break
+      bytes.push(
+        codePoint >> 0x12 | 0xF0,
+        codePoint >> 0xC & 0x3F | 0x80,
+        codePoint >> 0x6 & 0x3F | 0x80,
+        codePoint & 0x3F | 0x80
+      )
+    } else {
+      throw new Error('Invalid code point')
+    }
+  }
+
+  return bytes
+}
+
+function asciiToBytes (str) {
+  var byteArray = []
+  for (var i = 0; i < str.length; ++i) {
+    // Node's code seems to be doing this and not & 0x7F..
+    byteArray.push(str.charCodeAt(i) & 0xFF)
+  }
+  return byteArray
+}
+
+function utf16leToBytes (str, units) {
+  var c, hi, lo
+  var byteArray = []
+  for (var i = 0; i < str.length; ++i) {
+    if ((units -= 2) < 0) break
+
+    c = str.charCodeAt(i)
+    hi = c >> 8
+    lo = c % 256
+    byteArray.push(lo)
+    byteArray.push(hi)
+  }
+
+  return byteArray
+}
+
+function base64ToBytes (str) {
+  return base64.toByteArray(base64clean(str))
+}
+
+function blitBuffer (src, dst, offset, length) {
+  for (var i = 0; i < length; ++i) {
+    if ((i + offset >= dst.length) || (i >= src.length)) break
+    dst[i + offset] = src[i]
+  }
+  return i
+}
+
+function isnan (val) {
+  return val !== val // eslint-disable-line no-self-compare
+}
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../webpack/buildin/global.js */ 2)))
+
+/***/ }),
+/* 67 */
+/*!*****************************************!*\
+  !*** ./node_modules/base64-js/index.js ***!
+  \*****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+exports.byteLength = byteLength
+exports.toByteArray = toByteArray
+exports.fromByteArray = fromByteArray
+
+var lookup = []
+var revLookup = []
+var Arr = typeof Uint8Array !== 'undefined' ? Uint8Array : Array
+
+var code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+for (var i = 0, len = code.length; i < len; ++i) {
+  lookup[i] = code[i]
+  revLookup[code.charCodeAt(i)] = i
+}
+
+// Support decoding URL-safe base64 strings, as Node.js does.
+// See: https://en.wikipedia.org/wiki/Base64#URL_applications
+revLookup['-'.charCodeAt(0)] = 62
+revLookup['_'.charCodeAt(0)] = 63
+
+function getLens (b64) {
+  var len = b64.length
+
+  if (len % 4 > 0) {
+    throw new Error('Invalid string. Length must be a multiple of 4')
+  }
+
+  // Trim off extra bytes after placeholder bytes are found
+  // See: https://github.com/beatgammit/base64-js/issues/42
+  var validLen = b64.indexOf('=')
+  if (validLen === -1) validLen = len
+
+  var placeHoldersLen = validLen === len
+    ? 0
+    : 4 - (validLen % 4)
+
+  return [validLen, placeHoldersLen]
+}
+
+// base64 is 4/3 + up to two characters of the original data
+function byteLength (b64) {
+  var lens = getLens(b64)
+  var validLen = lens[0]
+  var placeHoldersLen = lens[1]
+  return ((validLen + placeHoldersLen) * 3 / 4) - placeHoldersLen
+}
+
+function _byteLength (b64, validLen, placeHoldersLen) {
+  return ((validLen + placeHoldersLen) * 3 / 4) - placeHoldersLen
+}
+
+function toByteArray (b64) {
+  var tmp
+  var lens = getLens(b64)
+  var validLen = lens[0]
+  var placeHoldersLen = lens[1]
+
+  var arr = new Arr(_byteLength(b64, validLen, placeHoldersLen))
+
+  var curByte = 0
+
+  // if there are placeholders, only get up to the last complete 4 chars
+  var len = placeHoldersLen > 0
+    ? validLen - 4
+    : validLen
+
+  var i
+  for (i = 0; i < len; i += 4) {
+    tmp =
+      (revLookup[b64.charCodeAt(i)] << 18) |
+      (revLookup[b64.charCodeAt(i + 1)] << 12) |
+      (revLookup[b64.charCodeAt(i + 2)] << 6) |
+      revLookup[b64.charCodeAt(i + 3)]
+    arr[curByte++] = (tmp >> 16) & 0xFF
+    arr[curByte++] = (tmp >> 8) & 0xFF
+    arr[curByte++] = tmp & 0xFF
+  }
+
+  if (placeHoldersLen === 2) {
+    tmp =
+      (revLookup[b64.charCodeAt(i)] << 2) |
+      (revLookup[b64.charCodeAt(i + 1)] >> 4)
+    arr[curByte++] = tmp & 0xFF
+  }
+
+  if (placeHoldersLen === 1) {
+    tmp =
+      (revLookup[b64.charCodeAt(i)] << 10) |
+      (revLookup[b64.charCodeAt(i + 1)] << 4) |
+      (revLookup[b64.charCodeAt(i + 2)] >> 2)
+    arr[curByte++] = (tmp >> 8) & 0xFF
+    arr[curByte++] = tmp & 0xFF
+  }
+
+  return arr
+}
+
+function tripletToBase64 (num) {
+  return lookup[num >> 18 & 0x3F] +
+    lookup[num >> 12 & 0x3F] +
+    lookup[num >> 6 & 0x3F] +
+    lookup[num & 0x3F]
+}
+
+function encodeChunk (uint8, start, end) {
+  var tmp
+  var output = []
+  for (var i = start; i < end; i += 3) {
+    tmp =
+      ((uint8[i] << 16) & 0xFF0000) +
+      ((uint8[i + 1] << 8) & 0xFF00) +
+      (uint8[i + 2] & 0xFF)
+    output.push(tripletToBase64(tmp))
+  }
+  return output.join('')
+}
+
+function fromByteArray (uint8) {
+  var tmp
+  var len = uint8.length
+  var extraBytes = len % 3 // if we have 1 byte left, pad 2 bytes
+  var parts = []
+  var maxChunkLength = 16383 // must be multiple of 3
+
+  // go through the array every three bytes, we'll deal with trailing stuff later
+  for (var i = 0, len2 = len - extraBytes; i < len2; i += maxChunkLength) {
+    parts.push(encodeChunk(
+      uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)
+    ))
+  }
+
+  // pad the end with zeros, but make sure to not forget the extra bytes
+  if (extraBytes === 1) {
+    tmp = uint8[len - 1]
+    parts.push(
+      lookup[tmp >> 2] +
+      lookup[(tmp << 4) & 0x3F] +
+      '=='
+    )
+  } else if (extraBytes === 2) {
+    tmp = (uint8[len - 2] << 8) + uint8[len - 1]
+    parts.push(
+      lookup[tmp >> 10] +
+      lookup[(tmp >> 4) & 0x3F] +
+      lookup[(tmp << 2) & 0x3F] +
+      '='
+    )
+  }
+
+  return parts.join('')
+}
+
+
+/***/ }),
+/* 68 */
+/*!***************************************!*\
+  !*** ./node_modules/ieee754/index.js ***!
+  \***************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+exports.read = function (buffer, offset, isLE, mLen, nBytes) {
+  var e, m
+  var eLen = (nBytes * 8) - mLen - 1
+  var eMax = (1 << eLen) - 1
+  var eBias = eMax >> 1
+  var nBits = -7
+  var i = isLE ? (nBytes - 1) : 0
+  var d = isLE ? -1 : 1
+  var s = buffer[offset + i]
+
+  i += d
+
+  e = s & ((1 << (-nBits)) - 1)
+  s >>= (-nBits)
+  nBits += eLen
+  for (; nBits > 0; e = (e * 256) + buffer[offset + i], i += d, nBits -= 8) {}
+
+  m = e & ((1 << (-nBits)) - 1)
+  e >>= (-nBits)
+  nBits += mLen
+  for (; nBits > 0; m = (m * 256) + buffer[offset + i], i += d, nBits -= 8) {}
+
+  if (e === 0) {
+    e = 1 - eBias
+  } else if (e === eMax) {
+    return m ? NaN : ((s ? -1 : 1) * Infinity)
+  } else {
+    m = m + Math.pow(2, mLen)
+    e = e - eBias
+  }
+  return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
+}
+
+exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
+  var e, m, c
+  var eLen = (nBytes * 8) - mLen - 1
+  var eMax = (1 << eLen) - 1
+  var eBias = eMax >> 1
+  var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
+  var i = isLE ? 0 : (nBytes - 1)
+  var d = isLE ? 1 : -1
+  var s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
+
+  value = Math.abs(value)
+
+  if (isNaN(value) || value === Infinity) {
+    m = isNaN(value) ? 1 : 0
+    e = eMax
+  } else {
+    e = Math.floor(Math.log(value) / Math.LN2)
+    if (value * (c = Math.pow(2, -e)) < 1) {
+      e--
+      c *= 2
+    }
+    if (e + eBias >= 1) {
+      value += rt / c
+    } else {
+      value += rt * Math.pow(2, 1 - eBias)
+    }
+    if (value * c >= 2) {
+      e++
+      c /= 2
+    }
+
+    if (e + eBias >= eMax) {
+      m = 0
+      e = eMax
+    } else if (e + eBias >= 1) {
+      m = ((value * c) - 1) * Math.pow(2, mLen)
+      e = e + eBias
+    } else {
+      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
+      e = 0
+    }
+  }
+
+  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {}
+
+  e = (e << mLen) | m
+  eLen += mLen
+  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
+
+  buffer[offset + i - d] |= s * 128
+}
+
+
+/***/ }),
+/* 69 */
+/*!***************************************!*\
+  !*** ./node_modules/isarray/index.js ***!
+  \***************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+var toString = {}.toString;
+
+module.exports = Array.isArray || function (arr) {
+  return toString.call(arr) == '[object Array]';
+};
+
+
+/***/ }),
+/* 70 */
+/*!*****************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/util/route.js ***!
+  \*****************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _regenerator = _interopRequireDefault(__webpack_require__(/*! ./node_modules/@babel/runtime/regenerator */ 71));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);return Constructor;} /**
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 * 路由跳转方法，该方法相对于直接使用uni.xxx的好处是使用更加简单快捷
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 * 并且带有路由拦截功能
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 */var
+
+Router = /*#__PURE__*/function () {
+  function Router() {_classCallCheck(this, Router);
+    // 原始属性定义
+    this.config = {
+      type: 'navigateTo',
+      url: '',
+      delta: 1, // navigateBack页面后退时,回退的层数
+      params: {}, // 传递的参数
+      animationType: 'pop-in', // 窗口动画,只在APP有效
+      animationDuration: 300, // 窗口动画持续时间,单位毫秒,只在APP有效
+      intercept: false // 是否需要拦截
+    };
+    // 因为route方法是需要对外赋值给另外的对象使用，同时route内部有使用this，会导致route失去上下文
+    // 这里在构造函数中进行this绑定
+    this.route = this.route.bind(this);
+  }
+
+  // 判断url前面是否有"/"，如果没有则加上，否则无法跳转
+  _createClass(Router, [{ key: "addRootPath", value: function addRootPath(url) {
+      return url[0] === '/' ? url : "/".concat(url);
+    }
+
+    // 整合路由参数
+  }, { key: "mixinParam", value: function mixinParam(url, params) {
+      url = url && this.addRootPath(url);
+
+      // 使用正则匹配，主要依据是判断是否有"/","?","="等，如“/page/index/index?name=mary"
+      // 如果有url中有get参数，转换后无需带上"?"
+      var query = '';
+      if (/.*\/.*\?.*=.*/.test(url)) {
+        // object对象转为get类型的参数
+        query = uni.$u.queryParams(params, false);
+        // 因为已有get参数,所以后面拼接的参数需要带上"&"隔开
+        return url += "&".concat(query);
+      }
+      // 直接拼接参数，因为此处url中没有后面的query参数，也就没有"?/&"之类的符号
+      query = uni.$u.queryParams(params);
+      return url += query;
+    }
+
+    // 对外的方法名称
+  }, { key: "route", value: function () {var _route = _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee() {var options,params,mergeConfig,isNext,_args = arguments;return _regenerator.default.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:options = _args.length > 0 && _args[0] !== undefined ? _args[0] : {};params = _args.length > 1 && _args[1] !== undefined ? _args[1] : {};
+                // 合并用户的配置和内部的默认配置
+                mergeConfig = {};
+
+                if (typeof options === 'string') {
+                  // 如果options为字符串，则为route(url, params)的形式
+                  mergeConfig.url = this.mixinParam(options, params);
+                  mergeConfig.type = 'navigateTo';
+                } else {
+                  mergeConfig = uni.$u.deepClone(options, this.config);
+                  // 否则正常使用mergeConfig中的url和params进行拼接
+                  mergeConfig.url = this.mixinParam(options.url, options.params);
+                }
+
+                // 如果本次跳转的路径和本页面路径一致，不执行跳转，防止用户快速点击跳转按钮，造成多次跳转同一个页面的问题
+                if (!(mergeConfig.url === uni.$u.page())) {_context.next = 6;break;}return _context.abrupt("return");case 6:
+
+                if (params.intercept) {
+                  this.config.intercept = params.intercept;
+                }
+                // params参数也带给拦截器
+                mergeConfig.params = params;
+                // 合并内外部参数
+                mergeConfig = uni.$u.deepMerge(this.config, mergeConfig);
+                // 判断用户是否定义了拦截器
+                if (!(typeof uni.$u.routeIntercept === 'function')) {_context.next = 16;break;}_context.next = 12;return (
+
+                  new Promise(function (resolve, reject) {
+                    uni.$u.routeIntercept(mergeConfig, resolve);
+                  }));case 12:isNext = _context.sent;
+                // 如果isNext为true，则执行路由跳转
+                isNext && this.openPage(mergeConfig);_context.next = 17;break;case 16:
+
+                this.openPage(mergeConfig);case 17:case "end":return _context.stop();}}}, _callee, this);}));function route() {return _route.apply(this, arguments);}return route;}()
+
+
+
+    // 执行路由跳转
+  }, { key: "openPage", value: function openPage(config) {
+      // 解构参数
+      var
+      url =
+
+
+
+
+      config.url,type = config.type,delta = config.delta,animationType = config.animationType,animationDuration = config.animationDuration;
+      if (config.type == 'navigateTo' || config.type == 'to') {
+        uni.navigateTo({
+          url: url,
+          animationType: animationType,
+          animationDuration: animationDuration });
+
+      }
+      if (config.type == 'redirectTo' || config.type == 'redirect') {
+        uni.redirectTo({
+          url: url });
+
+      }
+      if (config.type == 'switchTab' || config.type == 'tab') {
+        uni.switchTab({
+          url: url });
+
+      }
+      if (config.type == 'reLaunch' || config.type == 'launch') {
+        uni.reLaunch({
+          url: url });
+
+      }
+      if (config.type == 'navigateBack' || config.type == 'back') {
+        uni.navigateBack({
+          delta: delta });
+
+      }
+    } }]);return Router;}();var _default =
+
+
+new Router().route;exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 71 */
 /*!**********************************************************!*\
   !*** ./node_modules/@babel/runtime/regenerator/index.js ***!
   \**********************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! regenerator-runtime */ 58);
+module.exports = __webpack_require__(/*! regenerator-runtime */ 72);
 
 /***/ }),
-/* 58 */
+/* 72 */
 /*!************************************************************!*\
   !*** ./node_modules/regenerator-runtime/runtime-module.js ***!
   \************************************************************/
@@ -11621,7 +15217,7 @@ var oldRuntime = hadRuntime && g.regeneratorRuntime;
 // Force reevalutation of runtime.js.
 g.regeneratorRuntime = undefined;
 
-module.exports = __webpack_require__(/*! ./runtime */ 59);
+module.exports = __webpack_require__(/*! ./runtime */ 73);
 
 if (hadRuntime) {
   // Restore the original runtime.
@@ -11637,7 +15233,7 @@ if (hadRuntime) {
 
 
 /***/ }),
-/* 59 */
+/* 73 */
 /*!*****************************************************!*\
   !*** ./node_modules/regenerator-runtime/runtime.js ***!
   \*****************************************************/
@@ -12366,6 +15962,15295 @@ if (hadRuntime) {
   })() || Function("return this")()
 );
 
+
+/***/ }),
+/* 74 */
+/*!*****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/function/colorGradient.js ***!
+  \*****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /**
+                                                                                                      * 求两个颜色之间的渐变值
+                                                                                                      * @param {string} startColor 开始的颜色
+                                                                                                      * @param {string} endColor 结束的颜色
+                                                                                                      * @param {number} step 颜色等分的份额
+                                                                                                      * */
+function colorGradient() {var startColor = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'rgb(0, 0, 0)';var endColor = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'rgb(255, 255, 255)';var step = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 10;
+  var startRGB = hexToRgb(startColor, false); // 转换为rgb数组模式
+  var startR = startRGB[0];
+  var startG = startRGB[1];
+  var startB = startRGB[2];
+
+  var endRGB = hexToRgb(endColor, false);
+  var endR = endRGB[0];
+  var endG = endRGB[1];
+  var endB = endRGB[2];
+
+  var sR = (endR - startR) / step; // 总差值
+  var sG = (endG - startG) / step;
+  var sB = (endB - startB) / step;
+  var colorArr = [];
+  for (var i = 0; i < step; i++) {
+    // 计算每一步的hex值
+    var hex = rgbToHex("rgb(".concat(Math.round(sR * i + startR), ",").concat(Math.round(sG * i + startG), ",").concat(Math.round(sB *
+    i + startB), ")"));
+    // 确保第一个颜色值为startColor的值
+    if (i === 0) hex = rgbToHex(startColor);
+    // 确保最后一个颜色值为endColor的值
+    if (i === step - 1) hex = rgbToHex(endColor);
+    colorArr.push(hex);
+  }
+  return colorArr;
+}
+
+// 将hex表示方式转换为rgb表示方式(这里返回rgb数组模式)
+function hexToRgb(sColor) {var str = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+  var reg = /^#([0-9a-fA-f]{3}|[0-9a-fA-f]{6})$/;
+  sColor = String(sColor).toLowerCase();
+  if (sColor && reg.test(sColor)) {
+    if (sColor.length === 4) {
+      var sColorNew = '#';
+      for (var i = 1; i < 4; i += 1) {
+        sColorNew += sColor.slice(i, i + 1).concat(sColor.slice(i, i + 1));
+      }
+      sColor = sColorNew;
+    }
+    // 处理六位的颜色值
+    var sColorChange = [];
+    for (var _i = 1; _i < 7; _i += 2) {
+      sColorChange.push(parseInt("0x".concat(sColor.slice(_i, _i + 2))));
+    }
+    if (!str) {
+      return sColorChange;
+    }
+    return "rgb(".concat(sColorChange[0], ",").concat(sColorChange[1], ",").concat(sColorChange[2], ")");
+  }if (/^(rgb|RGB)/.test(sColor)) {
+    var arr = sColor.replace(/(?:\(|\)|rgb|RGB)*/g, '').split(',');
+    return arr.map(function (val) {return Number(val);});
+  }
+  return sColor;
+}
+
+// 将rgb表示方式转换为hex表示方式
+function rgbToHex(rgb) {
+  var _this = rgb;
+  var reg = /^#([0-9a-fA-f]{3}|[0-9a-fA-f]{6})$/;
+  if (/^(rgb|RGB)/.test(_this)) {
+    var aColor = _this.replace(/(?:\(|\)|rgb|RGB)*/g, '').split(',');
+    var strHex = '#';
+    for (var i = 0; i < aColor.length; i++) {
+      var hex = Number(aColor[i]).toString(16);
+      hex = String(hex).length == 1 ? "".concat(0, hex) : hex; // 保证每个rgb的值为2位
+      if (hex === '0') {
+        hex += hex;
+      }
+      strHex += hex;
+    }
+    if (strHex.length !== 7) {
+      strHex = _this;
+    }
+    return strHex;
+  }if (reg.test(_this)) {
+    var aNum = _this.replace(/#/, '').split('');
+    if (aNum.length === 6) {
+      return _this;
+    }if (aNum.length === 3) {
+      var numHex = '#';
+      for (var _i2 = 0; _i2 < aNum.length; _i2 += 1) {
+        numHex += aNum[_i2] + aNum[_i2];
+      }
+      return numHex;
+    }
+  } else {
+    return _this;
+  }
+}
+
+/**
+  * JS颜色十六进制转换为rgb或rgba,返回的格式为 rgba（255，255，255，0.5）字符串
+  * sHex为传入的十六进制的色值
+  * alpha为rgba的透明度
+  */
+function colorToRgba(color, alpha) {
+  color = rgbToHex(color);
+  // 十六进制颜色值的正则表达式
+  var reg = /^#([0-9a-fA-f]{3}|[0-9a-fA-f]{6})$/;
+  /* 16进制颜色转为RGB格式 */
+  var sColor = String(color).toLowerCase();
+  if (sColor && reg.test(sColor)) {
+    if (sColor.length === 4) {
+      var sColorNew = '#';
+      for (var i = 1; i < 4; i += 1) {
+        sColorNew += sColor.slice(i, i + 1).concat(sColor.slice(i, i + 1));
+      }
+      sColor = sColorNew;
+    }
+    // 处理六位的颜色值
+    var sColorChange = [];
+    for (var _i3 = 1; _i3 < 7; _i3 += 2) {
+      sColorChange.push(parseInt("0x".concat(sColor.slice(_i3, _i3 + 2))));
+    }
+    // return sColorChange.join(',')
+    return "rgba(".concat(sColorChange.join(','), ",").concat(alpha, ")");
+  }
+
+  return sColor;
+}var _default =
+
+{
+  colorGradient: colorGradient,
+  hexToRgb: hexToRgb,
+  rgbToHex: rgbToHex,
+  colorToRgba: colorToRgba };exports.default = _default;
+
+/***/ }),
+/* 75 */
+/*!********************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/function/test.js ***!
+  \********************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /**
+                                                                                                      * 验证电子邮箱格式
+                                                                                                      */
+function email(value) {
+  return /^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z0-9]+$/.test(value);
+}
+
+/**
+   * 验证手机格式
+   */
+function mobile(value) {
+  return /^1[23456789]\d{9}$/.test(value);
+}
+
+/**
+   * 验证URL格式
+   */
+function url(value) {
+  return /^((https|http|ftp|rtsp|mms):\/\/)(([0-9a-zA-Z_!~*'().&=+$%-]+: )?[0-9a-zA-Z_!~*'().&=+$%-]+@)?(([0-9]{1,3}.){3}[0-9]{1,3}|([0-9a-zA-Z_!~*'()-]+.)*([0-9a-zA-Z][0-9a-zA-Z-]{0,61})?[0-9a-zA-Z].[a-zA-Z]{2,6})(:[0-9]{1,4})?((\/?)|(\/[0-9a-zA-Z_!~*'().;?:@&=+$,%#-]+)+\/?)$/.
+  test(value);
+}
+
+/**
+   * 验证日期格式
+   */
+function date(value) {
+  if (!value) return false;
+  // 判断是否数值或者字符串数值(意味着为时间戳)，转为数值，否则new Date无法识别字符串时间戳
+  if (number(value)) value = +value;
+  return !/Invalid|NaN/.test(new Date(value).toString());
+}
+
+/**
+   * 验证ISO类型的日期格式
+   */
+function dateISO(value) {
+  return /^\d{4}[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/.test(value);
+}
+
+/**
+   * 验证十进制数字
+   */
+function number(value) {
+  return /^[\+-]?(\d+\.?\d*|\.\d+|\d\.\d+e\+\d+)$/.test(value);
+}
+
+/**
+   * 验证字符串
+   */
+function string(value) {
+  return typeof value === 'string';
+}
+
+/**
+   * 验证整数
+   */
+function digits(value) {
+  return /^\d+$/.test(value);
+}
+
+/**
+   * 验证身份证号码
+   */
+function idCard(value) {
+  return /^[1-9]\d{5}[1-9]\d{3}((0\d)|(1[0-2]))(([0|1|2]\d)|3[0-1])\d{3}([0-9]|X)$/.test(
+  value);
+
+}
+
+/**
+   * 是否车牌号
+   */
+function carNo(value) {
+  // 新能源车牌
+  var xreg = /^[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领A-Z]{1}[A-Z]{1}(([0-9]{5}[DF]$)|([DF][A-HJ-NP-Z0-9][0-9]{4}$))/;
+  // 旧车牌
+  var creg = /^[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领A-Z]{1}[A-Z]{1}[A-HJ-NP-Z0-9]{4}[A-HJ-NP-Z0-9挂学警港澳]{1}$/;
+  if (value.length === 7) {
+    return creg.test(value);
+  }if (value.length === 8) {
+    return xreg.test(value);
+  }
+  return false;
+}
+
+/**
+   * 金额,只允许2位小数
+   */
+function amount(value) {
+  // 金额，只允许保留两位小数
+  return /^[1-9]\d*(,\d{3})*(\.\d{1,2})?$|^0\.\d{1,2}$/.test(value);
+}
+
+/**
+   * 中文
+   */
+function chinese(value) {
+  var reg = /^[\u4e00-\u9fa5]+$/gi;
+  return reg.test(value);
+}
+
+/**
+   * 只能输入字母
+   */
+function letter(value) {
+  return /^[a-zA-Z]*$/.test(value);
+}
+
+/**
+   * 只能是字母或者数字
+   */
+function enOrNum(value) {
+  // 英文或者数字
+  var reg = /^[0-9a-zA-Z]*$/g;
+  return reg.test(value);
+}
+
+/**
+   * 验证是否包含某个值
+   */
+function contains(value, param) {
+  return value.indexOf(param) >= 0;
+}
+
+/**
+   * 验证一个值范围[min, max]
+   */
+function range(value, param) {
+  return value >= param[0] && value <= param[1];
+}
+
+/**
+   * 验证一个长度范围[min, max]
+   */
+function rangeLength(value, param) {
+  return value.length >= param[0] && value.length <= param[1];
+}
+
+/**
+   * 是否固定电话
+   */
+function landline(value) {
+  var reg = /^\d{3,4}-\d{7,8}(-\d{3,4})?$/;
+  return reg.test(value);
+}
+
+/**
+   * 判断是否为空
+   */
+function empty(value) {
+  switch (typeof value) {
+    case 'undefined':
+      return true;
+    case 'string':
+      if (value.replace(/(^[ \t\n\r]*)|([ \t\n\r]*$)/g, '').length == 0) return true;
+      break;
+    case 'boolean':
+      if (!value) return true;
+      break;
+    case 'number':
+      if (value === 0 || isNaN(value)) return true;
+      break;
+    case 'object':
+      if (value === null || value.length === 0) return true;
+      for (var i in value) {
+        return false;
+      }
+      return true;}
+
+  return false;
+}
+
+/**
+   * 是否json字符串
+   */
+function jsonString(value) {
+  if (typeof value === 'string') {
+    try {
+      var obj = JSON.parse(value);
+      if (typeof obj === 'object' && obj) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+  return false;
+}
+
+/**
+   * 是否数组
+   */
+function array(value) {
+  if (typeof Array.isArray === 'function') {
+    return Array.isArray(value);
+  }
+  return Object.prototype.toString.call(value) === '[object Array]';
+}
+
+/**
+   * 是否对象
+   */
+function object(value) {
+  return Object.prototype.toString.call(value) === '[object Object]';
+}
+
+/**
+   * 是否短信验证码
+   */
+function code(value) {var len = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 6;
+  return new RegExp("^\\d{".concat(len, "}$")).test(value);
+}
+
+/**
+   * 是否函数方法
+   * @param {Object} value
+   */
+function func(value) {
+  return typeof value === 'function';
+}
+
+/**
+   * 是否promise对象
+   * @param {Object} value
+   */
+function promise(value) {
+  return object(value) && func(value.then) && func(value.catch);
+}
+
+/** 是否图片格式
+   * @param {Object} value
+   */
+function image(value) {
+  var IMAGE_REGEXP = /\.(jpeg|jpg|gif|png|svg|webp|jfif|bmp|dpg)/i;
+  return IMAGE_REGEXP.test(value);
+}
+
+/**
+   * 是否视频格式
+   * @param {Object} value
+   */
+function video(value) {
+  var VIDEO_REGEXP = /\.(mp4|mpg|mpeg|dat|asf|avi|rm|rmvb|mov|wmv|flv|mkv)/i;
+  return VIDEO_REGEXP.test(value);
+}
+
+/**
+   * 是否为正则对象
+   * @param {Object}
+   * @return {Boolean}
+   */
+function regExp(o) {
+  return o && Object.prototype.toString.call(o) === '[object RegExp]';
+}var _default =
+
+{
+  email: email,
+  mobile: mobile,
+  url: url,
+  date: date,
+  dateISO: dateISO,
+  number: number,
+  digits: digits,
+  idCard: idCard,
+  carNo: carNo,
+  amount: amount,
+  chinese: chinese,
+  letter: letter,
+  enOrNum: enOrNum,
+  contains: contains,
+  range: range,
+  rangeLength: rangeLength,
+  empty: empty,
+  isEmpty: empty,
+  jsonString: jsonString,
+  landline: landline,
+  object: object,
+  array: array,
+  code: code,
+  func: func,
+  promise: promise,
+  video: video,
+  image: image,
+  regExp: regExp,
+  string: string };exports.default = _default;
+
+/***/ }),
+/* 76 */
+/*!************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/function/debounce.js ***!
+  \************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var timeout = null;
+
+/**
+                                                                                                                         * 防抖原理：一定时间内，只有最后一次操作，再过wait毫秒后才执行函数
+                                                                                                                         *
+                                                                                                                         * @param {Function} func 要执行的回调函数
+                                                                                                                         * @param {Number} wait 延时的时间
+                                                                                                                         * @param {Boolean} immediate 是否立即执行
+                                                                                                                         * @return null
+                                                                                                                         */
+function debounce(func) {var wait = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 500;var immediate = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+  // 清除定时器
+  if (timeout !== null) clearTimeout(timeout);
+  // 立即执行，此类情况一般用不到
+  if (immediate) {
+    var callNow = !timeout;
+    timeout = setTimeout(function () {
+      timeout = null;
+    }, wait);
+    if (callNow) typeof func === 'function' && func();
+  } else {
+    // 设置定时器，当最后一次操作后，timeout不会再被清除，所以在延时wait毫秒后执行func回调方法
+    timeout = setTimeout(function () {
+      typeof func === 'function' && func();
+    }, wait);
+  }
+}var _default =
+
+debounce;exports.default = _default;
+
+/***/ }),
+/* 77 */
+/*!************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/function/throttle.js ***!
+  \************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var timer;var
+flag;
+/**
+       * 节流原理：在一定时间内，只能触发一次
+       *
+       * @param {Function} func 要执行的回调函数
+       * @param {Number} wait 延时的时间
+       * @param {Boolean} immediate 是否立即执行
+       * @return null
+       */
+function throttle(func) {var wait = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 500;var immediate = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+  if (immediate) {
+    if (!flag) {
+      flag = true;
+      // 如果是立即执行，则在wait毫秒内开始时执行
+      typeof func === 'function' && func();
+      timer = setTimeout(function () {
+        flag = false;
+      }, wait);
+    }
+  } else if (!flag) {
+    flag = true;
+    // 如果是非立即执行，则在wait毫秒内的结束处执行
+    timer = setTimeout(function () {
+      flag = false;
+      typeof func === 'function' && func();
+    }, wait);
+  }
+}var _default =
+throttle;exports.default = _default;
+
+/***/ }),
+/* 78 */
+/*!*********************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/function/index.js ***!
+  \*********************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _test = _interopRequireDefault(__webpack_require__(/*! ./test.js */ 75));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
+
+/**
+                                                                                                                                                                                                                                                            * @description 如果value小于min，取min；如果value大于max，取max
+                                                                                                                                                                                                                                                            * @param {number} min 
+                                                                                                                                                                                                                                                            * @param {number} max 
+                                                                                                                                                                                                                                                            * @param {number} value
+                                                                                                                                                                                                                                                            */
+function range() {var min = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;var max = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;var value = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+  return Math.max(min, Math.min(max, Number(value)));
+}
+
+/**
+   * @description 用于获取用户传递值的px值  如果用户传递了"xxpx"或者"xxrpx"，取出其数值部分，如果是"xxxrpx"还需要用过uni.upx2px进行转换
+   * @param {number|string} value 用户传递值的px值
+   * @param {boolean} unit 
+   * @returns {number|string}
+   */
+function getPx(value) {var unit = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+  if (_test.default.number(value)) {
+    return unit ? "".concat(value, "px") : value;
+  }
+  // 如果带有rpx，先取出其数值部分，再转为px值
+  if (/(rpx|upx)$/.test(value)) {
+    return unit ? "".concat(uni.upx2px(parseInt(value)), "px") : uni.upx2px(parseInt(value));
+  }
+  return unit ? "".concat(parseInt(value), "px") : parseInt(value);
+}
+
+/**
+  * @description 进行延时，以达到可以简写代码的目的 比如: await uni.$u.sleep(20)将会阻塞20ms
+  * @param {number} value 堵塞时间 单位ms 毫秒
+  * @returns {Promise} 返回promise
+  */
+function sleep() {var value = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 30;
+  return new Promise(function (resolve) {
+    setTimeout(function () {
+      resolve();
+    }, value);
+  });
+}
+/**
+  * @description 运行期判断平台
+  * @returns {string} 返回所在平台(小写) 
+  * @link 运行期判断平台 https://uniapp.dcloud.io/frame?id=判断平台
+  */
+function os() {
+  return uni.getSystemInfoSync().platform.toLowerCase();
+}
+/**
+  * @description 获取系统信息同步接口
+  * @link 获取系统信息同步接口 https://uniapp.dcloud.io/api/system/info?id=getsysteminfosync 
+  */
+function sys() {
+  return uni.getSystemInfoSync();
+}
+
+/**
+   * @description 取一个区间数
+   * @param {Number} min 最小值
+   * @param {Number} max 最大值
+   */
+function random(min, max) {
+  if (min >= 0 && max > 0 && max >= min) {
+    var gab = max - min + 1;
+    return Math.floor(Math.random() * gab + min);
+  }
+  return 0;
+}
+
+/**
+   * @param {Number} len uuid的长度
+   * @param {Boolean} firstU 将返回的首字母置为"u"
+   * @param {Nubmer} radix 生成uuid的基数(意味着返回的字符串都是这个基数),2-二进制,8-八进制,10-十进制,16-十六进制
+   */
+function guid() {var len = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 32;var firstU = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;var radix = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+  var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
+  var uuid = [];
+  radix = radix || chars.length;
+
+  if (len) {
+    // 如果指定uuid长度,只是取随机的字符,0|x为位运算,能去掉x的小数位,返回整数位
+    for (var i = 0; i < len; i++) {uuid[i] = chars[0 | Math.random() * radix];}
+  } else {
+    var r;
+    // rfc4122标准要求返回的uuid中,某些位为固定的字符
+    uuid[8] = uuid[13] = uuid[18] = uuid[23] = '-';
+    uuid[14] = '4';
+
+    for (var _i = 0; _i < 36; _i++) {
+      if (!uuid[_i]) {
+        r = 0 | Math.random() * 16;
+        uuid[_i] = chars[_i == 19 ? r & 0x3 | 0x8 : r];
+      }
+    }
+  }
+  // 移除第一个字符,并用u替代,因为第一个字符为数值时,该guuid不能用作id或者class
+  if (firstU) {
+    uuid.shift();
+    return "u".concat(uuid.join(''));
+  }
+  return uuid.join('');
+}
+
+/**
+  * @description 获取父组件的参数，因为支付宝小程序不支持provide/inject的写法
+     this.$parent在非H5中，可以准确获取到父组件，但是在H5中，需要多次this.$parent.$parent.xxx
+     这里默认值等于undefined有它的含义，因为最顶层元素(组件)的$parent就是undefined，意味着不传name
+     值(默认为undefined)，就是查找最顶层的$parent
+  *  @param {string|undefined} name 父组件的参数名
+  */
+function $parent() {var name = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : undefined;
+  var parent = this.$parent;
+  // 通过while历遍，这里主要是为了H5需要多层解析的问题
+  while (parent) {
+    // 父组件
+    if (parent.$options && parent.$options.name !== name) {
+      // 如果组件的name不相等，继续上一级寻找
+      parent = parent.$parent;
+    } else {
+      return parent;
+    }
+  }
+  return false;
+}
+
+/**
+   * @description 样式转换
+   * 对象转字符串，或者字符串转对象
+   * @param {object | string} customStyle 需要转换的目标
+   * @param {String} target 转换的目的，object-转为对象，string-转为字符串
+   * @returns {object|string}
+   */
+function addStyle(customStyle) {var target = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'object';
+  // 字符串转字符串，对象转对象情形，直接返回
+  if (_test.default.empty(customStyle) || typeof customStyle === 'object' && target === 'object' || target === 'string' &&
+  typeof customStyle === 'string') {
+    return customStyle;
+  }
+  // 字符串转对象
+  if (target === 'object') {
+    // 去除字符串样式中的两端空格(中间的空格不能去掉，比如padding: 20px 0如果去掉了就错了)，空格是无用的
+    customStyle = trim(customStyle);
+    // 根据";"将字符串转为数组形式
+    var styleArray = customStyle.split(';');
+    var style = {};
+    // 历遍数组，拼接成对象
+    for (var i = 0; i < styleArray.length; i++) {
+      // 'font-size:20px;color:red;'，如此最后字符串有";"的话，会导致styleArray最后一个元素为空字符串，这里需要过滤
+      if (styleArray[i]) {
+        var item = styleArray[i].split(':');
+        style[trim(item[0])] = trim(item[1]);
+      }
+    }
+    return style;
+  }
+  // 这里为对象转字符串形式
+  var string = '';
+  for (var _i2 in customStyle) {
+    // 驼峰转为中划线的形式，否则css内联样式，无法识别驼峰样式属性名
+    var key = _i2.replace(/([A-Z])/g, '-$1').toLowerCase();
+    string += "".concat(key, ":").concat(customStyle[_i2], ";");
+  }
+  // 去除两端空格
+  return trim(string);
+}
+
+/**
+   * @description 添加单位，如果有rpx，upx，%，px等单位结尾或者值为auto，直接返回，否则加上px单位结尾
+   * @param {string|number} value 需要添加单位的值
+   * @param {string} unit 添加的单位名 比如px
+   */
+function addUnit() {var value = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'auto';var unit = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'px';
+  value = String(value);
+  // 用uView内置验证规则中的number判断是否为数值
+  return _test.default.number(value) ? "".concat(value).concat(unit) : value;
+}
+
+/**
+   * @description 深度克隆
+   * @param {object} obj 需要深度克隆的对象
+   * @returns {*} 克隆后的对象或者原值（不是对象）
+   */
+function deepClone(obj) {
+  // 对常见的“非”值，直接返回原来值
+  if ([null, undefined, NaN, false].includes(obj)) return obj;
+  if (typeof obj !== 'object' && typeof obj !== 'function') {
+    // 原始类型直接返回
+    return obj;
+  }
+  var o = _test.default.array(obj) ? [] : {};
+  for (var i in obj) {
+    if (obj.hasOwnProperty(i)) {
+      o[i] = typeof obj[i] === 'object' ? deepClone(obj[i]) : obj[i];
+    }
+  }
+  return o;
+}
+
+/**
+   * @description JS对象深度合并
+   * @param {object} target 需要拷贝的对象
+   * @param {object} source 拷贝的来源对象
+   * @returns {object|boolean} 深度合并后的对象或者false（入参有不是对象）
+   */
+function deepMerge() {var target = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};var source = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  target = deepClone(target);
+  if (typeof target !== 'object' || typeof source !== 'object') return false;
+  for (var prop in source) {
+    if (!source.hasOwnProperty(prop)) continue;
+    if (prop in target) {
+      if (typeof target[prop] !== 'object') {
+        target[prop] = source[prop];
+      } else if (typeof source[prop] !== 'object') {
+        target[prop] = source[prop];
+      } else if (target[prop].concat && source[prop].concat) {
+        target[prop] = target[prop].concat(source[prop]);
+      } else {
+        target[prop] = deepMerge(target[prop], source[prop]);
+      }
+    } else {
+      target[prop] = source[prop];
+    }
+  }
+  return target;
+}
+
+/**
+   * @description error提示
+   * @param {*} err 错误内容
+   */
+function error(err) {
+  // 开发环境才提示，生产环境不会提示
+  if (true) {
+    console.error("uView\u63D0\u793A\uFF1A".concat(err));
+  }
+}
+
+/**
+   * @description 打乱数组
+   * @param {array} array 需要打乱的数组
+   * @returns {array} 打乱后的数组
+   */
+function randomArray() {var array = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+  // 原理是sort排序,Math.random()产生0<= x < 1之间的数,会导致x-0.05大于或者小于0
+  return array.sort(function () {return Math.random() - 0.5;});
+}
+
+// padStart 的 polyfill，因为某些机型或情况，还无法支持es7的padStart，比如电脑版的微信小程序
+// 所以这里做一个兼容polyfill的兼容处理
+if (!String.prototype.padStart) {
+  // 为了方便表示这里 fillString 用了ES6 的默认参数，不影响理解
+  String.prototype.padStart = function (maxLength) {var fillString = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : ' ';
+    if (Object.prototype.toString.call(fillString) !== '[object String]') {
+      throw new TypeError(
+      'fillString must be String');
+
+    }
+    var str = this;
+    // 返回 String(str) 这里是为了使返回的值是字符串字面量，在控制台中更符合直觉
+    if (str.length >= maxLength) return String(str);
+
+    var fillLength = maxLength - str.length;
+    var times = Math.ceil(fillLength / fillString.length);
+    while (times >>= 1) {
+      fillString += fillString;
+      if (times === 1) {
+        fillString += fillString;
+      }
+    }
+    return fillString.slice(0, fillLength) + str;
+  };
+}
+
+/**
+   * @description 格式化时间
+   * @param {String|Number} dateTime 需要格式化的时间戳
+   * @param {String} fmt 格式化规则 yyyy:mm:dd|yyyy:mm|yyyy年mm月dd日|yyyy年mm月dd日 hh时MM分等,可自定义组合 默认yyyy-mm-dd
+   * @returns {string} 返回格式化后的字符串
+   */
+function timeFormat() {var dateTime = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;var fmt = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'yyyy-mm-dd';
+  // 如果为null,则格式化当前时间
+  if (!dateTime) dateTime = Number(new Date());
+  // 如果dateTime长度为10或者13，则为秒和毫秒的时间戳，如果超过13位，则为其他的时间格式
+  if (dateTime.toString().length == 10) dateTime *= 1000;
+  var date = new Date(dateTime);
+  var ret;
+  var opt = {
+    'y+': date.getFullYear().toString(), // 年
+    'm+': (date.getMonth() + 1).toString(), // 月
+    'd+': date.getDate().toString(), // 日
+    'h+': date.getHours().toString(), // 时
+    'M+': date.getMinutes().toString(), // 分
+    's+': date.getSeconds().toString() // 秒
+    // 有其他格式化字符需求可以继续添加，必须转化成字符串
+  };
+  for (var k in opt) {
+    ret = new RegExp("(".concat(k, ")")).exec(fmt);
+    if (ret) {
+      fmt = fmt.replace(ret[1], ret[1].length == 1 ? opt[k] : opt[k].padStart(ret[1].length, '0'));
+    }
+  }
+  return fmt;
+}
+
+/**
+   * @description 时间戳转为多久之前
+   * @param {String|Number} timestamp 时间戳
+   * @param {String|Boolean} format 
+   * 格式化规则如果为时间格式字符串，超出一定时间范围，返回固定的时间格式；
+   * 如果为布尔值false，无论什么时间，都返回多久以前的格式
+   * @returns {string} 转化后的内容
+   */
+function timeFrom() {var timestamp = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;var format = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'yyyy-mm-dd';
+  if (timestamp == null) timestamp = Number(new Date());
+  timestamp = parseInt(timestamp);
+  // 判断用户输入的时间戳是秒还是毫秒,一般前端js获取的时间戳是毫秒(13位),后端传过来的为秒(10位)
+  if (timestamp.toString().length == 10) timestamp *= 1000;
+  var timer = new Date().getTime() - timestamp;
+  timer = parseInt(timer / 1000);
+  // 如果小于5分钟,则返回"刚刚",其他以此类推
+  var tips = '';
+  switch (true) {
+    case timer < 300:
+      tips = '刚刚';
+      break;
+    case timer >= 300 && timer < 3600:
+      tips = "".concat(parseInt(timer / 60), "\u5206\u949F\u524D");
+      break;
+    case timer >= 3600 && timer < 86400:
+      tips = "".concat(parseInt(timer / 3600), "\u5C0F\u65F6\u524D");
+      break;
+    case timer >= 86400 && timer < 2592000:
+      tips = "".concat(parseInt(timer / 86400), "\u5929\u524D");
+      break;
+    default:
+      // 如果format为false，则无论什么时间戳，都显示xx之前
+      if (format === false) {
+        if (timer >= 2592000 && timer < 365 * 86400) {
+          tips = "".concat(parseInt(timer / (86400 * 30)), "\u4E2A\u6708\u524D");
+        } else {
+          tips = "".concat(parseInt(timer / (86400 * 365)), "\u5E74\u524D");
+        }
+      } else {
+        tips = timeFormat(timestamp, format);
+      }}
+
+  return tips;
+}
+
+/**
+   * @description 去除空格
+   * @param String str 需要去除空格的字符串
+   * @param String pos both(左右)|left|right|all 默认both
+   */
+function trim(str) {var pos = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'both';
+  str = String(str);
+  if (pos == 'both') {
+    return str.replace(/^\s+|\s+$/g, '');
+  }if (pos == 'left') {
+    return str.replace(/^\s*/, '');
+  }if (pos == 'right') {
+    return str.replace(/(\s*$)/g, '');
+  }if (pos == 'all') {
+    return str.replace(/\s+/g, '');
+  }
+  return str;
+}
+
+/**
+   * @description 对象转url参数
+   * @param {object} data,对象
+   * @param {Boolean} isPrefix,是否自动加上"?"
+   * @param {string} arrayFormat 规则 indices|brackets|repeat|comma
+   */
+function queryParams() {var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};var isPrefix = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;var arrayFormat = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'brackets';
+  var prefix = isPrefix ? '?' : '';
+  var _result = [];
+  if (['indices', 'brackets', 'repeat', 'comma'].indexOf(arrayFormat) == -1) arrayFormat = 'brackets';var _loop = function _loop(
+  key) {
+    var value = data[key];
+    // 去掉为空的参数
+    if (['', undefined, null].indexOf(value) >= 0) {
+      return "continue";
+    }
+    // 如果值为数组，另行处理
+    if (value.constructor === Array) {
+      // e.g. {ids: [1, 2, 3]}
+      switch (arrayFormat) {
+        case 'indices':
+          // 结果: ids[0]=1&ids[1]=2&ids[2]=3
+          for (var i = 0; i < value.length; i++) {
+            _result.push("".concat(key, "[").concat(i, "]=").concat(value[i]));
+          }
+          break;
+        case 'brackets':
+          // 结果: ids[]=1&ids[]=2&ids[]=3
+          value.forEach(function (_value) {
+            _result.push("".concat(key, "[]=").concat(_value));
+          });
+          break;
+        case 'repeat':
+          // 结果: ids=1&ids=2&ids=3
+          value.forEach(function (_value) {
+            _result.push("".concat(key, "=").concat(_value));
+          });
+          break;
+        case 'comma':
+          // 结果: ids=1,2,3
+          var commaStr = '';
+          value.forEach(function (_value) {
+            commaStr += (commaStr ? ',' : '') + _value;
+          });
+          _result.push("".concat(key, "=").concat(commaStr));
+          break;
+        default:
+          value.forEach(function (_value) {
+            _result.push("".concat(key, "[]=").concat(_value));
+          });}
+
+    } else {
+      _result.push("".concat(key, "=").concat(value));
+    }};for (var key in data) {var _ret = _loop(key);if (_ret === "continue") continue;
+  }
+  return _result.length ? prefix + _result.join('&') : '';
+}
+
+/**
+   * 显示消息提示框
+   * @param {String} title 提示的内容，长度与 icon 取值有关。
+   * @param {Number} duration 提示的延迟时间，单位毫秒，默认：2000
+   */
+function toast(title) {var duration = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 2000;
+  uni.showToast({
+    title: String(title),
+    icon: 'none',
+    duration: duration });
+
+}
+
+/**
+   * @description 根据主题type值,获取对应的图标
+   * @param {String} type 主题名称,primary|info|error|warning|success
+   * @param {boolean} fill 是否使用fill填充实体的图标
+   */
+function type2icon() {var type = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'success';var fill = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+  // 如果非预置值,默认为success
+  if (['primary', 'info', 'error', 'warning', 'success'].indexOf(type) == -1) type = 'success';
+  var iconName = '';
+  // 目前(2019-12-12),info和primary使用同一个图标
+  switch (type) {
+    case 'primary':
+      iconName = 'info-circle';
+      break;
+    case 'info':
+      iconName = 'info-circle';
+      break;
+    case 'error':
+      iconName = 'close-circle';
+      break;
+    case 'warning':
+      iconName = 'error-circle';
+      break;
+    case 'success':
+      iconName = 'checkmark-circle';
+      break;
+    default:
+      iconName = 'checkmark-circle';}
+
+  // 是否是实体类型,加上-fill,在icon组件库中,实体的类名是后面加-fill的
+  if (fill) iconName += '-fill';
+  return iconName;
+}
+
+/**
+  * @description 数字格式化
+  * @param {number|string} number 要格式化的数字
+  * @param {number} decimals 保留几位小数
+  * @param {string} decimalPoint 小数点符号
+  * @param {string} thousandsSeparator 千分位符号
+  * @returns {string} 格式化后的数字
+  */
+function priceFormat(number) {var decimals = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;var decimalPoint = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '.';var thousandsSeparator = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : ',';
+  number = "".concat(number).replace(/[^0-9+-Ee.]/g, '');
+  var n = !isFinite(+number) ? 0 : +number;
+  var prec = !isFinite(+decimals) ? 0 : Math.abs(decimals);
+  var sep = typeof thousandsSeparator === 'undefined' ? ',' : thousandsSeparator;
+  var dec = typeof decimalPoint === 'undefined' ? '.' : decimalPoint;
+  var s = '';
+  var toFixedFix = function toFixedFix(n, prec) {
+    var k = Math.pow(10, prec);
+    return "".concat(Math.ceil(n * k) / k);
+  };
+
+  s = (prec ? toFixedFix(n, prec) : "".concat(Math.round(n))).split('.');
+  var re = /(-?\d+)(\d{3})/;
+  while (re.test(s[0])) {
+    s[0] = s[0].replace(re, "$1".concat(sep, "$2"));
+  }
+
+  if ((s[1] || '').length < prec) {
+    s[1] = s[1] || '';
+    s[1] += new Array(prec - s[1].length + 1).join('0');
+  }
+  return s.join(dec);
+}
+
+/**
+   * @description 获取duration值
+   * 如果带有ms或者s直接返回，如果大于一定值，认为是ms单位，小于一定值，认为是s单位
+   * 比如以30位阈值，那么300大于30，可以理解为用户想要的是300ms，而不是想花300s去执行一个动画
+   * @param {String|number} value 比如: "1s"|"100ms"|1|100
+   * @param {boolean} unit  提示: 如果是false 默认返回number
+   * @return {string|number} 
+   */
+function getDuration(value) {var unit = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+  var valueNum = parseInt(value);
+  if (unit) {
+    if (/s$/.test(value)) return value;
+    return value > 30 ? "".concat(value, "ms") : "".concat(value, "s");
+  }
+  if (/ms$/.test(value)) return valueNum;
+  if (/s$/.test(value)) return valueNum > 30 ? valueNum : valueNum * 1000;
+  return valueNum;
+}
+
+/**
+   * @description 日期的月或日补零操作
+   * @param {String} value 需要补零的值
+   */
+function padZero(value) {
+  return "00".concat(value).slice(-2);
+}
+
+/**
+   * @description 在u-form的子组件内容发生变化，或者失去焦点时，尝试通知u-form执行校验方法
+   * @param {*} instance
+   * @param {*} event
+   */
+function formValidate(instance, event) {
+  var formItem = uni.$u.$parent.call(instance, 'u-form-item');
+  var form = uni.$u.$parent.call(instance, 'u-form');
+  // 如果发生变化的input或者textarea等，其父组件中有u-form-item或者u-form等，就执行form的validate方法
+  // 同时将form-item的pros传递给form，让其进行精确对象验证
+  if (formItem && form) {
+    form.validateField(formItem.prop, function () {}, event);
+  }
+}
+
+/**
+   * @description 获取某个对象下的属性，用于通过类似'a.b.c'的形式去获取一个对象的的属性的形式
+   * @param {object} obj 对象
+   * @param {string} key 需要获取的属性字段
+   * @returns {*}
+   */
+function getProperty(obj, key) {
+  if (!obj) {
+    return;
+  }
+  if (typeof key !== 'string' || key === '') {
+    return '';
+  }if (key.indexOf('.') !== -1) {
+    var keys = key.split('.');
+    var firstObj = obj[keys[0]] || {};
+
+    for (var i = 1; i < keys.length; i++) {
+      if (firstObj) {
+        firstObj = firstObj[keys[i]];
+      }
+    }
+    return firstObj;
+  }
+  return obj[key];
+}
+
+/**
+   * @description 设置对象的属性值，如果'a.b.c'的形式进行设置
+   * @param {object} obj 对象
+   * @param {string} key 需要设置的属性
+   * @param {string} value 设置的值
+   */
+function setProperty(obj, key, value) {
+  if (!obj) {
+    return;
+  }
+  // 递归赋值
+  var inFn = function inFn(_obj, keys, v) {
+    // 最后一个属性key
+    if (keys.length === 1) {
+      _obj[keys[0]] = v;
+      return;
+    }
+    // 0~length-1个key
+    while (keys.length > 1) {
+      var k = keys[0];
+      if (!_obj[k] || typeof _obj[k] !== 'object') {
+        _obj[k] = {};
+      }
+      var _key = keys.shift();
+      // 自调用判断是否存在属性，不存在则自动创建对象
+      inFn(_obj[k], keys, v);
+    }
+  };
+
+  if (typeof key !== 'string' || key === '') {
+
+  } else if (key.indexOf('.') !== -1) {// 支持多层级赋值操作
+    var keys = key.split('.');
+    inFn(obj, keys, value);
+  } else {
+    obj[key] = value;
+  }
+}
+
+/**
+   * @description 获取当前页面路径
+   */
+function page() {var _pages$route, _pages;
+  var pages = getCurrentPages();
+  // 某些特殊情况下(比如页面进行redirectTo时的一些时机)，pages可能为空数组
+  return "/".concat((_pages$route = (_pages = pages[pages.length - 1]) === null || _pages === void 0 ? void 0 : _pages.route) !== null && _pages$route !== void 0 ? _pages$route : '');
+}
+
+/**
+   * @description 获取当前路由栈实例数组
+   */
+function pages() {
+  var pages = getCurrentPages();
+  return pages;
+}var _default =
+
+{
+  range: range,
+  getPx: getPx,
+  sleep: sleep,
+  os: os,
+  sys: sys,
+  random: random,
+  guid: guid,
+  $parent: $parent,
+  addStyle: addStyle,
+  addUnit: addUnit,
+  deepClone: deepClone,
+  deepMerge: deepMerge,
+  error: error,
+  randomArray: randomArray,
+  timeFormat: timeFormat,
+  timeFrom: timeFrom,
+  trim: trim,
+  queryParams: queryParams,
+  toast: toast,
+  type2icon: type2icon,
+  priceFormat: priceFormat,
+  getDuration: getDuration,
+  padZero: padZero,
+  formValidate: formValidate,
+  getProperty: getProperty,
+  setProperty: setProperty,
+  page: page,
+  pages: pages };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 79 */
+/*!********************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/config.js ***!
+  \********************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; // 此版本发布于2022-01-20
+var version = '2.0.22';
+
+// 开发环境才提示，生产环境不会提示
+if (true) {
+  console.log("\n %c uView V".concat(version, " %c https://www.uviewui.com/ \n\n"), 'color: #ffffff; background: #3c9cff; padding:5px 0;', 'color: #3c9cff;background: #ffffff; padding:5px 0;');
+}var _default =
+
+{
+  v: version,
+  version: version,
+  // 主题名称
+  type: [
+  'primary',
+  'success',
+  'info',
+  'error',
+  'warning'],
+
+  // 颜色部分，本来可以通过scss的:export导出供js使用，但是奈何nvue不支持
+  color: {
+    'u-primary': '#2979ff',
+    'u-warning': '#ff9900',
+    'u-success': '#19be6b',
+    'u-error': '#fa3534',
+    'u-info': '#909399',
+    'u-main-color': '#303133',
+    'u-content-color': '#606266',
+    'u-tips-color': '#909399',
+    'u-light-color': '#c0c4cc' },
+
+  // 默认单位，可以通过配置为rpx，那么在用于传入组件大小参数为数值时，就默认为rpx
+  unit: 'px' };exports.default = _default;
+
+/***/ }),
+/* 80 */
+/*!*******************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props.js ***!
+  \*******************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;
+
+
+
+
+var _config = _interopRequireDefault(__webpack_require__(/*! ./config */ 79));
+
+var _actionSheet = _interopRequireDefault(__webpack_require__(/*! ./props/actionSheet.js */ 81));
+var _album = _interopRequireDefault(__webpack_require__(/*! ./props/album.js */ 82));
+var _alert = _interopRequireDefault(__webpack_require__(/*! ./props/alert.js */ 83));
+var _avatar = _interopRequireDefault(__webpack_require__(/*! ./props/avatar */ 84));
+var _avatarGroup = _interopRequireDefault(__webpack_require__(/*! ./props/avatarGroup */ 85));
+var _backtop = _interopRequireDefault(__webpack_require__(/*! ./props/backtop */ 86));
+var _badge = _interopRequireDefault(__webpack_require__(/*! ./props/badge */ 87));
+var _button = _interopRequireDefault(__webpack_require__(/*! ./props/button */ 88));
+var _calendar = _interopRequireDefault(__webpack_require__(/*! ./props/calendar */ 89));
+var _carKeyboard = _interopRequireDefault(__webpack_require__(/*! ./props/carKeyboard */ 90));
+var _cell = _interopRequireDefault(__webpack_require__(/*! ./props/cell */ 91));
+var _cellGroup = _interopRequireDefault(__webpack_require__(/*! ./props/cellGroup */ 92));
+var _checkbox = _interopRequireDefault(__webpack_require__(/*! ./props/checkbox */ 93));
+var _checkboxGroup = _interopRequireDefault(__webpack_require__(/*! ./props/checkboxGroup */ 94));
+var _circleProgress = _interopRequireDefault(__webpack_require__(/*! ./props/circleProgress */ 95));
+var _code = _interopRequireDefault(__webpack_require__(/*! ./props/code */ 96));
+var _codeInput = _interopRequireDefault(__webpack_require__(/*! ./props/codeInput */ 97));
+var _col = _interopRequireDefault(__webpack_require__(/*! ./props/col */ 98));
+var _collapse = _interopRequireDefault(__webpack_require__(/*! ./props/collapse */ 99));
+var _collapseItem = _interopRequireDefault(__webpack_require__(/*! ./props/collapseItem */ 100));
+var _columnNotice = _interopRequireDefault(__webpack_require__(/*! ./props/columnNotice */ 101));
+var _countDown = _interopRequireDefault(__webpack_require__(/*! ./props/countDown */ 102));
+var _countTo = _interopRequireDefault(__webpack_require__(/*! ./props/countTo */ 103));
+var _datetimePicker = _interopRequireDefault(__webpack_require__(/*! ./props/datetimePicker */ 104));
+var _divider = _interopRequireDefault(__webpack_require__(/*! ./props/divider */ 105));
+var _empty = _interopRequireDefault(__webpack_require__(/*! ./props/empty */ 106));
+var _form = _interopRequireDefault(__webpack_require__(/*! ./props/form */ 107));
+var _formItem = _interopRequireDefault(__webpack_require__(/*! ./props/formItem */ 108));
+var _gap = _interopRequireDefault(__webpack_require__(/*! ./props/gap */ 109));
+var _grid = _interopRequireDefault(__webpack_require__(/*! ./props/grid */ 110));
+var _gridItem = _interopRequireDefault(__webpack_require__(/*! ./props/gridItem */ 111));
+var _icon = _interopRequireDefault(__webpack_require__(/*! ./props/icon */ 112));
+var _image = _interopRequireDefault(__webpack_require__(/*! ./props/image */ 113));
+var _indexAnchor = _interopRequireDefault(__webpack_require__(/*! ./props/indexAnchor */ 114));
+var _indexList = _interopRequireDefault(__webpack_require__(/*! ./props/indexList */ 115));
+var _input = _interopRequireDefault(__webpack_require__(/*! ./props/input */ 116));
+var _keyboard = _interopRequireDefault(__webpack_require__(/*! ./props/keyboard */ 117));
+var _line = _interopRequireDefault(__webpack_require__(/*! ./props/line */ 118));
+var _lineProgress = _interopRequireDefault(__webpack_require__(/*! ./props/lineProgress */ 119));
+var _link = _interopRequireDefault(__webpack_require__(/*! ./props/link */ 120));
+var _list = _interopRequireDefault(__webpack_require__(/*! ./props/list */ 121));
+var _listItem = _interopRequireDefault(__webpack_require__(/*! ./props/listItem */ 122));
+var _loadingIcon = _interopRequireDefault(__webpack_require__(/*! ./props/loadingIcon */ 123));
+var _loadingPage = _interopRequireDefault(__webpack_require__(/*! ./props/loadingPage */ 124));
+var _loadmore = _interopRequireDefault(__webpack_require__(/*! ./props/loadmore */ 125));
+var _modal = _interopRequireDefault(__webpack_require__(/*! ./props/modal */ 126));
+var _navbar = _interopRequireDefault(__webpack_require__(/*! ./props/navbar */ 127));
+var _noNetwork = _interopRequireDefault(__webpack_require__(/*! ./props/noNetwork */ 129));
+var _noticeBar = _interopRequireDefault(__webpack_require__(/*! ./props/noticeBar */ 130));
+var _notify = _interopRequireDefault(__webpack_require__(/*! ./props/notify */ 131));
+var _numberBox = _interopRequireDefault(__webpack_require__(/*! ./props/numberBox */ 132));
+var _numberKeyboard = _interopRequireDefault(__webpack_require__(/*! ./props/numberKeyboard */ 133));
+var _overlay = _interopRequireDefault(__webpack_require__(/*! ./props/overlay */ 134));
+var _parse = _interopRequireDefault(__webpack_require__(/*! ./props/parse */ 135));
+var _picker = _interopRequireDefault(__webpack_require__(/*! ./props/picker */ 136));
+var _popup = _interopRequireDefault(__webpack_require__(/*! ./props/popup */ 137));
+var _radio = _interopRequireDefault(__webpack_require__(/*! ./props/radio */ 138));
+var _radioGroup = _interopRequireDefault(__webpack_require__(/*! ./props/radioGroup */ 139));
+var _rate = _interopRequireDefault(__webpack_require__(/*! ./props/rate */ 140));
+var _readMore = _interopRequireDefault(__webpack_require__(/*! ./props/readMore */ 141));
+var _row = _interopRequireDefault(__webpack_require__(/*! ./props/row */ 142));
+var _rowNotice = _interopRequireDefault(__webpack_require__(/*! ./props/rowNotice */ 143));
+var _scrollList = _interopRequireDefault(__webpack_require__(/*! ./props/scrollList */ 144));
+var _search = _interopRequireDefault(__webpack_require__(/*! ./props/search */ 145));
+var _section = _interopRequireDefault(__webpack_require__(/*! ./props/section */ 146));
+var _skeleton = _interopRequireDefault(__webpack_require__(/*! ./props/skeleton */ 147));
+var _slider = _interopRequireDefault(__webpack_require__(/*! ./props/slider */ 148));
+var _statusBar = _interopRequireDefault(__webpack_require__(/*! ./props/statusBar */ 149));
+var _steps = _interopRequireDefault(__webpack_require__(/*! ./props/steps */ 150));
+var _stepsItem = _interopRequireDefault(__webpack_require__(/*! ./props/stepsItem */ 151));
+var _sticky = _interopRequireDefault(__webpack_require__(/*! ./props/sticky */ 152));
+var _subsection = _interopRequireDefault(__webpack_require__(/*! ./props/subsection */ 153));
+var _swipeAction = _interopRequireDefault(__webpack_require__(/*! ./props/swipeAction */ 154));
+var _swipeActionItem = _interopRequireDefault(__webpack_require__(/*! ./props/swipeActionItem */ 155));
+var _swiper = _interopRequireDefault(__webpack_require__(/*! ./props/swiper */ 156));
+var _swipterIndicator = _interopRequireDefault(__webpack_require__(/*! ./props/swipterIndicator */ 157));
+var _switch2 = _interopRequireDefault(__webpack_require__(/*! ./props/switch */ 158));
+var _tabbar = _interopRequireDefault(__webpack_require__(/*! ./props/tabbar */ 159));
+var _tabbarItem = _interopRequireDefault(__webpack_require__(/*! ./props/tabbarItem */ 160));
+var _tabs = _interopRequireDefault(__webpack_require__(/*! ./props/tabs */ 161));
+var _tag = _interopRequireDefault(__webpack_require__(/*! ./props/tag */ 162));
+var _text = _interopRequireDefault(__webpack_require__(/*! ./props/text */ 163));
+var _textarea = _interopRequireDefault(__webpack_require__(/*! ./props/textarea */ 164));
+var _toast = _interopRequireDefault(__webpack_require__(/*! ./props/toast */ 165));
+var _toolbar = _interopRequireDefault(__webpack_require__(/*! ./props/toolbar */ 166));
+var _tooltip = _interopRequireDefault(__webpack_require__(/*! ./props/tooltip */ 167));
+var _transition = _interopRequireDefault(__webpack_require__(/*! ./props/transition */ 168));
+var _upload = _interopRequireDefault(__webpack_require__(/*! ./props/upload */ 169));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function ownKeys(object, enumerableOnly) {var keys = Object.keys(object);if (Object.getOwnPropertySymbols) {var symbols = Object.getOwnPropertySymbols(object);if (enumerableOnly) symbols = symbols.filter(function (sym) {return Object.getOwnPropertyDescriptor(object, sym).enumerable;});keys.push.apply(keys, symbols);}return keys;}function _objectSpread(target) {for (var i = 1; i < arguments.length; i++) {var source = arguments[i] != null ? arguments[i] : {};if (i % 2) {ownKeys(Object(source), true).forEach(function (key) {_defineProperty(target, key, source[key]);});} else if (Object.getOwnPropertyDescriptors) {Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));} else {ownKeys(Object(source)).forEach(function (key) {Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));});}}return target;}function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}var
+
+
+color =
+_config.default.color;var _default = _objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread({},
+
+
+_actionSheet.default),
+_album.default),
+_alert.default),
+_avatar.default),
+_avatarGroup.default),
+_backtop.default),
+_badge.default),
+_button.default),
+_calendar.default),
+_carKeyboard.default),
+_cell.default),
+_cellGroup.default),
+_checkbox.default),
+_checkboxGroup.default),
+_circleProgress.default),
+_code.default),
+_codeInput.default),
+_col.default),
+_collapse.default),
+_collapseItem.default),
+_columnNotice.default),
+_countDown.default),
+_countTo.default),
+_datetimePicker.default),
+_divider.default),
+_empty.default),
+_form.default),
+_formItem.default),
+_gap.default),
+_grid.default),
+_gridItem.default),
+_icon.default),
+_image.default),
+_indexAnchor.default),
+_indexList.default),
+_input.default),
+_keyboard.default),
+_line.default),
+_lineProgress.default),
+_link.default),
+_list.default),
+_listItem.default),
+_loadingIcon.default),
+_loadingPage.default),
+_loadmore.default),
+_modal.default),
+_navbar.default),
+_noNetwork.default),
+_noticeBar.default),
+_notify.default),
+_numberBox.default),
+_numberKeyboard.default),
+_overlay.default),
+_parse.default),
+_picker.default),
+_popup.default),
+_radio.default),
+_radioGroup.default),
+_rate.default),
+_readMore.default),
+_row.default),
+_rowNotice.default),
+_scrollList.default),
+_search.default),
+_section.default),
+_skeleton.default),
+_slider.default),
+_statusBar.default),
+_steps.default),
+_stepsItem.default),
+_sticky.default),
+_subsection.default),
+_swipeAction.default),
+_swipeActionItem.default),
+_swiper.default),
+_swipterIndicator.default),
+_switch2.default),
+_tabbar.default),
+_tabbarItem.default),
+_tabs.default),
+_tag.default),
+_text.default),
+_textarea.default),
+_toast.default),
+_toolbar.default),
+_tooltip.default),
+_transition.default),
+_upload.default);exports.default = _default;
+
+/***/ }),
+/* 81 */
+/*!*******************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/actionSheet.js ***!
+  \*******************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 16:44:35
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/actionSheet.js
+                                                                                                      */var _default =
+{
+  // action-sheet组件
+  actionSheet: {
+    show: false,
+    title: '',
+    description: '',
+    actions: function actions() {return [];},
+    index: '',
+    cancelText: '',
+    closeOnClickAction: true,
+    safeAreaInsetBottom: true,
+    openType: '',
+    closeOnClickOverlay: true,
+    round: 0 } };exports.default = _default;
+
+/***/ }),
+/* 82 */
+/*!*************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/album.js ***!
+  \*************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 16:47:24
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/album.js
+                                                                                                      */var _default =
+{
+  // album 组件
+  album: {
+    urls: function urls() {return [];},
+    keyName: '',
+    singleSize: 180,
+    multipleSize: 70,
+    space: 6,
+    singleMode: 'scaleToFill',
+    multipleMode: 'aspectFill',
+    maxCount: 9,
+    previewFullImage: true,
+    rowCount: 3,
+    showMore: true } };exports.default = _default;
+
+/***/ }),
+/* 83 */
+/*!*************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/alert.js ***!
+  \*************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 16:48:53
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/alert.js
+                                                                                                      */var _default =
+{
+  // alert警告组件
+  alert: {
+    title: '',
+    type: 'warning',
+    description: '',
+    closable: false,
+    showIcon: false,
+    effect: 'light',
+    center: false,
+    fontSize: 14 } };exports.default = _default;
+
+/***/ }),
+/* 84 */
+/*!**************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/avatar.js ***!
+  \**************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 16:49:22
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/avatar.js
+                                                                                                      */var _default =
+{
+  // avatar 组件
+  avatar: {
+    src: '',
+    shape: 'circle',
+    size: 40,
+    mode: 'scaleToFill',
+    text: '',
+    bgColor: '#c0c4cc',
+    color: '#ffffff',
+    fontSize: 18,
+    icon: '',
+    mpAvatar: false,
+    randomBgColor: false,
+    defaultUrl: '',
+    colorIndex: '',
+    name: '' } };exports.default = _default;
+
+/***/ }),
+/* 85 */
+/*!*******************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/avatarGroup.js ***!
+  \*******************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 16:49:55
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/avatarGroup.js
+                                                                                                      */var _default =
+{
+  // avatarGroup 组件
+  avatarGroup: {
+    urls: function urls() {return [];},
+    maxCount: 5,
+    shape: 'circle',
+    mode: 'scaleToFill',
+    showMore: true,
+    size: 40,
+    keyName: '',
+    gap: 0.5,
+    extraValue: 0 } };exports.default = _default;
+
+/***/ }),
+/* 86 */
+/*!***************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/backtop.js ***!
+  \***************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 16:50:18
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/backtop.js
+                                                                                                      */var _default =
+{
+  // backtop组件
+  backtop: {
+    mode: 'circle',
+    icon: 'arrow-upward',
+    text: '',
+    duration: 100,
+    scrollTop: 0,
+    top: 400,
+    bottom: 100,
+    right: 20,
+    zIndex: 9,
+    iconStyle: function iconStyle() {return {
+        color: '#909399',
+        fontSize: '19px' };} } };exports.default = _default;
+
+/***/ }),
+/* 87 */
+/*!*************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/badge.js ***!
+  \*************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-23 19:51:50
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/badge.js
+                                                                                                      */var _default =
+{
+  // 徽标数组件
+  badge: {
+    isDot: false,
+    value: '',
+    show: true,
+    max: 999,
+    type: 'error',
+    showZero: false,
+    bgColor: null,
+    color: null,
+    shape: 'circle',
+    numberType: 'overflow',
+    offset: function offset() {return [];},
+    inverted: false,
+    absolute: false } };exports.default = _default;
+
+/***/ }),
+/* 88 */
+/*!**************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/button.js ***!
+  \**************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 16:51:27
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/button.js
+                                                                                                      */var _default =
+{
+  // button组件
+  button: {
+    hairline: false,
+    type: 'info',
+    size: 'normal',
+    shape: 'square',
+    plain: false,
+    disabled: false,
+    loading: false,
+    loadingText: '',
+    loadingMode: 'spinner',
+    loadingSize: 15,
+    openType: '',
+    formType: '',
+    appParameter: '',
+    hoverStopPropagation: true,
+    lang: 'en',
+    sessionFrom: '',
+    sendMessageTitle: '',
+    sendMessagePath: '',
+    sendMessageImg: '',
+    showMessageCard: false,
+    dataName: '',
+    throttleTime: 0,
+    hoverStartTime: 0,
+    hoverStayTime: 200,
+    text: '',
+    icon: '',
+    iconColor: '',
+    color: '' } };exports.default = _default;
+
+/***/ }),
+/* 89 */
+/*!****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/calendar.js ***!
+  \****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 16:52:43
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/calendar.js
+                                                                                                      */var _default =
+{
+  // calendar 组件
+  calendar: {
+    title: '日期选择',
+    showTitle: true,
+    showSubtitle: true,
+    mode: 'single',
+    startText: '开始',
+    endText: '结束',
+    customList: function customList() {return [];},
+    color: '#3c9cff',
+    minDate: 0,
+    maxDate: 0,
+    defaultDate: null,
+    maxCount: Number.MAX_SAFE_INTEGER, // Infinity
+    rowHeight: 56,
+    formatter: null,
+    showLunar: false,
+    showMark: true,
+    confirmText: '确定',
+    confirmDisabledText: '确定',
+    show: false,
+    closeOnClickOverlay: false,
+    readonly: false,
+    showConfirm: true,
+    maxRange: Number.MAX_SAFE_INTEGER, // Infinity
+    rangePrompt: '',
+    showRangePrompt: true,
+    allowSameDay: false,
+    round: 0,
+    monthNum: 3 } };exports.default = _default;
+
+/***/ }),
+/* 90 */
+/*!*******************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/carKeyboard.js ***!
+  \*******************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 16:53:20
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/carKeyboard.js
+                                                                                                      */var _default =
+{
+  // 车牌号键盘
+  carKeyboard: {
+    random: false } };exports.default = _default;
+
+/***/ }),
+/* 91 */
+/*!************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/cell.js ***!
+  \************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-23 20:53:09
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/cell.js
+                                                                                                      */var _default =
+{
+  // cell组件的props
+  cell: {
+    customClass: '',
+    title: '',
+    label: '',
+    value: '',
+    icon: '',
+    titleWidth: '',
+    disabled: false,
+    border: true,
+    center: false,
+    url: '',
+    linkType: 'navigateTo',
+    clickable: false,
+    isLink: false,
+    required: false,
+    arrowDirection: '',
+    iconStyle: {},
+    rightIconStyle: {},
+    rightIcon: 'arrow-right',
+    titleStyle: {},
+    size: '',
+    stop: true,
+    name: '' } };exports.default = _default;
+
+/***/ }),
+/* 92 */
+/*!*****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/cellGroup.js ***!
+  \*****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 16:54:16
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/cellGroup.js
+                                                                                                      */var _default =
+{
+  // cell-group组件的props
+  cellGroup: {
+    title: '',
+    border: true,
+    customStyle: {} } };exports.default = _default;
+
+/***/ }),
+/* 93 */
+/*!****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/checkbox.js ***!
+  \****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-23 21:06:59
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/checkbox.js
+                                                                                                      */var _default =
+{
+  // checkbox组件
+  checkbox: {
+    name: '',
+    shape: 'square',
+    size: '',
+    checkbox: false,
+    disabled: '',
+    activeColor: '',
+    inactiveColor: '',
+    iconSize: '',
+    iconColor: '',
+    label: '',
+    labelSize: '',
+    labelColor: '',
+    labelDisabled: '' } };exports.default = _default;
+
+/***/ }),
+/* 94 */
+/*!*********************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/checkboxGroup.js ***!
+  \*********************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 16:54:47
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/checkboxGroup.js
+                                                                                                      */var _default =
+{
+  // checkbox-group组件
+  checkboxGroup: {
+    name: '',
+    value: function value() {return [];},
+    shape: 'square',
+    disabled: false,
+    activeColor: '#2979ff',
+    inactiveColor: '#c8c9cc',
+    size: 18,
+    placement: 'row',
+    labelSize: 14,
+    labelColor: '#303133',
+    labelDisabled: false,
+    iconColor: '#ffffff',
+    iconSize: 12,
+    iconPlacement: 'left',
+    borderBottom: false } };exports.default = _default;
+
+/***/ }),
+/* 95 */
+/*!**********************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/circleProgress.js ***!
+  \**********************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 16:55:02
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/circleProgress.js
+                                                                                                      */var _default =
+{
+  // circleProgress 组件
+  circleProgress: {
+    percentage: 30 } };exports.default = _default;
+
+/***/ }),
+/* 96 */
+/*!************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/code.js ***!
+  \************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 16:55:27
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/code.js
+                                                                                                      */var _default =
+
+{
+  // code 组件
+  code: {
+    seconds: 60,
+    startText: '获取验证码',
+    changeText: 'X秒重新获取',
+    endText: '重新获取',
+    keepRunning: false,
+    uniqueKey: '' } };exports.default = _default;
+
+/***/ }),
+/* 97 */
+/*!*****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/codeInput.js ***!
+  \*****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 16:55:58
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/codeInput.js
+                                                                                                      */var _default =
+{
+  // codeInput 组件
+  codeInput: {
+    maxlength: 6,
+    dot: false,
+    mode: 'box',
+    hairline: false,
+    space: 10,
+    value: '',
+    focus: false,
+    bold: false,
+    color: '#606266',
+    fontSize: 18,
+    size: 35,
+    disabledKeyboard: false,
+    borderColor: '#c9cacc',
+    disabledDot: true } };exports.default = _default;
+
+/***/ }),
+/* 98 */
+/*!***********************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/col.js ***!
+  \***********************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 16:56:12
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/col.js
+                                                                                                      */var _default =
+{
+  // col 组件
+  col: {
+    span: 12,
+    offset: 0,
+    justify: 'start',
+    align: 'stretch',
+    textAlign: 'left' } };exports.default = _default;
+
+/***/ }),
+/* 99 */
+/*!****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/collapse.js ***!
+  \****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 16:56:30
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/collapse.js
+                                                                                                      */var _default =
+{
+  // collapse 组件
+  collapse: {
+    value: null,
+    accordion: false,
+    border: true } };exports.default = _default;
+
+/***/ }),
+/* 100 */
+/*!********************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/collapseItem.js ***!
+  \********************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 16:56:42
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/collapseItem.js
+                                                                                                      */var _default =
+{
+  // collapseItem 组件
+  collapseItem: {
+    title: '',
+    value: '',
+    label: '',
+    disabled: false,
+    isLink: true,
+    clickable: true,
+    border: true,
+    align: 'left',
+    name: '',
+    icon: '',
+    duration: 300 } };exports.default = _default;
+
+/***/ }),
+/* 101 */
+/*!********************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/columnNotice.js ***!
+  \********************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 16:57:16
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/columnNotice.js
+                                                                                                      */var _default =
+{
+  // columnNotice 组件
+  columnNotice: {
+    text: '',
+    icon: 'volume',
+    mode: '',
+    color: '#f9ae3d',
+    bgColor: '#fdf6ec',
+    fontSize: 14,
+    speed: 80,
+    step: false,
+    duration: 1500,
+    disableTouch: true } };exports.default = _default;
+
+/***/ }),
+/* 102 */
+/*!*****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/countDown.js ***!
+  \*****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:11:29
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/countDown.js
+                                                                                                      */var _default =
+{
+  // u-count-down 计时器组件
+  countDown: {
+    time: 0,
+    format: 'HH:mm:ss',
+    autoStart: true,
+    millisecond: false } };exports.default = _default;
+
+/***/ }),
+/* 103 */
+/*!***************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/countTo.js ***!
+  \***************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 16:57:32
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/countTo.js
+                                                                                                      */var _default =
+{
+  // countTo 组件
+  countTo: {
+    startVal: 0,
+    endVal: 0,
+    duration: 2000,
+    autoplay: true,
+    decimals: 0,
+    useEasing: true,
+    decimal: '.',
+    color: '#606266',
+    fontSize: 22,
+    bold: false,
+    separator: '' } };exports.default = _default;
+
+/***/ }),
+/* 104 */
+/*!**********************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/datetimePicker.js ***!
+  \**********************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 16:57:48
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/datetimePicker.js
+                                                                                                      */var _default =
+{
+  // datetimePicker 组件
+  datetimePicker: {
+    show: false,
+    showToolbar: true,
+    value: '',
+    title: '',
+    mode: 'datetime',
+    maxDate: new Date(new Date().getFullYear() + 10, 0, 1).getTime(),
+    minDate: new Date(new Date().getFullYear() - 10, 0, 1).getTime(),
+    minHour: 0,
+    maxHour: 23,
+    minMinute: 0,
+    maxMinute: 59,
+    filter: null,
+    formatter: null,
+    loading: false,
+    itemHeight: 44,
+    cancelText: '取消',
+    confirmText: '确认',
+    cancelColor: '#909193',
+    confirmColor: '#3c9cff',
+    visibleItemCount: 5,
+    closeOnClickOverlay: false,
+    defaultIndex: function defaultIndex() {return [];} } };exports.default = _default;
+
+/***/ }),
+/* 105 */
+/*!***************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/divider.js ***!
+  \***************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 16:58:03
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/divider.js
+                                                                                                      */var _default =
+{
+  // divider组件
+  divider: {
+    dashed: false,
+    hairline: true,
+    dot: false,
+    textPosition: 'center',
+    text: '',
+    textSize: 14,
+    textColor: '#909399',
+    lineColor: '#dcdfe6' } };exports.default = _default;
+
+/***/ }),
+/* 106 */
+/*!*************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/empty.js ***!
+  \*************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:03:27
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/empty.js
+                                                                                                      */var _default =
+{
+  // empty组件
+  empty: {
+    icon: '',
+    text: '',
+    textColor: '#c0c4cc',
+    textSize: 14,
+    iconColor: '#c0c4cc',
+    iconSize: 90,
+    mode: 'data',
+    width: 160,
+    height: 160,
+    show: true,
+    marginTop: 0 } };exports.default = _default;
+
+/***/ }),
+/* 107 */
+/*!************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/form.js ***!
+  \************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:03:49
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/form.js
+                                                                                                      */var _default =
+{
+  // form 组件
+  form: {
+    model: function model() {return {};},
+    rules: function rules() {return {};},
+    errorType: 'message',
+    borderBottom: true,
+    labelPosition: 'left',
+    labelWidth: 45,
+    labelAlign: 'left',
+    labelStyle: function labelStyle() {return {};} } };exports.default = _default;
+
+/***/ }),
+/* 108 */
+/*!****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/formItem.js ***!
+  \****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:04:32
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/formItem.js
+                                                                                                      */var _default =
+{
+  // formItem 组件
+  formItem: {
+    label: '',
+    prop: '',
+    borderBottom: '',
+    labelWidth: '',
+    rightIcon: '',
+    leftIcon: '',
+    required: false } };exports.default = _default;
+
+/***/ }),
+/* 109 */
+/*!***********************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/gap.js ***!
+  \***********************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:05:25
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/gap.js
+                                                                                                      */var _default =
+{
+  // gap组件
+  gap: {
+    bgColor: 'transparent',
+    height: 20,
+    marginTop: 0,
+    marginBottom: 0,
+    customStyle: {} } };exports.default = _default;
+
+/***/ }),
+/* 110 */
+/*!************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/grid.js ***!
+  \************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:05:57
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/grid.js
+                                                                                                      */var _default =
+{
+  // grid组件
+  grid: {
+    col: 3,
+    border: false,
+    align: 'left' } };exports.default = _default;
+
+/***/ }),
+/* 111 */
+/*!****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/gridItem.js ***!
+  \****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:06:13
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/gridItem.js
+                                                                                                      */var _default =
+{
+  // grid-item组件
+  gridItem: {
+    name: null,
+    bgColor: 'transparent' } };exports.default = _default;
+
+/***/ }),
+/* 112 */
+/*!************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/icon.js ***!
+  \************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;
+
+
+
+
+
+
+
+
+var _config = _interopRequireDefault(__webpack_require__(/*! ../config */ 79));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };} /*
+                                                                                                                                                          * @Author       : LQ
+                                                                                                                                                          * @Description  :
+                                                                                                                                                          * @version      : 1.0
+                                                                                                                                                          * @Date         : 2021-08-20 16:44:21
+                                                                                                                                                          * @LastAuthor   : LQ
+                                                                                                                                                          * @lastTime     : 2021-08-20 18:00:14
+                                                                                                                                                          * @FilePath     : /u-view2.0/uview-ui/libs/config/props/icon.js
+                                                                                                                                                          */var color = _config.default.color;var _default = { // icon组件
+  icon: { name: '', color: color['u-content-color'],
+    size: '16px',
+    bold: false,
+    index: '',
+    hoverClass: '',
+    customPrefix: 'uicon',
+    label: '',
+    labelPos: 'right',
+    labelSize: '15px',
+    labelColor: color['u-content-color'],
+    space: '3px',
+    imgMode: '',
+    width: '',
+    height: '',
+    top: 0,
+    stop: false } };exports.default = _default;
+
+/***/ }),
+/* 113 */
+/*!*************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/image.js ***!
+  \*************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:01:51
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/image.js
+                                                                                                      */var _default =
+{
+  // image组件
+  image: {
+    src: '',
+    mode: 'aspectFill',
+    width: '300',
+    height: '225',
+    shape: 'square',
+    radius: 0,
+    lazyLoad: true,
+    showMenuByLongpress: true,
+    loadingIcon: 'photo',
+    errorIcon: 'error-circle',
+    showLoading: true,
+    showError: true,
+    fade: true,
+    webp: false,
+    duration: 500,
+    bgColor: '#f3f4f6' } };exports.default = _default;
+
+/***/ }),
+/* 114 */
+/*!*******************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/indexAnchor.js ***!
+  \*******************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:13:15
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/indexAnchor.js
+                                                                                                      */var _default =
+{
+  // indexAnchor 组件
+  indexAnchor: {
+    text: '',
+    color: '#606266',
+    size: 14,
+    bgColor: '#dedede',
+    height: 32 } };exports.default = _default;
+
+/***/ }),
+/* 115 */
+/*!*****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/indexList.js ***!
+  \*****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:13:35
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/indexList.js
+                                                                                                      */var _default =
+{
+  // indexList 组件
+  indexList: {
+    inactiveColor: '#606266',
+    activeColor: '#5677fc',
+    indexList: function indexList() {return [];},
+    sticky: true,
+    customNavHeight: 0 } };exports.default = _default;
+
+/***/ }),
+/* 116 */
+/*!*************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/input.js ***!
+  \*************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:13:55
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/input.js
+                                                                                                      */var _default =
+{
+  // index 组件
+  input: {
+    value: '',
+    type: 'text',
+    fixed: false,
+    disabled: false,
+    disabledColor: '#f5f7fa',
+    clearable: false,
+    password: false,
+    maxlength: -1,
+    placeholder: null,
+    placeholderClass: 'input-placeholder',
+    placeholderStyle: 'color: #c0c4cc',
+    showWordLimit: false,
+    confirmType: 'done',
+    confirmHold: false,
+    holdKeyboard: false,
+    focus: false,
+    autoBlur: false,
+    disableDefaultPadding: false,
+    cursor: -1,
+    cursorSpacing: 30,
+    selectionStart: -1,
+    selectionEnd: -1,
+    adjustPosition: true,
+    inputAlign: 'left',
+    fontSize: '15px',
+    color: '#303133',
+    prefixIcon: '',
+    prefixIconStyle: '',
+    suffixIcon: '',
+    suffixIconStyle: '',
+    border: 'surround',
+    readonly: false,
+    shape: 'square',
+    formatter: null } };exports.default = _default;
+
+/***/ }),
+/* 117 */
+/*!****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/keyboard.js ***!
+  \****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:07:49
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/keyboard.js
+                                                                                                      */var _default =
+{
+  // 键盘组件
+  keyboard: {
+    mode: 'number',
+    dotDisabled: false,
+    tooltip: true,
+    showTips: true,
+    tips: '',
+    showCancel: true,
+    showConfirm: true,
+    random: false,
+    safeAreaInsetBottom: true,
+    closeOnClickOverlay: true,
+    show: false,
+    overlay: true,
+    zIndex: 10075,
+    cancelText: '取消',
+    confirmText: '确定',
+    autoChange: false } };exports.default = _default;
+
+/***/ }),
+/* 118 */
+/*!************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/line.js ***!
+  \************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:04:49
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/line.js
+                                                                                                      */var _default =
+{
+  // line组件
+  line: {
+    color: '#d6d7d9',
+    length: '100%',
+    direction: 'row',
+    hairline: true,
+    margin: 0,
+    dashed: false } };exports.default = _default;
+
+/***/ }),
+/* 119 */
+/*!********************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/lineProgress.js ***!
+  \********************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:14:11
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/lineProgress.js
+                                                                                                      */var _default =
+{
+  // lineProgress 组件
+  lineProgress: {
+    activeColor: '#19be6b',
+    inactiveColor: '#ececec',
+    percentage: 0,
+    showText: true,
+    height: 12 } };exports.default = _default;
+
+/***/ }),
+/* 120 */
+/*!************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/link.js ***!
+  \************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;
+
+
+
+
+
+
+
+
+var _config = _interopRequireDefault(__webpack_require__(/*! ../config */ 79));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };} /*
+                                                                                                                                                          * @Author       : LQ
+                                                                                                                                                          * @Description  :
+                                                                                                                                                          * @version      : 1.0
+                                                                                                                                                          * @Date         : 2021-08-20 16:44:21
+                                                                                                                                                          * @LastAuthor   : LQ
+                                                                                                                                                          * @lastTime     : 2021-08-20 17:45:36
+                                                                                                                                                          * @FilePath     : /u-view2.0/uview-ui/libs/config/props/link.js
+                                                                                                                                                          */var color = _config.default.color;var _default = { // link超链接组件props参数
+  link: { color: color['u-primary'], fontSize: 15,
+    underLine: false,
+    href: '',
+    mpTips: '链接已复制，请在浏览器打开',
+    lineColor: '',
+    text: '' } };exports.default = _default;
+
+/***/ }),
+/* 121 */
+/*!************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/list.js ***!
+  \************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:14:53
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/list.js
+                                                                                                      */var _default =
+{
+  // list 组件
+  list: {
+    showScrollbar: false,
+    lowerThreshold: 50,
+    upperThreshold: 0,
+    scrollTop: 0,
+    offsetAccuracy: 10,
+    enableFlex: false,
+    pagingEnabled: false,
+    scrollable: true,
+    scrollIntoView: '',
+    scrollWithAnimation: false,
+    enableBackToTop: false,
+    height: 0,
+    width: 0,
+    preLoadScreen: 1 } };exports.default = _default;
+
+/***/ }),
+/* 122 */
+/*!****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/listItem.js ***!
+  \****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:15:40
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/listItem.js
+                                                                                                      */var _default =
+{
+  // listItem 组件
+  listItem: {
+    anchor: '' } };exports.default = _default;
+
+/***/ }),
+/* 123 */
+/*!*******************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/loadingIcon.js ***!
+  \*******************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;
+
+
+
+
+
+
+
+
+var _config = _interopRequireDefault(__webpack_require__(/*! ../config */ 79));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };} /*
+                                                                                                                                                          * @Author       : LQ
+                                                                                                                                                          * @Description  :
+                                                                                                                                                          * @version      : 1.0
+                                                                                                                                                          * @Date         : 2021-08-20 16:44:21
+                                                                                                                                                          * @LastAuthor   : LQ
+                                                                                                                                                          * @lastTime     : 2021-08-20 17:45:47
+                                                                                                                                                          * @FilePath     : /u-view2.0/uview-ui/libs/config/props/loadingIcon.js
+                                                                                                                                                          */var color = _config.default.color;var _default = { // loading-icon加载中图标组件
+  loadingIcon: { show: true, color: color['u-tips-color'],
+    textColor: color['u-tips-color'],
+    vertical: false,
+    mode: 'spinner',
+    size: 24,
+    textSize: 15,
+    text: '',
+    timingFunction: 'ease-in-out',
+    duration: 1200,
+    inactiveColor: '' } };exports.default = _default;
+
+/***/ }),
+/* 124 */
+/*!*******************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/loadingPage.js ***!
+  \*******************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:00:23
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/loadingPage.js
+                                                                                                      */var _default =
+{
+  // loading-page组件
+  loadingPage: {
+    loadingText: '正在加载',
+    image: '',
+    loadingMode: 'circle',
+    loading: false,
+    bgColor: '#ffffff',
+    color: '#C8C8C8',
+    fontSize: 19,
+    loadingColor: '#C8C8C8' } };exports.default = _default;
+
+/***/ }),
+/* 125 */
+/*!****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/loadmore.js ***!
+  \****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:15:26
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/loadmore.js
+                                                                                                      */var _default =
+{
+  // loadmore 组件
+  loadmore: {
+    status: 'loadmore',
+    bgColor: 'transparent',
+    icon: true,
+    fontSize: 14,
+    color: '#606266',
+    loadingIcon: 'spinner',
+    loadmoreText: '加载更多',
+    loadingText: '正在加载...',
+    nomoreText: '没有更多了',
+    isDot: false,
+    iconColor: '#b7b7b7',
+    marginTop: 10,
+    marginBottom: 10,
+    height: 'auto',
+    line: false } };exports.default = _default;
+
+/***/ }),
+/* 126 */
+/*!*************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/modal.js ***!
+  \*************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:15:59
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/modal.js
+                                                                                                      */var _default =
+{
+  // modal 组件
+  modal: {
+    show: false,
+    title: '',
+    content: '',
+    confirmText: '确认',
+    cancelText: '取消',
+    showConfirmButton: true,
+    showCancelButton: false,
+    confirmColor: '#2979ff',
+    cancelColor: '#606266',
+    buttonReverse: false,
+    zoom: true,
+    asyncClose: false,
+    closeOnClickOverlay: false,
+    negativeTop: 0,
+    width: '650rpx',
+    confirmButtonShape: '' } };exports.default = _default;
+
+/***/ }),
+/* 127 */
+/*!**************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/navbar.js ***!
+  \**************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;
+
+
+
+
+
+
+
+
+var _color = _interopRequireDefault(__webpack_require__(/*! ../color */ 128));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };} /*
+                                                                                                                                                        * @Author       : LQ
+                                                                                                                                                        * @Description  :
+                                                                                                                                                        * @version      : 1.0
+                                                                                                                                                        * @Date         : 2021-08-20 16:44:21
+                                                                                                                                                        * @LastAuthor   : LQ
+                                                                                                                                                        * @lastTime     : 2021-08-20 17:16:18
+                                                                                                                                                        * @FilePath     : /u-view2.0/uview-ui/libs/config/props/navbar.js
+                                                                                                                                                        */var _default = { // navbar 组件
+  navbar: { safeAreaInsetTop: true, placeholder: false, fixed: true, border: false, leftIcon: 'arrow-left', leftText: '',
+    rightText: '',
+    rightIcon: '',
+    title: '',
+    bgColor: '#ffffff',
+    titleWidth: '400rpx',
+    height: '44px',
+    leftIconSize: 20,
+    leftIconColor: _color.default.mainColor,
+    autoBack: false } };exports.default = _default;
+
+/***/ }),
+/* 128 */
+/*!*******************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/color.js ***!
+  \*******************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; // 为了让用户能够自定义主题，会逐步弃用此文件，各颜色通过css提供
+// 为了给某些特殊场景使用和向后兼容，无需删除此文件(2020-06-20)
+var color = {
+  primary: '#3c9cff',
+  info: '#909399',
+  default: '#909399',
+  warning: '#f9ae3d',
+  error: '#f56c6c',
+  success: '#5ac725',
+  mainColor: '#303133',
+  contentColor: '#606266',
+  tipsColor: '#909399',
+  lightColor: '#c0c4cc',
+  borderColor: '#e4e7ed' };var _default =
+
+
+color;exports.default = _default;
+
+/***/ }),
+/* 129 */
+/*!*****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/noNetwork.js ***!
+  \*****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:16:39
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/noNetwork.js
+                                                                                                      */var _default =
+{
+  // noNetwork
+  noNetwork: {
+    tips: '哎呀，网络信号丢失',
+    zIndex: '',
+    image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsCAYAAAB5fY51AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAABLKADAAQAAAABAAABLAAAAADYYILnAABAAElEQVR4Ae29CZhkV3kefNeq6m2W7tn3nl0aCbHIAgmQPGB+sLCNzSID9g9PYrAf57d/+4+DiW0cy8QBJ06c2In/PLFDHJ78+MGCGNsYgyxwIwktwEijAc1ohtmnZ+2Z7p5eq6vu9r/vuXWrq25VdVV1V3dXVX9Hmj73nv285963vvOd75yraeIEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQaD8E9PbrkvRopSMwMBBYRs+5O/yJS68cPnzYXel4tFP/jXbqjPRFEAiCQNe6Bw/6gdFn9Oy9Q90LLG2DgBBW2wyldIQIPPPCte2a5q3jtR+4ff/4wuBuXotrDwSEsNpjHKUXQODppy+udYJMEUEZgbd94DvnNwlA7YGAEFZ7jOOK78Xp06eTTkq7sxwQhmXuf/754VXl4iSstRAQwmqt8ZLWlkHg0UcD49qYfUjXfLtMtOZ7npExJu4iqZWLl7DWQUAIq3XGSlpaAYHD77q8xwuCOSUoXw8Sl0eMux977DGzQjES3AIICGG1wCBJEysj8PXnz230XXdr5RQFMYbRvWnv6w8UhMhliyGwYghr4Pjg3oEXL34ey9zyC9tiD2ml5h47dr1LN7S6CMjz/A3PvHh1Z6UyJby5EVgRhKUe7Kz/JU0LfvrJo5f+Y3MPibSuFgQGBgasYSd9l6GDsup0WS/T/9RTp9fXmU2SNwECdQ92E7S57iaMeJnPQLK6ixkDLfjlb7546RfrLkQyNBcC3dsP6oHWMd9G+V3JgwPHh7rnm1/yLQ8CbU9Y33zp0j+nZFUMb/DHmB7+SHGY3LUKAk8cObtD00xlHDrfNge+Z2ozU3c9dvx4Yr5lSL6lR6CtCWvg6OAPw9z538ZhhZRl6XrwhW8du1KX/iNejtwvPQIDR8+vSRqJ/obU7GupjdNdh2gW0ZDypJBFR6BtB2rg2OVtuub9JcmpHIpBoK1xfffLzx4f7C0XL2HNiYDp6bs9z23Ypn1fC1Y/9PCFDc3ZW2lVHIG2JKzTp4Ok7nv/G6Q054MIvda+bNb74pEgKGtwGAdL7pcfAa8vOKEZ2kyjWuLr7uDh+/qvN6o8KWdxEWhLwroyeek/g4zuqwU6kNrhyZcu/UktaSXN8iNwuL9/RuvVXtJ9PbPQ1vhmcP6t9+47u9ByJP/SIdB2hDVw9MJHQFYfrQdCph84evFX68kjaZcPAZJWwjMXRFpJ2zr91tfuvrh8vZCa54NA2xGWrunvmg8QWCJ/N4ir7fCYDxatkOeBB7an501agXbygVdvv9IK/ZQ2FiPQdi9osGbH+zRNf7y4m9Xu9Me7N9nv0HXdr5ZS4psHgXpJC9P/wDRTx0Vn1TxjWG9LGrbaUm/Fi5meSvcrkxf/Cg/ow9XqAUk91v3qHT97r6471dJKfHMi8Oyzgx1Z03t1YAQVT2MwgsC3u+yXHzi0faQ5eyGtqgWBtpOw2Ol9+/TM+sTOn8L08MtzgQCy+tOHXr3jA0JWc6HU/HF5Scssr4jXcYqfP6V/T8iq+ceyWgvbUsKKOn38eJAYyl56TAuCEr2WYei//9Crd/5GlFb81kdASVopSFrerKRlaoZj9HR+700H10+0fg+lB21NWBxe2lhNHsUpDZr27mi4dV379R9+za4/iO7Fbx8ECknLCPTsTDJ17O33bJpqnx6u7J60PWFxeAcCbMV56dJfQKf1bkMLfuGh1+76zMoe9vbuPUnLsb2DtmOe5HSxvXsrvWtLBEhaTx29+Ma27Jx0ShAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQaEsEVoQdVluO3BJ06ptHL34b1XRjp4Ch6Rq24+kmjG4Nwwg+9uA9u/73EjRBqhAEihAoe3xwUQq5WTYEzp0b3ZnV/Ncf6O/9AvY9wlh/6dy3X7ncN512Zw9BVLXjuAP4np44vnQtkZoEgVkEhLBmsWiKqwsXpjbPBOn3gRfenwnc+7GBe+zsjclvonFDS9nA9Iy/u3x9+vAP3735VPk4CRUEFhcBIazFxbfm0k9fHD7k+v4nQFaPQIrx8Gmyx/GJ0J/t7ez7mw0b9MmaC2pQQgh0/ZSm4g5TwueWWtqLt0HuVy4CQljLPPYnB0depTn+b3t+8B4t0AdBUv93h2H9xc6da0aXs2m+r1WQsLRnl7NdUvfKRkAIa5nG//r1oGtsZvjTgev/kqYHF/TA+AXoqv4npJemOEiQU1Eo2l+G0movBK1UBBPU7s9E1+ILAkuNgKwSLjXiqO/khVtvARH8dxDBRkMzPrF/V+9/BlG5y9CUqlXinHv9mRPXtvuus88L9H3JPv2zD2yXExCqAicJBIFWRwAvv3Xqwq0/Pnn+lv/K+ZvfPH3p9p5W75O0fxaBp793ce3AwIDMWmYhafiVgNtwSMsXeHp4eNXJC8Nf0PAdRCiuf/XgrnWUqsqotcvnl9DmRkCdweX4b9N7+m/ih+mbMraLM14yJVwcXItKpT1VRve+ArC3Qqn+3gM7132jKEGZm6tXg86J7OhDfuA/iHwPUpfUZSfu2L59tXxEoQxeyxkEgjKeOnLxHb4RqC+NY5H3+2953d4XlrNN7Vq3ENYij+yZwbG9jpt9GkBPQ5H9zgP9607OVeWp87cOQtn9zwJf+xDMNFfj+jryPqXpxj8c2Nn7P+SXey70lidu4IXzb0DNB4tr9751+HV7zxSHyd1CERDCWiiCc+QPjUCnsaqmZ62O5IN7N/VUNP48ee7mAZDTf4Tt049iUG4Guv4ZfNLos9UIbo7qJWoJEHjy+bP7fNsoOcnW0A0/aacef8PdG28sQTNWTBVCWIs01OfPj66BpfqTmq732UnjgT1bei+Vq4pTv7HM8Ceg2/o1qLQug7T+FaaM3IqTLZdewpoHgYEjV9fphvOj+OShWa5V+CxvZtpzv/LwG/aNl4uXsPoRwI+4uEYjAJ2GmdG8L0FK2mYa+tsrkdXZy+P7x2ZuHdW14P+BLdank9q6Qwd3rf+ckFWjR6Tx5Q2cP58K9Jm3VCIr1ogt48lO237r3//96YofeG18y9q7RFklXITxPXV+5DchKb3ZDMy37Nu5tuxG4R9cHH6b42QfAzlds+3EPXu2rfrBIjRFilwkBIIR7SHoJDurFU89ZOd680Gke6JaWomvjoBIWNUxqivFD87fej0e0n8Fwvr0/t1rnyqX+QfnRz7g+8FX8Rv8vL3auF/IqhxKzR2WCPxXqKeq3krDTdj2ierpJEUtCIgOqxaUakwzNBR0D09yiqePHOjveyOkpxLr9VMXb73V97S/h3nDXx7Y2fdPkAYbncW1IgIDxy5vM7LZt/hgrnLtxyaBrJNxv/72N+6tuNhSLp+EVUZACKsyNnXHvHL+1qcgNf2KbSXu2bt9dcmS9qlzo/fARgcmCtpzB3b1/Vg5QiuslLowENyDWDn8cSjl98PgdBviu03N+rl9/WufLEwr18uDwLdevLTF1YK3xnVZ2HI1bUxrT7z5zTuXdRP78qCyeLUKYTUI25OXbm4JPO00TBj+6I7+db8ZL3ZwMOiYdG4dA1lN9HWte2iuI2NAVPapC8O/CGPR34Ip/AZIbIMo7yX8G9QMbcS09P+2b1vf5XgdrXaPfiYns9oeLLEd8D1/B7Dp0E1jGP042pXQj7RKf546cmGzp+tv1TRf6YQD35/QO3seP3xow5IfC9QqmM23naJ0ny9ysXwgq98BWc0kVhv/Nhalbqe8kd/Fr8MOSEr3zEVWrwyO3I29hl+E9LUHGf+nAXI6sGPdd8uV2YphIKnE5IyL6bLxk7cn3bdkHHefrpvJAExMZ1uBZmqeNzXtfzUzk/m/ens7LjV7Px+8d9e1579/44l0duZtge+Np5zEEw8c2pBu9na3YvtEwmrAqNE8IZvNHsep5//yjl3r/0O8yFOXbv0QCO05gP0JGIL+fjw+uj91YeRh/Dp/PtCDM7Zpfmjvjt6Xo7hW9ycmJjaYduf7Hdf/8HTGfa3rG9rYxLSWnsloPg7fijZV8oFM2Ja2a9t6EJd7bCztvHP7us4rrdD/r3/7ct9I99jEI4cOiQ3dIg2YEFYDgOUJDFj1e8TqX7cT4kImXuQr5279A4DeBEX8ayvprU4N3rovcALot/TH13T0fXDTJn0qXk4r3k9OTm4y7a6PzjjORzOOvn1kbEqbnEprPhRzwAKzwFLHk05hv6Yd6N+o3R6beG50aPSdr3qV6IJKkVp5ITIlXOCYn4Yexr0w/DO6YXymHFlR0e5r7tsM3fxgJbI6fW1ivTeT+SsYmr54cFff+5Cu5X+hb94Merp6/J/PusGvTE6724eGJ7RpSFOkKPCUZvBPBccoHBet3Rwe13rX9tw/PjXzZ5hKvr8SfhWKkeA2REAIa4GD6p0feRdWBnvxjv2PckVhVfBf4A29uG/X2i+Ui2eYn8n8NryuDr3jPfWSFV5k44UT137eshIP2K7/64cObbheqZ6lCp+Ydt8TBO7vTM5od1+/NR4SFVhoLpKKt410lnE8LTMzo3V2dLznxLkhYgQ9obiVjEDln7mVjEodfYcpw+MAsftg/7qSDbAnb97sCSb0Yei2fqOcbovVqKNnNO8HmAE9Cv3Wp+uoWjt27HpXNqH9WTKR+kBHKqEFbvo5y3N/avfu4g23R45f3WGa1k9ZicTd0zPTf/f6O7f8dT311Jp2fHzmgJlI/N70jPPe4bEZ6Kg4qw0lqlrLiNKBiLWerpTW25PUbkPXZViW62ecHz+4d8PXojTirzwEyhq8rTwYFtRjvpX/rlwJ+iSXugPbMuyKBOHo3geRJtuT7PujcmVUCuPJlhnL/9NUqvMD2eyM5sxMaIlE4n7XML907tyNjcxHQjty4sZv66Z1xEok/xNW5n4uZSf+8sT5m++vVO58wkEu5sR09pd9w/rWyET2vReujiqygrSopn/zKZN5qMeirotKeTyolm7p/+X06Wvr51ue5Gt9BISwFjiGsLl6N6SrvylXDNTK70D4mX071pwtF88w6Jd/DG/1E1u26NOV0pQL71y3/8PJVOcHMzPTWkcCH2YGOaTTaS2RTN6f1fQvvvDK1bdnbO2JZCr1SeRfn05Pa1PTU0gXJBKW+ecnzlxvCGndhFQ1NRP8bcY1/vjS9bF1V26MwHwsVKiXa3etYVw1TNhYJ3TDjQCO42jJVMcez7J+t9YyJF37ISCEtahjGjxkGDr2DJZ31D8h5vUQJL5RPkXlUMM07u3qSGidICvkzzuSlmlZb0olrK9hD9v9JCrPC196JoPMAolFg6CV+PPj54YeyWecx8Vk2v1Q0rSfhFT18LnBmzBRyNalp5qrSuq7kiAsh4SFa7oZ9M0wzI+cPHOjZPo9V1kS1z4ICGEt4lhiCvZrSa2jol7qzPXJPk6nIGbVbWfUvcr7hO9MP97ZVXpggOu6ajplYStj7l1XvbRMXbPAbp6HzSSBlkraNknrvfVCcPt2sHYi7f3pTDb47KUbYxuvKqkKpYBXKBnV869c3WgbDEixAck0FGFFfEzJzbIsO9C1TyrcymWWsLZGIHoW2rqTzdo5dXyykz0NC8l779i5vu4zwM+eHVntGP5jqVTq/6AkVc5NZ3wNH2lVxNWZNIukMSjiNd9z0+CHp5DXAdX4SAg203w8GB5IATtODHzdK8C15kEjhXvNS9rWA11dnfcMDY9prscss48RySakrOLWqODCoIKAgkuVgsS0urtD60haeV1YYVbbtjUn6/74HXvW/11huFy3PwKzT1r797Upe3jq4sib9u9Y+wxe+vh7W1N7jx49v6ZzbffnQD4/Cj1Pfjx54XiBls6GVuTUc9mQsOIO9mPQFdkIRlz4fy5JLm2ZMOqTcJaXIqpcqnixVe+rdbZ3dbc2OT0D0wZIibHSksmklslknvx+//q3PiKnXcTQae/b+LPQ3r1t0969cOL6G7o6E09qgZegdMJBpVQ1DbKCpyUt6oPKz/4NEJalCAuZFIuEVBJd+jgLh4rvAiFqUVGkhJZMWFp3Z0obGSu/d5gSnWmavuO6h+/cvYHSobgVgoAYjrb4QPMUiGtj1/79jBMkLBwiTlMASlYzTkhWCJyTrGAyMOFkst/BoYMmuIIyGJYcMXMMdNwHPhYN1qWS1t6ZLGaKZL8yzFXTr15BooLLMugHMBRNKgW+It8y9TEcJGt4rvcRFCCEVQbFdg0Swmrxkb0+cf2XOzq73kgdFieEXF2jdEUJKQH6SVWQrNjtZDKlpTPp38U58iUbthk/Ph7sN6zg/xudSGvD4xkq6otcnnjyF0XRRTflkyC0IIJE1JG0QbqGNpMNp5xFhRTcZDNoj66988SFm5vv3LX+WkGUXLYxAuXnCW3c4XbqGs9hwjv+a9lsuN+ahOJSCoLjNDAFvVUll0p1aNPp6adTweSflEszPO48oFn+4yOTmR+6enOshKyYhzWpf/jDuuf6x2aV/qNRaPG/1d0gUXWCA0uu7GhMmkqmerEc8KOVU0lMuyFQ+Ylut562YX9Sncmf7Ojo3BDZWbGLtMkiUVXSWTFNuMqWuYG530f7+/tnGFboxsfdd9mm8XdDo9O7rg6NFq0CFqZr5DWlK9qV0fZqGvZchSuPlevB2VmG/hOV4yWm3RAQwmrhEcW64qu4ykfJho52Vp3J8quBYQooqWDKADftBd6HD+5efyoKj/zR8ew/hWXY56/cnFh7a3RCTTGjuMX0SVB9qzu1qfQM+jO3dBW1g6uVSHv/qVNX10Vh4rc3AkJYLTy+WA/8ou9kJjo7bOh+DLVFZ64TEbCyBktxI5PJZj56R//Gx+NdH5vM4vuI+p8NXh9LjU1iw3EZhXc8TyPuuV9wDaaCfBjTM06N0hVWQmHBDzvSDZ5tvqYR7ZAymh8BIazmH6OKLbzv0KZvJEz3ZzEFnEolaEtV2XEaCLKadrIz//TQnk1/EU85NuH8th8Yf4j9gMZUOrNkZEVZCnsbtTU9KW18GqcKFyjh420sd2+j33pg3F8uTsLaDwEhrBYf04O7N/2t7/o/C2FoGnsIy/YGlvAwSfCvZzLOe+8oR1ZT3u/5uvHJC9dGtJlMrfqjslXVHwjpat2aLi2rjFFLjUSrFUjlO0juddXSSXx7ICCE1QbjiHO0/hofbPgwpnDTOR2V6hWNQqGUx34890noet5yaO+Gko3Y45PO7/uB/lvnrwxrWdha1absbgxo1FWtwplXqYSJY5Nn5lU3bLHQmGA/yko0plVSSjMjIITVzKNTR9sO7dv8RSeb/T9BWmMkKv4D+YzBXuljV7yxd+zfte6VeHGKrHTz4+cv38JWmyUmKzSGG5z7VndoE7kz3uPtq+Welvhwm39weVjOyaoFsBZPI4TV4gNY2Pw79mz8KyebeRIH+VEZTaX0sf27+v794TKmCxNTzr/2NOPj5wZBVjjdYSklq6jN69dyKuhqmWztivYob+RTSkPbe/xMdlMUJn77IiCE1W5jq+s4dYEO6mzsYAmvi/+CrH7LDYxPcBq4HGTFVcG1ULLT5orS1ULIkoSFI2cMHKG8obiXcteOCAhhtdmo6gaOh4EWWlkyYU9gvHswXfgV19d/7+LVkSWfBrItJJhObL/p7elQR8fUZnEV70XxPc01sM+xrzhU7toRgZIHuh07uZL6xA3LBaYB+Ar8rBsfz34YX1j+D5eu317QNGy2xPquSE4mDuXb2IujY2AgytNE67RiKFshzuwCR5s9ZSMlsK0QEMJqq+GkBKOF5yFzRoidK5BoFCeMjM/8mG+a//Xy0Li55KYLBRiTrGjwOQ1br4VMBQuKVJeQKVPxMLlvPwSEsNpsTEECmBLSgbHUpwD1YGwse59l2p+9fmuig4fiNZIowrqq/6Xeqm9Vh9JbjcOKvqFtACX7gV8kTVZvkaRoRQSEsFpx1OZoM2iKxxuHLtDcsZlgLzYZfv7m7XSv+r7fIm234XSP/8o5ktWqzqSyZr89PoXPYDTYkZvziw0NLluKayoEyq4iNVULpTF1IaDjHHZmoAW4aep9geN8fiLt998cGYdtVp7K6iqzXGJFUCAi7jdkuapsBJKcPBwgyP8YRyV7B04Q3dDbpY3jg6gupoMNla5U41BbUN9n0sr1ScKaHwEhrOYfo7paCAW0WiWknihhW/0Tabf/6tDtxpIVSIhGnz1dSXUkDL8fSHKi4/lWPId9Kp3Vxqegp8J/m9f14D6DQ/nmb281FwgkZ1Dj7bnSSFx7ICCE1R7jmO8FJJr8jCvjeNrIxFjDJBpKVaSlXhwDw384MyucBoLAGEfHI5ptO6n1YAq4FjorH9IWjUOnFlF3pj62aui3whbI33ZGQAir/UY3XCVEvzgdw/8NcSyGUhSlpVWQrFg2p39xp0JYLyIohaXxdZ2FGofG6yi85/QS32F0Asu8URgu1+2JgCjd22xcsVElPC85169Gaa1YTkRWJKpSqooBiQQzONvq9sRULKKxtzzAEJw1api2EFZjoW3K0oSwmnJY5tcoSD09HanEDztubnfO/IopyUWC6sUmZUpW5aSqkgwgK04DxxaZrFivacCaIdAuH9zaM1rSDgloOwSEsNpoSMenvU93dXb+EE5taFivKElRqd67qrNmsqIF+yjMF/i56MV2JqadYKxXMDXM6+4Wu04pf/kQEMJaPuwbWvPticwj4Il/NnTrdl7JrqaDC5wTUle1GmdWWVCw1+JotjA6PgnThsIdQrXknF8arkJi/+R355dbcrUaArU9ha3WqxXW3tHR9C5dN//T9eEJ3aGdUwP7T0V7F86Mr0VW4mF6o2NTS/ilaB2HDmb8wA2+08AuS1FNjIAQVhMPTi1NgwRkGKbxRxMz3uaJSRzVUkumOtLwo6Zc7aOkVdEhynN9NQ1cyuNqeEqD67mX9TXGyxXbJhFthYAQVosP58S0909czfqJqzdGODVqaG/IUbCWr2p0yukfp4FUtDfeir1yl8IPUGjPHFy/fqJyKolpJwSEsFp4NEfT6Z3YBvOp8MvMc0hAi9hHNQ1cBrJil5TUZxhfXsTuSdFNhoAQVpMNSD3NMTzzU1PZYAM/ProYkg3UV5rHT8lXmA7SwnwEq4FLLVkRI04HM+n0LdvzvlEPZpK2tREQwmrR8ZucCd7hePr7rw2N5PfxLUZXON1zHKz4kb0KnIttP6Njk8tyaimbwXPrsW/yq3v3bhoqaJZctjkCQlgtOMCYCnU4GedTI+NpQ32XbxH7QOmKG5nzdIWZJz8HNkKygqI9TmSL2JSiovGVn0A39c8WBcpN2yMghNWCQ4zPc0HRbr6GEs6chJFnmfl3knZO4/hmII1B6fiFG9br0s6qAeXPp2WUrhzHeXH/jr6n5pNf8rQuAkJYLTZ2kK7Wul7w6zeGx9DyUsZovOodOizosTg1TM9k1Wogpa7lIisOF+w48E/7E5B1Y/cgtdizsBKbK6c1tNioT6X9n3MDcyePOo7OoJqrC6S0+ZIYV+GSOHxvc18PJCxXG4ed13I727axqTp9yk9rX1jutkj9S4+ASFhLj/m8axwdDdbgELxfGsLpoZyqVXPVU1QugVJUV0dC27p+FaaBWWxknq6ceAljTNMiAf/BoUMbJpewWqmqSRAQCatJBqKWZpgJ731Zx9pJM4aK0hXe5vlKVFEbKFlxs3PvqpSSqpbzKztRm+gnEkktnU6/2GFMfa4wXK5XDgJCWC0y1iAR6/Z49iOjY7C5qkG6mk+3SFQGlEP8FFdnygrNFqBsn1OxP5+K5pGHbcBhqhT8fqu/v39mHkVIljZAQAirRQYx7Wj3Zj3tddQjVVJ4l50CMjHe8mqOTJCCvmoTyIrENXx7Uinbm4Gs2PZUqkObnp76i0N7N36tWl8kvn0RaGnCGhgILKPn3B3+xKVXDh8+nPseX3sOlpt13+P4uonv71WeDqLr1ampFB8S1JrulNaHc9rTMxltcpofOeWns0rTLkeIZUHRnpm5YibMf7kc9UudzYNAyyrd8ZLpWvfgQT8w+oyevXeo++bBtaEtQd9s1/ffRsV3I6eDJCp+nourgH04UZQnhIYfWm1o8xdUGCU8/E/bil89sH3dlQUVJplbHoGWJaxnXri2HTvd1nEEcCBS3z++MLi75UejQgcmJjL92ax/gNJPo6QekhVXAbdvXI3D+XQ1Bcxiu02zTAEjKFIdHTQS/S8Hd2/4YhQm/spFoCUJ6+mnL651gkwRQRmBt33gO+c3teNQYin/oG6aKX5rcKEukqqoWN+Ij5vy81v8UATDG0WGC21jlJ96K6wKPpWd8H8jChN/ZSPQcoR1+vTppJPS7iw3bIZl7n/++eFV5eJaOczX9Z2YvM1LPxWpocBHKv8qHHdMqSphGUqqahaThfj40ITBcbLnsDj6oXvu2bS4n96JVy73TYtASxHWo48GxrUx+5Cu+XY5RH3PMzLGxF0ktXLxrRoGNVPPfNtOolIrgElLGYH2wbZqcipdIFVFlDbfGhqfj9bskCaHHS/7gTt3r73Y+BqkxFZFoKUI6/C7Lu/Bl1jmlKB8PUhcHjHufuyxx/g5lbZw+BL7bX4EoiZqyS0T0uM0j1+82QSl+ua+bhxj7GjD2LicwWkLzaarigbKsmDJ7gcTmezMBw/t3ixntUfAiK8QaBmzhq8/f26j77pbaxo3w+jetPf1B5D2RE3pmzyR4/nH+Mti4Wx1dUrCHO0lSVGqskFUnakkpn6mhu086jgYHkWTW3Wbo4Tli6L5gqYHE47vfeDufVv+YflaIjU3KwItIWEdO3a9Szc0ElDNDqcLbHjmxas7a87QxAnX9ljfxcr+Mzs29ykpi1O8iJjoR/cm5o7dnUl89LRLW93dyWmVIip+Kp7pmlWqIvQ8Mga9Gslm3Efu3LX+K008HNK0ZUSgplnGMrZPGxgYsIKeXa/TA61jPu0w0+7xBx/cd3M+eZspD0wbDgWm+RXP13cODY/jWGKuGAb48jG+agNpilbqlKZoWDqDY2AyjtNUlupzYZlKpXgaxIVMNv0zd+/d+uxcaSVuZSPQ/IT13TN34QRvZW81n6HSDdMLUqmjh9tgd//Fi8OHEl3JL3Z2dh3MzGA7XU664llVWRz/QhLjNYmsmaWp/DjCjqIDdlaZTOZZ1/A+fGj7hjP5OLkQBMog0NSE9cSRszuswNhdpt31BRnazM3U9IuPHDrUuG+419eChqU+cvzqjp7u5P9KJpMPpqc51Zv9QntLkFQBEqZluVCw/7nhaP9i376+8YIouRQEyiLQtIQ1cPT8GjOw7vE8tyFtxBrb2MBXdh579FF99g0vC0nzB548ebNHT2l/aFmJj1BPBYyav9EFLaQ+jdPAVNL8/pZ13a8qiJLLOhAAjvrTRy/d0enbF+69d0tzHFhWR/vnk7Rple6mp+9uFFkRGF8LVj/08IUN8wGp2fIcPLh+4sCu9R+F3ucj0MLf4vaVVnChqYWmdaQS2jpY2vd0djh86Vqh7c3Yxm8dudTPxaW0lrn7yJEjZW0Tm7HdC2lT0xKW1xecgHE3FDWNcb7uDh6+r/96Y0prjlIO7ur7TOD5b3ayzt9ylY0Gl83qKFXZsCXrXdOlrV3djf2LBr556JOshLDmMWhPPXV6vav5O5jVxYLUhNl3iIbV8yiqpbI0bQcP85C2Xu0l3dczC0XUN4Pzb71339mFltOM+Q/0rzu5f2fvu1zH+QDOt3uZ0pbVRMRFouJK5qqeTkhVqyBdtdUmhGV5JI4cudrpd5kHiyp3tTU/8s6r+4rC2vCmaQmLWJO0Ep65INJK2tbpt75298U2HLuiLh3oX/95L+0/kHUyvwTieiUJHVEimVzy1UKeWMqv2pCoKEVFRNXT1aHawnBx80eAZj7TwcxdAc5Gi5fiaNnNT37nCk4xaV/X1IRF2B94YHt63qQVaCcfePX2K+07fMU9U7qtHev+xE/7r3cc70O+6w1gxuV0dHZiusgvJS/O7IskRXLs6KCxqj+B26t9a3uUREWi4plbQlTFYzXvu+7tB3EIUGel/L6e3TNw5NS8zYAqldss4YvzBC9C7559drAja3qvDoyg6pwCP+KBZaVOPPjazS1vMLpQKE9fuPnawDB+EqehPwzWuAuSl8LPg90WVxhJJPWQCUmPBAWTBEz1TFUGpqO3wYYvIPgr2az35a2b1/50V6f1e1NTlVcvEzB0xRekj67usu5FmS2/crvQcaol/zeeObfTSOj91dIq28PxiaOHDx9quy8LtQxhcZBqIS0Dhkl2l/3yA4e2j1Qb2JUUD1Iyz1waOQib0vsxKXsAFvH3wMB0JySwtZC+DBPTN5BOCEnhrI1BuKe9l6tIzsVCiD6E0DOabrwI2elZ09aP7N3aNxjheXvK+a1OENa0EFYEyYL9rz072Ju03ZpNQKj7Xd899cKhNrA9LASvZTY/s9GcHoK0XsrakLS8UklLxyl+/rj+/Qfu2367sJNyTS7SuZfneO7ffweBGScu3NwAqWgrTvTc5jjBZmw87tMCfRXYKQWOgula4OiBOQUZ7DZuhrAGdQXxV0zPuCaGnkv3VPGHOpPw7+QPR62OM5HhdNddGOeX2kmCbSnC4mDlSStVTFr4eLljdHV+702vWz9R66Cu5HS5h5hmHvz3QiOxwJTRo2BGgY06dm7OVhewYGAY6s75oD+ZDs4JPY9JyqSCQ7ABqftd5VFM3/j2Ja4mtsWpJQSq6ZXu5UZTKeJnsHpohiYPRqBn04nkS2+CQWW59BK2dAjwS0Y4IHDz2ERWG8Gnwm7iK9W3sFmbvrqGPzw6gW8eTmvTM07XmTPX28KYd7EQ3rjnvv1QFHbPt3zT9DcMPHd+13zzN1s+/hC2rKOo7NjeQdsxT5LEWrYjbdLw05eHtwWe9jl0542u62HZHZIVpalY/yIlP5X3MHYddLLZfy4fmYiBhNuB509vw+rG3tKY+kOwGHLi7W/cS91jS7v4s9TSnZHGLx8CICH9lXNDX+zpWfXuycnaBV2e3e567nAm4973qv0bzy1fD5qr5oEB7KXt0u7B3Loh7yhWVfypbOalh9+wr6U3mbfklLC5Hi1pDRE4ef7Wj+EEiZ+amqpvJT2bzWjJRLIPR3n9riA5i4DZg720DSIrlsrvHXSZ9p7ZGlrzSgirNcetqVp9/vz5FJTqj6JRejTdq6eBMzNpHP9s//QrF4bvrydfO6f1JrCX1mvcXlo98Kembjotr3wXwmrnp36J+pYNeh5JdqRem83O77gxkpxtW3bgOZ/g1HKJmt3U1Rw+3D+zrc89aunagnWzpq6PdxujLz388L4F78tdbtCEsJZ7BFq8/sHBoMPX/I9hyrGgnuDUUZzrnnz7yQu3HlxQQW2Ued++fZmJ1e5LoPB5k5ZpWCPXz+08du+99zrtAI0QVjuM4jL2YcIZeh+2+9wF49MFtYJSlgmHE0g/JlLWLJQPg7RmhtyXsJ18eja0tivsXhj6xy9ve/mRR5TRcG2ZmjyViN9NPkDN3Dz1FW5z9XM4i+s1ME1YcFNpUIrVLHzJzHnwjl0bn1twgW1UwPHjxxPXpztejR0HFTc+F3YXRwxdfdM9W08D0zrs4wtLaM5rkbCac1xaolWOvurhZIPIih0OdVm2haNTfqUlAFjCRnJP4HBn+iUqz6tVa2nGpTe/etsP2o2s2G8hrGqjL/FlEQC5GHghfplSUSMdvwaEA/9+4vjpa3c2stx2KIsfUek2dr+EuXNF2xEjSJx98w/tbFt7NiGsdniSl6EPp84O3W/Z1oPzXRms1GRKWdCJdeCIlJ+vlGYlh997r+70+EPH8NHJEtLCauCph+7bmj81ox1xEsJqx1Fdij4Zxi9AT2KSYBrtslgxhOD2gWOyz7AstFzx6zFHj1mGobYUYAgC9cHge3ddK5uhjQKFsNpoMJeqK6+8cm0X6noXiWUxHA8WxAdWNyQM45HFKL8dyiRpueM7jllmMGpnjO+1w9fNaxmXxiogaqlR0jQdAkeOBPjczrnOiQ6jw88ESSOA6KT7iQzOHEvavu1pZsLQg4QPP/DdZG9Xx/vWrOr+mfR03SvtNffdxleAQIgvTzjBT0w409Mpu2faufZy+vDhw5WPMa25dEnYqggIYbXqyNXY7i/jCyvdfmaVb5hdVsLp9LJGp43j1/1A7/RdvdMwPRzEboRnLVHe9vEvL3eXBOB4ZMta22H+TiqV2LJQ26u5u6Bju44Z3J7O/Lvp6cwPmBanOwQ4uNHRTWMK21bSvh1Mm642nTWCtKkH07rnTE72aOO0XZq7bIltVQSEsFp15HLthg5J/+aJE12m3tVjOPYq1/dW4cTjHnwMYhXOce8xDd3y/PJW6OpMdsTRVy4iK/rKMR/jwvz825VIHFzT3fkx13UW/dnhRy3GJyeeHEs7n1XNibUPFvY6vtGDw5vV9w0Vofn81qGhZfDhi3HX8SfQ/3HPMse9CWcCX0gel2OIFJIt+2fRH7qWRaYJG85NxldGzV4tGayFSLQ24+q9ULyu9gJfMU5ELTn6wUISTl03NHz1KzyiJLqmX657OLLdSJgoXTO7cBxyN172blier4YCvBsFdSNXV2dC35tKJrbzfPfFdjwvC/qs9MSMxxNRsSqmT6LhUDQHE+jUBE7UnATXTuLsrRn01K2l/x6+qItiR3TNG8V59KNB0DGSfNXGUXwJY2Gm+osNhpSvEBDCasIHgVLTt75/aQ0MnXpBNb2QgNYEntfr4wu/nBYpKQLtxtdwAh0SBX3VDe7nM/Ha5vf1Fb/CURS2bCTAWWuxR229qRsbQQQbUed61LfW14JVKKsTJ5sk8WUcHbtlNANyTOhgcmAGKH7p3m1FWpqtuZCu+LByVdKHVMjpKEQrBwIW9tnpXOIH+QTDSH/D9f0bmCLewDn1I4HmwtAypPDZ/oe9oXKf/aMPsWxSs/RR13FHrURiZE1gDR86tKHEdCDMKX+XCwEhrOVCvqBeHNaW6ui11/mWDtLQ1kEiWodXE4rwYgepAPssTPCMOjIdAk94TZ8pMZjch8HjDorGFUTUAwlkh64be0A9/ZCatiDZWtOyE7ClQmIdJICJFYhA+TRV4Fo5/QIHiUvrTEbkVRCxiJfsSBbfYk87OTExXxdazY5yUgiRKfpHQ1YSkONmAZY+gV4NIeVFfCXoLNA5h/Plb5LzWAyzF+IVXdNnvO/6GcsyhjC1vmWZ7s2pO3fdOqzriy9asnJxZREoerDLppDAhiIAEtCfO3F5rW0a6z1PX4/nf53nG5RqqrpieSnULEVh8cx4E7ugH78H8tG9eP/24oVezY+pkpA8b/abhPF8le75BqdsXUtaFeaTlTI2IByEoU1l8oq1mkokcZHElIRoWmpejMMCMyCvQXyy7JjjuUcgOl4tLCzCMpTHgFpcgkViX/dH/ax2Szf8m2Yqc/MN+1r7BM/C/rfCtRDWEozSkbMjq7NTY5t13dqE6dhG3wsSqlp+C9DDi0ifLrqmT1f6BgUaPjiHN0lJAGAfvpWcI4XjiHIMF6ocO/EjmMa9HeelQ1LT1PRpoce/sJwOTCQtc+kfGQp6Uxl+9JWtmL+jNEaJ0gKBgbsygR58B4sHfwV5aliVWg3vCHv6ymHcdG868IzrVsK6pnd71+/dsmXxbD3m3/W2ybn0T1/bQFe5I8euX+9ybuqbXMPbDA7ZCKV4uMOecyz+9OfmWvj9x9zEw6JW+JuOX298WhE6qtwLEV3TL1tb/AWj7sqwfqaro/sdmcyM+vBp2XzzDEzaBiQsNH+e+eeTjQ+ohwqnG0BYhfVzNYKrkOmpyauYYH8KvD8G6RPBszrC6Jq+ystl0ghzXEZjR5+O4+iZwTh+eG7Yqa5rq/3hGzzTSkXKn4YgIITVABjBP+ZzP7i8ydasrZCetuCHvIvFRs92SEdlpnCYE2LOQi12OA7RNf1yjrphHIyE9yOXPnfNMDg70DpdTf8DWDKs5rRvMVwChAWrUgh21HzllD0NrigqlxKVC7bKQuOOWeGiuI7OTkhb6T8C/Xw3xkel9cXxj6eIxiY3Hhx3X9dHsWJwDaa3l1+zd9Mt/F4tUk/ijWnP+/DBb8++LWqvnh0c7NDGta0pO7kl6zpb8AJzEUr91kYEFdeBRCt69Nm4+AsSl6jwjVGckY6VwPwUpLhLURx9xliWvxFHi/w+zB0SWCnLsVpxnoXesSI2ngp4zmRJXPgf/0IleGH51R6uwjeX5MR76qtITh7+8N9Cp4GF7Sm8Zl1s35pVXVomm/5c1vG+Wm284njHJeJq44/FjixUAld8w7uijW6+xo3MhW2S6+oIVHumqpewglJ87+LFtcFUcqur+1vxwPcZJqYPMOyhXw6GKI4+4/GwQpjCBhe+6XDIpFb06PM+np5hhS5eXzw9bLJ2pBLGv4Fe36BU4kA6IQGw8MUY6MJywVeqDs54Z69zrWdY7jI3G1ZtUiSV6zzDI3IqLLew/wu9jspl+yywrA1pEed5QceXPT3jBb/DLrA5ua5UHZ/4eMTbFx+fwvE3DJO8fANrjlctL7giJhRx9MrfR89R+VgJ1Y6currONuwd0FNsxwtV02mPlWGLy1TxlPHf6Hh8PH9xesvw9yRM+5PIRT2ZIgVKKZxWUY/PT8aTFPji0i3m4Ed1hDWV/7uY9bNGtiGqAyorJRWSqCgdkrQiR5KddrwPlsq8xfhG6efvx8dvtiQczDdmmPaldDBxSVYeZ3GJXxUMWzxq5d4fPz7Ym7X1HTAL2A7NqtJHEQ3qtCPjw3LoxB/v+OMZ5VVzR5aHWRuErYA+y4uu6fM+Xl9J/lh7bFvbY+vmv0bWos9tsXAWSLIiaSnyApHxJz6SbFSFuXTw8i86r5vVRW1m+6IHmUREAuI0lcREP5q2ztWPrO9/YK54xsXHI56+cePvj3qBfimZNS+J5FWMcrjptThsRd4dPX9+DcwEd5iQphwozfkCwJKaLv9ewHYKeicfSudwShcnJDBBOD3MTwGRO0cqLIj73jQTaejDBYaPHTBgJ/i5+HyYijd95sFhRzkzB7yL2IrCtGwezj9nOQVTUlfPwiicifnu5J0qHHd8mXHIG6ZD7JQqIk9kJK6QwAokMWRUhMaSeJ0vcfaiXNhs7PyuwpYV51Vh+EM/Pu2M9GckpyiOuZm2Wvtom+Y4me8xPbvIIujzPu6Wbvyt1ejL3U7Sv/v754ZHsORwaX3KGdwiJhO5pzY+Mivk/urVq52jTnIXlEc78LKu8qAMx/G8kHhyOicosz0ovM3IrIDKb15HSvDoOoqv+hMLYCOWI8ash0vmufryZVcqLz4u8fym3ov1xT/EVp4UDUTn4/iS0xW+sZTMojASmLqGp64iH4FRXJQ2TKj+lv7JVRTVxwQkm9APyaboGnGMzSVR6VR87ipsVT645ovOzi5tamb6zzB1/nqzjz+s9YetwLioZW5C8jq08K9+1IxS8yQsfF6ap1WL2BK8VOaJc6NbPcPrx7wJ++hmHQUPvOaQgMJ3ETtVlERDP0wVsQ19uPgcLQyt/Dc+p4jlL6k/1xa2qVyh5ApEzEoErm/DsPOTXV3de6anq36roFyRdYWVbVSshHJEMt98saIXfIu9koplYZL6m/hUz7kS/Jt0/PE8+Jj6X/Y6k+fv2tA1BKIvB/OC8WnGAmp5dpqx3XW36fjgYK/upXbhFd+BrRlqn16MfkrspkoC4hnirYjbUVWzs4rHx8uL3cerjwt0TA4RcBcsuX8Rn97q54okVsCKJJ9YkSvy1gJR4aOtnAr6OJP+L13d+BKBKMEzHhAfgDh6yzD+vqHjTDDvYpAxLqwEfVdbE9bpIEi6V27tdLP+LnzPrWS/XrRTnz5d4e79+LNY7r4kP+Z7Jv7z1LyPL0B4Tb+ci9cXLy+eJ54e8Rw//rqqcUR+HOrgYVprJbBl5E2w63oI64J7k8mUDZLGhmAXs19ucVkxP8gKQu4ptCxbMy2TW3KAGI4u1P207ztH3CDx/7bL+Cdse8h1Zy5ev7Dp8uHD7blJuy0J69TV8XW6l92Dl3cbLG6g98idbhDgdANcY1ZY9o2N4mpNr96GRf1Da3Wui0RW69F1bWslvp81LD2xDTOGu9DhQzBc7AcYfYlkAqo6A6ozqHNBYJTESGitTGShsp0qQSxT4AcoPJQw0LBlEPhBFakHDjoLvY+XgVIyg7WK77tG8n9pvpHXBbXL+OMBd7FN6KLu+uf27esbX9RHdIkLbxvCGhgYsDb3v2a7obt7YHakpKmYiqgE2ioqJbzIOszXcSov/DAzRRNehyJKvPx4+igv/ZLKEaCkoZxUFMYXE1I8f7Xyq/UHp9CkAlfbCF3NdlhS7IQguA0N2wiJYy1ktC5IISb1Okr5jSYruy2SGlYkIkKLSC3yy/WrUWGzSnjaTUX/QEhYQuNewLCdwBFKRkpOuAfr4sBnwwfDg6B0MHagORhBHNqHw5WxTwYav6lAt/42MBLfrYZXHO9w3Ftr/B0Hp0pY+tkD29ddAz5ln8NGjddSlNPyhHV8aKjbzAS7Dd3egRcvgRHJWyrHASw9Pyp+vlSxEluH0jWAGQF9VVZMpxHVRZ/xSKQU4PR5Xy0+/sLQZCFS9DN/XKtSeh5WrL2x+sMyZv+W67+vwz5eC7oDx12rm9pakNg639B68XL3Qh+2Bm94DySxHhg0daBHSQhiCbyyyMS9SDi8RhEHyYP1qD9qak0S4VGn5VYrSTRKEkKHWYYiHuQmCYb/YKYLqS+3H5LYckxJmz6qhSYJ5yNgzgtuclESpncBfN8Fj3lgJdCSGpHcGECoxrouMoHjzO+4evLLMB1VKxJV8Wyj8Q80Ix043jnTu32hlTdkh08Yn7UWcnio9Qs3pzZm0lN7LCOxIdIZxbuQ1+lAVFFxJB7aMeUIiPkiPRPjo2v6dPF4FVjHnxi/oQK0Az/bymf5uI7ayGLj6eM63nrbF5VNXzV7nv3HViQL3JAEaSV1z0iBNJIgJBCYkSKJYbdjEiSHw7a0BI5s6QBBbINUswMUsQ6E11UojZGccA9dcZDBdQY+TgyFTgkiEKYyIBvstAQzIRk8cBJ+A2j4gZFDFWAqjAp3V5IhQYYwwUJ57ByS0QINzMYK8FyrRxt3KNbXb2qG/UVNT5wDyCt6/A0boGbdqzPA4tD21SPquWihPy1FWHjQzYs3xnZkM95ePIZd8RccBx1xez/UPowp46I4+uVcLD9/8Plq0Gfy6Jp+uez5uqPyY+UtNN5DuVQc06drpv4bIDXsjtsMpdkOSC79QK4Xog3PzwF4IBNCBiIhpBSpoE8jioqWaM2KCRuOqwLXgIQItKIe0lCYD/lZjoqgGIo0+J++SsmMKA8eqQ21qHuUh2PfzQHN6vgG6vVK8GfmQhcbr3Yff+AEi3rtdCtNF8u/eIWD2ATXx4Mg0XH1Vr/hm7sDQw8PvyvTrriKWocEE0C6oM/kJRJHrAykgj6WGlq+JUifu6YfS6pu4/UVa6AgQcXKi78ApekhcWFBwMstEkTX9MvVHw+Lt2ex+4+Pg62CxgsHEwZbAdgWIJfA+ICkfDRYtyAwWWB7Ay8F8VT/KB0bOJ4Gx/CQfUKSwZGrJJs8iZHYgB0zMB+zk8hopQ8hEcEog2ERASIBAOL5fIrVIKLxXKtzKPZLgZUckvGf+/nH5HsK0+Uz3316zeAjj3D23Lwu90w0ZwNpiZ72UnvwfO/AXIFnXfLBxLOsHn6yiLqmr3oQ04LHX9hq6TFHI6txrlYWkHj98UT1lh8vryR/rIKq6aO204drdP8hRWF3itmLUw42QnW1CSTSA2IAIXkWOBYKLWw8wjVqNkEaFqjFwLQNJhWI4ZiFoiq6QX0SbsEo6HMoWVFCYprwjw6FP65BXCSoXJwiOwpnFK9A6yiWkQhRDwA9XAfpwLS/AqnqSKP7jwapquiznXFXMn6x8Yg/X/HySvLHKqiaPlZfvf0H6BloAM/v3tpzHkJwUx59Uxb4GE5Lfnt2ZGS16SX3+F5mq4llfegtwnaSR6J5EC8hPUV6IDaS6aDnoZ5DpYe6AtdgOr4pyhXLNPH0KKCo/DDP7N+S+mI6qHzbQr7AbdgW+iylWn0l5cf6E29ftfSN6L9lGl04x30tOtMHklmLhxpClW9BL4S1T+i2uNPRp+0FflD0AN9A9LHnmHGBBfJCE3QL9ALiguoJqiu+64gDzWGIIAlhzhaSDsMV/yjJi3BxyY9khP9BXBSzEMY/AFORGMmM1yyKZfmm+ZKuJf4uMHV1THEj+o+S864E7zYd/8Dliqp2MamvPbt9uw4dY/M4DnXTuMuXx/scK9iHLcbryzfKwvOJBSGNPl10Tb8WV0xYyMFymDdXXv46Kq+ueChJQI4WlSUqf8StOf5CNdXqr9afxe8/Gm6AoLAqGKyCGLSG350ACFzKM2FvaeOseEhFOsjItdQ2S6wYYmkOdl2+CfLBvmpIV55vYY2Qn6uAxAWC40zbhxSmWArcQj0TSIiSU37mx0kgVesgLereOSz8E5EWJa6Qzyh1hZEcO7xY4Ct9WLfNvwa+5xA2h6uGP6vMPxMsZ8WNf0Gf+cOCw9usq51a5+kNG9Sn1IjJsjoO0LI7EpVra/vxhPdFs7JyjYriohlbTAKGxO1C6oJEljseOLqmTxfPX66OucJK66OUNzuDjK7p05UIbGwX25I/vrj4BYrnD0uZ/Rtvfzz9fPsPIkgkbL0DZNMFRVEHFEY2ZCBTcwMLdfCsCCVN4SwpE9YG+ARNgD24IDHYSYB1yNCYDkLRFoC8oOUG40AKQx5IYyAmlQ6SF7dDoSof0hbJiApzqLs43aPc5UG+AvVQ/4T7nGQFQiJ5kdbAkmgH2Sz0FaWB4gLrad22v4nmuvPt/yzCc1+V4t0e4z93r8PYwDCvNANxLSthkai0jmCf5+jq6y6Y4SkjTfoKprgWufj9Dg3AozBmiK7pl3H8WDH3u0YfLY6u6c/HVS2vSvsxoygyTF2q/qNenEyjJ5NJPYGPRidME1M1/JYqwyoNq32Ihu4J0z5M+WA2DoqwEI9wfmEaEhQJzPNsKNOh0jJwrfRVJqbnNOrC6IGwQFzgHiKrpCuq2kE+FizrMXWE7IWCEKemg7hSiimOQchNIC3EchqpHlBO95TshQThkwF5TL9k+Mm/MZLGzVo3AlQdLzagDle1vCYd/wU9/5Z5ZcyZPnNow/J8ZHZZCGtsbKw3rdn7nIzTx42o0WfP1cPKuYJ6XPFs5q7p8zmKx5v8cdcxDeMPOR1fj+gh4X10TV/dukiC+nJPeLy8eH1hrtm/UVvpKxcrP2oL/dlcs1eQ9PCeo73wGcp+R2Xyvlp74vH19B9EkoA2CYKUlcQqJCQj6vkoyBjh/IurcJiy4Zxy2FMptRBO7sK3kClR0UYUZAX+wMqfC1ICiYHMYBsKSQsSFKaAUEqZLoiK00ASFsgpN0UEUWE6yOkiiArE6NmUb91OWwAAEuNJREFUszCNxA0c/uBoF04W86YOarWQAYjGmHBBEIkUiXEqib025hNmInWknv6zKo77Sh3/RvcfSx5Xl4O4yr5Y7NxiuEEQFT4uvs8yrF5VvosX28LLS185vsiRHkc9YPiJtrCbJIzHyx3gJdfpl80flZWPR6qIxJghus7xjSqj4E9UNn2VvN76Csqq6XIR+48OYEeGlcAaXhLfQwxNQcgQEI9IErOOxBUuCuDLz9Arm5iyOTaYy7Jty8hAb2VCm43ZmwnwQTbgFpAWyA4SGEKhaMdgYNpngKAcpeMCAfFjYGE4yAqco3RZ0LorUqOkxVkf6AgzvFBPFbISSsOUD+WRrWijpcwbmI4Gomj4yxAIv4bPVU+q9sfxk/EP36UlfP49N3vNWr/m9CZdX/zzjDDofAoW3XHVr9NPHdB8p2+uORl/mjFLUktMbBTtkSJbpLCRxYyD5OpJps/4+DJuvq5IIgoLqfi3pLzcRuloM7QSzKImsBSWG80LVKkxkSvOkFHaCjL5QvrPN9rwvaSVtEg2ICmQCNRQkGjwnlOpNktMxdds+GxcRFrIyCmhTQMEUJjl4qwtzPbAOVC8o0DUZroGiMmBpEUfRBZ4DvRUJC4/1GOpij1ML9XU0PJdFxIZGsOpJkkOQ0YdFh5CPodKl0WfRqQkVUhTIEf1iN4GkdJU4Rx/xsJfHkpfMv4cd+IAUJb1+YdkfSU7NXp6+/bti7qquKiEdfVq0Gl2TO2DonYzAcUTCv0slCB8FuGia/q8j7iAPl30aNIPHVKq55w+00MvjFLo05WmV8H5P9XLzydVF/H0xbGl9UGfjm226B98po2u6fO+0f3H9M7SbT1h+FoS00ybSmm+5/RZHxzbwWvVHtSvNuLRR4BKl0vPtHRhWh1SESUsNBkH0qjvNiAx4MA1JDBc4yBmTPmwJArJCFM+dA1SE5XsmFIqRTzKUrZYkMio78IUkauFoW6Mcbin1GWrOR8nqOEUEUQFmuK3ZdEw6NFg92s9j3XLp0CIsAuS8VdPkcKhCZ9/KAc81x/c3NdzFjy6KHZc0YPNh7VhDg9jYnh4co9n2dvx1nLalys7Rimx2xLGigfEJBQ0Xr149FkBVb04BQiTlPAFbTiDxRGKM1pJf5AgarPKG0sQu413N07hkCANO5m0fSebtCwziW5DqMISHTRMJCDF23inYbmsauNCHq+Vn1ta5dErzKN8psP/RiIXVpAegKJQ30Y06AQSEXdAIpdL0wbTNsLpoSIeCwRJHZYBpTusIFAIlPC0iqL5AxoCcmLPQkkLdITRCc0dSFqQD1A51g4pLOXmhZCwDMO2BpH9q6ZtDoU4oKQIy5yEynFnv+mzw+0+/q3Sf5yT4aYs89zq1alLIK7wYeQANcCpgW5AOaqIARzxcudrXrMTz+cuFAxBI1Rw06eLKz3xsnDikt+Mmr9mWBlXrbySeJAlTt8MXJImXHRNv0zx2GpWZ3r0KKqzXHlRHH26+fQf+mkbg56ADjppUuihMJl7BEhGtmnj+4Phj1lEUAzjaQcgJkzcqPPmlI/yjdJV8Trf/+hbeYyP0uMS0zSVF8SEaSELxkhR6a7IC1IVHkNMBWEkCljxYQ7YXgWKrDCHw2ohJDDKSkr5Tst3TANBp7DdgkTFKSOpxYMtV2i3hXQoJjwbBo3L4oibAajdXmSbCl01PEvi6x3PetMvwfi3cv+xHpPRk8GZvo6Oq5y5FvZlvtfqQZ5v5igfH7iRdHqrn/H24McyEb6ejCUxkCwqEATi8JDNKtWRIxI6wrLj+aOyQgIqLT/KTZ+OLYnCFGHE60PdSgzIgVmcfrbt5evjYkB97VeNyv8plx/UYoChElhYgB7KtD3PAUWRpejIVNzNAjNzyDuYRqnrMF5dIx4CkTrlAJQRps2FhZIX5lqYwfFLOygTBeSmkUhDEgNvIC7MR5ML6JhozoCpn+858G1utbH4j7BRT0Z9VlZzbTyOKJCKeCjkqYbkFBJh+DXCPVcKuXKIFURlm8WBoZSFOBCYmk6i33ioT+Kw1CegEMspcFfe+M8+rRySNum/YUwm9I7TPT04NWOBDg/nwtz16xMbEp3mPswIOuI6G7wBSlynz1pQWZEIP0smIcEEWN3QsfJDn+nj9FFSPh73wilgdE2f+eOumo4pPqWI2kI/LKu4RVXLq7H/kJopRUFhnkj4joNT9KC/BlZgAIVD1I+cwASVUBgCIsF1KEQxJLpGPKHGP5LYrAs5ikREnmJ61KF4K5cG1+REVS6HC1JauGroYYcOrLWUEp6MSF0UpoZgK5hV2dgEzeNLYbMBnRQZEUPnOwGMT6GOp57Kg/0WTCMYjnsQHpDmlJFTR5IcNt/alvV1PdF5NsKcLSpGG03L6QcjnWDpeIXqgFYb//A9wGi1+fMPDeqY7nae6uvT530KKp+JebkhHJyX6Fqz33X83tCgRr1d6gXBH+XnFtEwDmEVMBfAtbK7UvHxVTb1gGLQokbFVBZMDtUJHmT+dsPxmqSRU2nkrxkWxhfbOfEVwLov4sIaonSRr1qZy6vy8xliPbn+qPjYHxSm6mJwdB357DfaVtJ/BMLeW0/ayVQSR6TA5AB7h8kwmFeRrFBUSFYkJk7GsM+F5SuiCQmFBEriCskHYcxfEM9ozBjBS/yaKD//rBzndjD3BHswAcmqwFdhOWGugCw5owwpEt9sxMlVGWQEK4GlcAOi1XAcL6eLICfdcMFmNDnH7xdO/YTCHTkxM2B6EiSPbuXmHrZO5eJy4Iu6lfo2Gu8orFfA+PM9UMjnHpBIx9v+/Q9Wm8nMfcMTE1d7u7vP4Ec6fzy1wqOGP3xI63JHjgT2/rsy/boTbMP0pe78dVUWS5wjK0VUjIqNN3kA62ZYeIcfxofXDFNFUZBTT4W6m71mWBlXrb4yWSoEYWh0jVIUdJEmzA6o18mRDN7dCplCEkK8IiP4WRAU9OO8j5wimZB3SAhKYlJEphLkJCaSEP7PEdxsfVG5UWFxP6qPPngTlvBED6IWLN8dTPmg8ocFPPRXWBdlFWqqCEmLlhAgLRtKdLaAkpQNfRUM6DUQGOUiTimNEaT7FvRVw/F6K91XG4/mHf9KPaovvJ36jzfSS1mpc6mUdhnvhZL4a0GjZsKBKK+n0+kt0AHvztCAsIzjeeAeUKVPF1l101cBWCICxcGmcPalUeHRnyguIsJYej79fFnpKxdjrKhu+spVK69Ke+OW6SXlh7Xk/8b7D5umJKY6nUiQAEmp5ZKoD5Ay8kTFzcAsJIrL+ZREYCWAaU4ubXRNP8wfpuSuGubHMwCJhSuGPCiYJIMw5GV6xkfY0Wd+WoPiBAlEhvnzNluw3SKZYTkQHIQ5J1RQDg7Lw/QQGUIdFp4wcC9KgQ/7KkxjucEHROVmc3ZaCFfEjMxUvlPvBZ0WhT1Q1zG06hQKyGPA9qEh4bPRJuO/0p//WvoPyXpa77BPr9L1mn64QiJRT0vlP3jg1oyn0/th1dnN6VOkQyh8wVRuPpLUH9GHi+sckD4vLaj43NSHLwfv8cKjbGxdgc97JUpFpIRbpovKYHTUltkpHYkyEqNYf1gWfZU+Vn+JiMZERS4qKyTAMv1hmwoItLT/aL6OL9cn8A4mknhDkR5CUuh43ExhAXjnIQVxRQ9UwnU1JM73meHISINzlY/1Ir3jwNQBtui5IpU3K2mFZbEUEhgJiHlZhkqI8rws7hPFxBHlZ5romu1CGRSv2HyQEQiLPkwefJcSk2o0mU+F8Z46KswbKd8qvRUWiq7BsuoYlF/q+Jd839p4/KNnFHhw+Fbc819r/y3dHO7qsk9D2lLPBvEq59SLXC6CYSCq1OTk5F48g+FxLyQSvvyzhFK8taaYL1ACiYdkkSOg/HVO4irmAySLlR8+yHy5wnaWysTF7YmnRxdyecMXFDcxx3KjNCUEGUtb2r4Iixwh5qebxEG58v2Hkh0ERqlLp5kClNLkngLSyF8XExrZi089SYbFm9DRg1FCbEKyoxQE8sqFkTOgTwrDVIPCP/k8qpRcGrxMEXmxnpwjUeXbhjpgA2bBNsp0HPQWOiwNOnddw5YcNIdSFyzTlUKehEbrLDxDNn7osjCXPw5FO22qgPfKHn/pf8XxxxetvSvYlX8BxBVKCdGDmPPDhz0W+Oijjxof//jHt+Hh2oko/qKqFx4l0BJQmQIwS3RNn/fxZXqGFbq4nQzimI9tKFs+S1S1KJ9XoQkEfUQwtKg98fSzefMMwmx5F28/IqK2RLjM2b54/gX0H0v6+IiDZSVgHJogfYWNzDMUpCtsUkKg4pKIUJAsnNTlkjNWzfBCPMOhi8JAiCSqPBmyMFVQ1OdctQwLywNZ5cPCpDl80D6IhjzBASQF0sUeREpSJCyE4ceSpJXbEO2612AHepaTSRn/YrtEAD3n8xV/ntv4+S96nyGRO9gccQZmEPiBK3bRi5kPHcG+v2T32n2+53bxNY8oQyWIB0SR9OmqxMeTh5lm/8azx8srEbCQNSqTpUTX+eagwCiPqiWeQAXO/olHV2tPaYUFjWCxsQJjt7MV564K6iOB2Xj1adNGa3PqDMFl4XwSSnAQCUIibqFPlwtTwbiOkoSR+JvLx3KYv9BXaSrlLyifSegQBNMFTAWhiIeFArRZnoX+8Y2EzKhbnuNlYO9wFpZXkwoH5Kmj/6qOFTz+0n8+Y4Y/2pVIcJqY35+YJ6wjEN33ZzL9kPY3hWjx6Sv+RcByLIQAZZYQJSn2C944FRF/QkvjQ31XZDcV04GVPOGl+WdJEhVGbaNPV3d7Va7ZP83U/1ACgzTjkg4gjUFvHhGWkrPAPnnBLNeFSEKKfAbzOu9yBAUdVj6cZURpZuU3XOUILioD93x2IEnxxFGc9c6M+M93cHSNZVzHquBQDeMn4x898wQ2us7pgGvAbyU8/z5e5EupVEqtJirCgp4KHxVI7sbrQIYKHyKF3+yvIvEEX8FsQNk9qXwgBpgQwNo7p9OKrukzfdzF08+WTmYrV35YF+tU8bEpYImInGtLVH+8PkzZ8iQcVpjrawXCLOHH5uo/9JmWjbXHJMQcNhVW8bOklbsumnJw7Q+cgtVK2mJxAUNNKKncp54KHuzAwnjCE01B1UIHA1A80ik/IkdIfTj6mE8MXh2sSKZhdHUd+IcDykwFLj4eMv7Fv+il75c8/xEmeHaojD+jZ4LgbsPVVvO5iutg4oSAFCCiAqVp/jrUKRU8mzVexsube05ff3tiD0Q1wkP/ojrYgeiaftiheHsjLKL4GrudTxYvb0H9h94bpzeAwCD4cAqJf5SmlBjFH5D8ChVC1Q8KyIkrjtgbE64y4lqtINJHel5Hq4q4ZdsYzsWBWaU+rkFWtFzQbiNNnWciNbT/qD4+Hitq/FdE/3mWzmvQU+W4hZZPenQuRHRNfylcvfVjpUqz0Tj6dNE1/fm4euufTx1z5am3/hr6z6lj9A9ElneKwPJ3IYEVEpqKys0YFeUhoDBP4TV/+bjVIkfqKuu8/ixC/+tqR73111V4DYnrrb+G8a+h1tkk9dY/m7MxV7XUzwdP3ApBgCYG6Co+L6/+kcB4X0g0ERFFzwXjojBc5q8ZhqOKtWEoROmLEwSWBIHowVySyqSS5kIABEYhisRFEov8SgRWGD6K9OMgq8IwBIkTBBYXASGsxcW3pUoHgfF5iIiLPv9x+03kuLxMqaqsUj1KJL4gsFgICGEtFrJtUG6OwDhtJHHhqLOl+dBAG0AnXRAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBAFBQBAQBAQBQUAQEAQEAUFAEBAEBIGVhMD/D0fV/fpMMM+gAAAAAElFTkSuQmCC' } };exports.default = _default;
+
+/***/ }),
+/* 130 */
+/*!*****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/noticeBar.js ***!
+  \*****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:17:13
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/noticeBar.js
+                                                                                                      */var _default =
+{
+  // noticeBar
+  noticeBar: {
+    text: function text() {return [];},
+    direction: 'row',
+    step: false,
+    icon: 'volume',
+    mode: '',
+    color: '#f9ae3d',
+    bgColor: '#fdf6ec',
+    speed: 80,
+    fontSize: 14,
+    duration: 2000,
+    disableTouch: true,
+    url: '',
+    linkType: 'navigateTo' } };exports.default = _default;
+
+/***/ }),
+/* 131 */
+/*!**************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/notify.js ***!
+  \**************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:10:21
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/notify.js
+                                                                                                      */var _default =
+{
+  // notify组件
+  notify: {
+    top: 0,
+    type: 'primary',
+    color: '#ffffff',
+    bgColor: '',
+    message: '',
+    duration: 3000,
+    fontSize: 15,
+    safeAreaInsetTop: false } };exports.default = _default;
+
+/***/ }),
+/* 132 */
+/*!*****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/numberBox.js ***!
+  \*****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:11:46
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/numberBox.js
+                                                                                                      */var _default =
+{
+  // 步进器组件
+  numberBox: {
+    name: '',
+    value: 0,
+    min: 1,
+    max: Number.MAX_SAFE_INTEGER,
+    step: 1,
+    integer: false,
+    disabled: false,
+    disabledInput: false,
+    asyncChange: false,
+    inputWidth: 35,
+    showMinus: true,
+    showPlus: true,
+    decimalLength: null,
+    longPress: true,
+    color: '#323233',
+    buttonSize: 30,
+    bgColor: '#EBECEE',
+    cursorSpacing: 100,
+    disableMinus: false,
+    disablePlus: false,
+    iconStyle: '' } };exports.default = _default;
+
+/***/ }),
+/* 133 */
+/*!**********************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/numberKeyboard.js ***!
+  \**********************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:08:05
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/numberKeyboard.js
+                                                                                                      */var _default =
+{
+  // 数字键盘
+  numberKeyboard: {
+    mode: 'number',
+    dotDisabled: false,
+    random: false } };exports.default = _default;
+
+/***/ }),
+/* 134 */
+/*!***************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/overlay.js ***!
+  \***************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:06:50
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/overlay.js
+                                                                                                      */var _default =
+{
+  // overlay组件
+  overlay: {
+    show: false,
+    zIndex: 10070,
+    duration: 300,
+    opacity: 0.5 } };exports.default = _default;
+
+/***/ }),
+/* 135 */
+/*!*************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/parse.js ***!
+  \*************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:17:33
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/parse.js
+                                                                                                      */var _default =
+{
+  // parse
+  parse: {
+    copyLink: true,
+    errorImg: '',
+    lazyLoad: false,
+    loadingImg: '',
+    pauseVideo: true,
+    previewImg: true,
+    setTitle: true,
+    showImgMenu: true } };exports.default = _default;
+
+/***/ }),
+/* 136 */
+/*!**************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/picker.js ***!
+  \**************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:18:20
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/picker.js
+                                                                                                      */var _default =
+{
+  // picker
+  picker: {
+    show: false,
+    showToolbar: true,
+    title: '',
+    columns: function columns() {return [];},
+    loading: false,
+    itemHeight: 44,
+    cancelText: '取消',
+    confirmText: '确定',
+    cancelColor: '#909193',
+    confirmColor: '#3c9cff',
+    singleIndex: 0,
+    visibleItemCount: 5,
+    keyName: 'text',
+    closeOnClickOverlay: false,
+    defaultIndex: function defaultIndex() {return [];},
+    immediateChange: false } };exports.default = _default;
+
+/***/ }),
+/* 137 */
+/*!*************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/popup.js ***!
+  \*************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:06:33
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/popup.js
+                                                                                                      */var _default =
+{
+  // popup组件
+  popup: {
+    show: false,
+    overlay: true,
+    mode: 'bottom',
+    duration: 300,
+    closeable: false,
+    overlayStyle: function overlayStyle() {},
+    closeOnClickOverlay: true,
+    zIndex: 10075,
+    safeAreaInsetBottom: true,
+    safeAreaInsetTop: false,
+    closeIconPos: 'top-right',
+    round: 0,
+    zoom: true,
+    bgColor: '',
+    overlayOpacity: 0.5 } };exports.default = _default;
+
+/***/ }),
+/* 138 */
+/*!*************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/radio.js ***!
+  \*************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:02:34
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/radio.js
+                                                                                                      */var _default =
+{
+  // radio组件
+  radio: {
+    name: '',
+    shape: '',
+    disabled: '',
+    labelDisabled: '',
+    activeColor: '',
+    inactiveColor: '',
+    iconSize: '',
+    labelSize: '',
+    label: '',
+    labelColor: '',
+    size: '',
+    iconColor: '',
+    placement: '' } };exports.default = _default;
+
+/***/ }),
+/* 139 */
+/*!******************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/radioGroup.js ***!
+  \******************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:03:12
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/radioGroup.js
+                                                                                                      */var _default =
+{
+  // radio-group组件
+  radioGroup: {
+    value: '',
+    disabled: false,
+    shape: 'circle',
+    activeColor: '#2979ff',
+    inactiveColor: '#c8c9cc',
+    name: '',
+    size: 18,
+    placement: 'row',
+    label: '',
+    labelColor: '#303133',
+    labelSize: 14,
+    labelDisabled: false,
+    iconColor: '#ffffff',
+    iconSize: 12,
+    borderBottom: false,
+    iconPlacement: 'left' } };exports.default = _default;
+
+/***/ }),
+/* 140 */
+/*!************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/rate.js ***!
+  \************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:05:09
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/rate.js
+                                                                                                      */var _default =
+{
+  // rate组件
+  rate: {
+    value: 1,
+    count: 5,
+    disabled: false,
+    size: 18,
+    inactiveColor: '#b2b2b2',
+    activeColor: '#FA3534',
+    gutter: 4,
+    minCount: 1,
+    allowHalf: false,
+    activeIcon: 'star-fill',
+    inactiveIcon: 'star',
+    touchable: true } };exports.default = _default;
+
+/***/ }),
+/* 141 */
+/*!****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/readMore.js ***!
+  \****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:18:41
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/readMore.js
+                                                                                                      */var _default =
+{
+  // readMore
+  readMore: {
+    showHeight: 400,
+    toggle: false,
+    closeText: '展开阅读全文',
+    openText: '收起',
+    color: '#2979ff',
+    fontSize: 14,
+    textIndent: '2em',
+    name: '' } };exports.default = _default;
+
+/***/ }),
+/* 142 */
+/*!***********************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/row.js ***!
+  \***********************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:18:58
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/row.js
+                                                                                                      */var _default =
+{
+  // row
+  row: {
+    gutter: 0,
+    justify: 'start',
+    align: 'center' } };exports.default = _default;
+
+/***/ }),
+/* 143 */
+/*!*****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/rowNotice.js ***!
+  \*****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:19:13
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/rowNotice.js
+                                                                                                      */var _default =
+{
+  // rowNotice
+  rowNotice: {
+    text: '',
+    icon: 'volume',
+    mode: '',
+    color: '#f9ae3d',
+    bgColor: '#fdf6ec',
+    fontSize: 14,
+    speed: 80 } };exports.default = _default;
+
+/***/ }),
+/* 144 */
+/*!******************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/scrollList.js ***!
+  \******************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:19:28
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/scrollList.js
+                                                                                                      */var _default =
+{
+  // scrollList
+  scrollList: {
+    indicatorWidth: 50,
+    indicatorBarWidth: 20,
+    indicator: true,
+    indicatorColor: '#f2f2f2',
+    indicatorActiveColor: '#3c9cff',
+    indicatorStyle: '' } };exports.default = _default;
+
+/***/ }),
+/* 145 */
+/*!**************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/search.js ***!
+  \**************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:19:45
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/search.js
+                                                                                                      */var _default =
+{
+  // search
+  search: {
+    shape: 'round',
+    bgColor: '#f2f2f2',
+    placeholder: '请输入关键字',
+    clearabled: true,
+    focus: false,
+    showAction: true,
+    actionStyle: function actionStyle() {return {};},
+    actionText: '搜索',
+    inputAlign: 'left',
+    inputStyle: function inputStyle() {return {};},
+    disabled: false,
+    borderColor: 'transparent',
+    searchIconColor: '#909399',
+    color: '#606266',
+    placeholderColor: '#909399',
+    searchIcon: 'search',
+    margin: '0',
+    animation: false,
+    value: '',
+    maxlength: '-1',
+    height: 64,
+    label: null } };exports.default = _default;
+
+/***/ }),
+/* 146 */
+/*!***************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/section.js ***!
+  \***************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:07:33
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/section.js
+                                                                                                      */var _default =
+{
+  // u-section组件
+  section: {
+    title: '',
+    subTitle: '更多',
+    right: true,
+    fontSize: 15,
+    bold: true,
+    color: '#303133',
+    subColor: '#909399',
+    showLine: true,
+    lineColor: '',
+    arrow: true } };exports.default = _default;
+
+/***/ }),
+/* 147 */
+/*!****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/skeleton.js ***!
+  \****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:20:14
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/skeleton.js
+                                                                                                      */var _default =
+{
+  // skeleton
+  skeleton: {
+    loading: true,
+    animate: true,
+    rows: 0,
+    rowsWidth: '100%',
+    rowsHeight: 18,
+    title: true,
+    titleWidth: '50%',
+    titleHeight: 18,
+    avatar: false,
+    avatarSize: 32,
+    avatarShape: 'circle' } };exports.default = _default;
+
+/***/ }),
+/* 148 */
+/*!**************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/slider.js ***!
+  \**************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:08:25
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/slider.js
+                                                                                                      */var _default =
+{
+  // slider组件
+  slider: {
+    value: 0,
+    blockSize: 18,
+    min: 0,
+    max: 100,
+    step: 1,
+    activeColor: '#2979ff',
+    inactiveColor: '#c0c4cc',
+    blockColor: '#ffffff',
+    showValue: false,
+    disabled: false,
+    blockStyle: function blockStyle() {} } };exports.default = _default;
+
+/***/ }),
+/* 149 */
+/*!*****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/statusBar.js ***!
+  \*****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:20:39
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/statusBar.js
+                                                                                                      */var _default =
+{
+  // statusBar
+  statusBar: {
+    bgColor: 'transparent' } };exports.default = _default;
+
+/***/ }),
+/* 150 */
+/*!*************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/steps.js ***!
+  \*************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:12:37
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/steps.js
+                                                                                                      */var _default =
+{
+  // steps组件
+  steps: {
+    direction: 'row',
+    current: 0,
+    activeColor: '#3c9cff',
+    inactiveColor: '#969799',
+    activeIcon: '',
+    inactiveIcon: '',
+    dot: false } };exports.default = _default;
+
+/***/ }),
+/* 151 */
+/*!*****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/stepsItem.js ***!
+  \*****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:12:55
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/stepsItem.js
+                                                                                                      */var _default =
+{
+  // steps-item组件
+  stepsItem: {
+    title: '',
+    desc: '',
+    iconSize: 17,
+    error: false } };exports.default = _default;
+
+/***/ }),
+/* 152 */
+/*!**************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/sticky.js ***!
+  \**************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:01:30
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/sticky.js
+                                                                                                      */var _default =
+{
+  // sticky组件
+  sticky: {
+    offsetTop: 0,
+    customNavHeight: 0,
+    disabled: false,
+    bgColor: 'transparent',
+    zIndex: '',
+    index: '' } };exports.default = _default;
+
+/***/ }),
+/* 153 */
+/*!******************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/subsection.js ***!
+  \******************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:12:20
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/subsection.js
+                                                                                                      */var _default =
+{
+  // subsection组件
+  subsection: {
+    list: [],
+    current: 0,
+    activeColor: '#3c9cff',
+    inactiveColor: '#303133',
+    mode: 'button',
+    fontSize: 12,
+    bold: true,
+    bgColor: '#eeeeef',
+    keyName: 'name' } };exports.default = _default;
+
+/***/ }),
+/* 154 */
+/*!*******************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/swipeAction.js ***!
+  \*******************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:00:42
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/swipeAction.js
+                                                                                                      */var _default =
+{
+  // swipe-action组件
+  swipeAction: {
+    autoClose: true } };exports.default = _default;
+
+/***/ }),
+/* 155 */
+/*!***********************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/swipeActionItem.js ***!
+  \***********************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:01:13
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/swipeActionItem.js
+                                                                                                      */var _default =
+{
+  // swipeActionItem 组件
+  swipeActionItem: {
+    show: false,
+    name: '',
+    disabled: false,
+    threshold: 20,
+    autoClose: true,
+    options: [],
+    duration: 300 } };exports.default = _default;
+
+/***/ }),
+/* 156 */
+/*!**************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/swiper.js ***!
+  \**************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:21:38
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/swiper.js
+                                                                                                      */var _default =
+{
+  // swiper 组件
+  swiper: {
+    list: function list() {return [];},
+    indicator: false,
+    indicatorActiveColor: '#FFFFFF',
+    indicatorInactiveColor: 'rgba(255, 255, 255, 0.35)',
+    indicatorStyle: '',
+    indicatorMode: 'line',
+    autoplay: true,
+    current: 0,
+    currentItemId: '',
+    interval: 3000,
+    duration: 300,
+    circular: false,
+    previousMargin: 0,
+    nextMargin: 0,
+    acceleration: false,
+    displayMultipleItems: 1,
+    easingFunction: 'default',
+    keyName: 'url',
+    imgMode: 'aspectFill',
+    height: 130,
+    bgColor: '#f3f4f6',
+    radius: 4,
+    loading: false,
+    showTitle: false } };exports.default = _default;
+
+/***/ }),
+/* 157 */
+/*!************************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/swipterIndicator.js ***!
+  \************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:22:07
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/swiperIndicator.js
+                                                                                                      */var _default =
+{
+  // swiperIndicator 组件
+  swiperIndicator: {
+    length: 0,
+    current: 0,
+    indicatorActiveColor: '',
+    indicatorInactiveColor: '',
+    indicatorMode: 'line' } };exports.default = _default;
+
+/***/ }),
+/* 158 */
+/*!**************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/switch.js ***!
+  \**************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:22:24
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/switch.js
+                                                                                                      */var _default =
+{
+  // switch
+  switch: {
+    loading: false,
+    disabled: false,
+    size: 25,
+    activeColor: '#2979ff',
+    inactiveColor: '#ffffff',
+    value: false,
+    activeValue: true,
+    inactiveValue: false,
+    asyncChange: false,
+    space: 0 } };exports.default = _default;
+
+/***/ }),
+/* 159 */
+/*!**************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/tabbar.js ***!
+  \**************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:22:40
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/tabbar.js
+                                                                                                      */var _default =
+{
+  // tabbar
+  tabbar: {
+    value: null,
+    safeAreaInsetBottom: true,
+    border: true,
+    zIndex: 1,
+    activeColor: '#1989fa',
+    inactiveColor: '#7d7e80',
+    fixed: true,
+    placeholder: true } };exports.default = _default;
+
+/***/ }),
+/* 160 */
+/*!******************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/tabbarItem.js ***!
+  \******************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:22:55
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/tabbarItem.js
+                                                                                                      */var _default =
+{
+  //
+  tabbarItem: {
+    name: null,
+    icon: '',
+    badge: null,
+    dot: false,
+    text: '',
+    badgeStyle: 'top: 6px;right:2px;' } };exports.default = _default;
+
+/***/ }),
+/* 161 */
+/*!************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/tabs.js ***!
+  \************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:23:14
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/tabs.js
+                                                                                                      */var _default =
+{
+  //
+  tabs: {
+    duration: 300,
+    list: function list() {return [];},
+    lineColor: '#3c9cff',
+    activeStyle: function activeStyle() {return {
+        color: '#303133' };},
+
+    inactiveStyle: function inactiveStyle() {return {
+        color: '#606266' };},
+
+    lineWidth: 20,
+    lineHeight: 3,
+    itemStyle: function itemStyle() {return {
+        height: '44px' };},
+
+    scrollable: true,
+    current: 0,
+    keyName: 'name' } };exports.default = _default;
+
+/***/ }),
+/* 162 */
+/*!***********************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/tag.js ***!
+  \***********************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:23:37
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/tag.js
+                                                                                                      */var _default =
+{
+  // tag 组件
+  tag: {
+    type: 'primary',
+    disabled: false,
+    size: 'medium',
+    shape: 'square',
+    text: '',
+    bgColor: '',
+    color: '',
+    borderColor: '',
+    closeColor: '#C6C7CB',
+    name: '',
+    plainFill: false,
+    plain: false,
+    closable: false,
+    show: true,
+    icon: '' } };exports.default = _default;
+
+/***/ }),
+/* 163 */
+/*!************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/text.js ***!
+  \************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:23:58
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/text.js
+                                                                                                      */var _default =
+{
+  // text 组件
+  text: {
+    type: '',
+    show: true,
+    text: '',
+    prefixIcon: '',
+    suffixIcon: '',
+    mode: '',
+    href: '',
+    format: '',
+    call: false,
+    openType: '',
+    bold: false,
+    block: false,
+    lines: '',
+    color: '#303133',
+    size: 15,
+    iconStyle: function iconStyle() {return {
+        fontSize: '15px' };},
+
+    decoration: 'none',
+    margin: 0,
+    lineHeight: '',
+    align: 'left',
+    wordWrap: 'normal' } };exports.default = _default;
+
+/***/ }),
+/* 164 */
+/*!****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/textarea.js ***!
+  \****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:24:32
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/textarea.js
+                                                                                                      */var _default =
+{
+  // textarea 组件
+  textarea: {
+    value: '',
+    placeholder: '',
+    placeholderClass: 'textarea-placeholder',
+    placeholderStyle: 'color: #c0c4cc',
+    height: 70,
+    confirmType: 'done',
+    disabled: false,
+    count: false,
+    focus: false,
+    autoHeight: false,
+    fixed: false,
+    cursorSpacing: 0,
+    cursor: '',
+    showConfirmBar: true,
+    selectionStart: -1,
+    selectionEnd: -1,
+    adjustPosition: true,
+    disableDefaultPadding: false,
+    holdKeyboard: false,
+    maxlength: 140,
+    border: 'surround',
+    formatter: null } };exports.default = _default;
+
+/***/ }),
+/* 165 */
+/*!*************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/toast.js ***!
+  \*************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:07:07
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/toast.js
+                                                                                                      */var _default =
+{
+  // toast组件
+  toast: {
+    zIndex: 10090,
+    loading: false,
+    text: '',
+    icon: '',
+    type: '',
+    loadingMode: '',
+    show: '',
+    overlay: false,
+    position: 'center',
+    params: function params() {},
+    duration: 2000,
+    isTab: false,
+    url: '',
+    callback: null,
+    back: false } };exports.default = _default;
+
+/***/ }),
+/* 166 */
+/*!***************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/toolbar.js ***!
+  \***************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:24:55
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/toolbar.js
+                                                                                                      */var _default =
+{
+  // toolbar 组件
+  toolbar: {
+    show: true,
+    cancelText: '取消',
+    confirmText: '确认',
+    cancelColor: '#909193',
+    confirmColor: '#3c9cff',
+    title: '' } };exports.default = _default;
+
+/***/ }),
+/* 167 */
+/*!***************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/tooltip.js ***!
+  \***************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:25:14
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/tooltip.js
+                                                                                                      */var _default =
+{
+  // tooltip 组件
+  tooltip: {
+    text: '',
+    copyText: '',
+    size: 14,
+    color: '#606266',
+    bgColor: 'transparent',
+    direction: 'top',
+    zIndex: 10071,
+    showCopy: true,
+    buttons: function buttons() {return [];},
+    overlay: true,
+    showToast: true } };exports.default = _default;
+
+/***/ }),
+/* 168 */
+/*!******************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/transition.js ***!
+  \******************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 16:59:00
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/transition.js
+                                                                                                      */var _default =
+{
+  // transition动画组件的props
+  transition: {
+    show: false,
+    mode: 'fade',
+    duration: '300',
+    timingFunction: 'ease-out' } };exports.default = _default;
+
+/***/ }),
+/* 169 */
+/*!**************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/props/upload.js ***!
+  \**************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-20 16:44:21
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-20 17:09:50
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/libs/config/props/upload.js
+                                                                                                      */var _default =
+{
+  // upload组件
+  upload: {
+    accept: 'image',
+    capture: function capture() {return ['album', 'camera'];},
+    compressed: true,
+    camera: 'back',
+    maxDuration: 60,
+    uploadIcon: 'camera-fill',
+    uploadIconColor: '#D3D4D6',
+    useBeforeRead: false,
+    previewFullImage: true,
+    maxCount: 52,
+    disabled: false,
+    imageMode: 'aspectFill',
+    name: '',
+    sizeType: function sizeType() {return ['original', 'compressed'];},
+    multiple: false,
+    deletable: true,
+    maxSize: Number.MAX_VALUE,
+    fileList: function fileList() {return [];},
+    uploadText: '',
+    width: 80,
+    height: 80,
+    previewImage: true } };exports.default = _default;
+
+/***/ }),
+/* 170 */
+/*!********************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/config/zIndex.js ***!
+  \********************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; // uniapp在H5中各API的z-index值如下：
+/**
+ * actionsheet: 999
+ * modal: 999
+ * navigate: 998
+ * tabbar: 998
+ * toast: 999
+ */var _default =
+
+{
+  toast: 10090,
+  noNetwork: 10080,
+  // popup包含popup，actionsheet，keyboard，picker的值
+  popup: 10075,
+  mask: 10070,
+  navbar: 980,
+  topTips: 975,
+  sticky: 970,
+  indexListSticky: 965 };exports.default = _default;
+
+/***/ }),
+/* 171 */
+/*!************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/function/platform.js ***!
+  \************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /**
+                                                                                                      * 注意：
+                                                                                                      * 此部分内容，在vue-cli模式下，需要在vue.config.js加入如下内容才有效：
+                                                                                                      * module.exports = {
+                                                                                                      *     transpileDependencies: ['uview-v2']
+                                                                                                      * }
+                                                                                                      */
+
+var platform = 'none';
+
+
+
+
+
+
+platform = 'vue2';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+platform = 'weixin';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+platform = 'mp';var _default =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+platform;exports.default = _default;
+
+/***/ }),
+/* 172 */
+/*!***********************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/router.js ***!
+  \***********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });Object.defineProperty(exports, "RouterMount", { enumerable: true, get: function get() {return _uniSimpleRouter.RouterMount;} });exports.router = void 0;var _uniSimpleRouter = __webpack_require__(/*! uni-simple-router */ 173);function _toConsumableArray(arr) {return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();}function _nonIterableSpread() {throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _iterableToArray(iter) {if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter);}function _arrayWithoutHoles(arr) {if (Array.isArray(arr)) return _arrayLikeToArray(arr);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) {arr2[i] = arr[i];}return arr2;}
+
+
+
+var router = (0, _uniSimpleRouter.createRouter)({
+  platform: "mp-weixin",
+  routes: _toConsumableArray([{"path":"/pages/index/index","aliasPath":"/"},{"path":"/pages/journey/list"},{"path":"/pages/message/list"},{"path":"/pages/mine/index"},{"path":"/pages/login/index"},{"path":"/pages/login/login"},{"path":"/pages/login/bind"},{"path":"/pages/register/register"},{"path":"/pages/password/password"},{"path":"/pages/login/agreement"},{"path":"/pages/login/policy"},{"path":"/pages/money/index"},{"path":"/pages/money/withdraw"},{"path":"/pages/terms/index"},{"path":"/pages/material/index"}]) });
+
+//全局路由前置守卫
+exports.router = router;router.beforeEach(function (to, from, next) {
+  console.log('当前路由:' + to.path);
+  // 不需要检测登录的路由
+  var noNeedLogin = [
+  '/pages/login/login', // 登录
+  '/pages/login/index', // 授权登录
+  '/pages/index/index', // 首页
+  '/pages/message/list', // 消息列表
+  '/pages/journey/list', // 旅途列表
+  '/pages/mine/index', // 我的
+  '/pages/register/register', // 注册页面
+  '/pages/password/password', // 找回密码
+  '/pages/login/agreement', // 用户服务协议
+  '/pages/login/policy', // 隐私政策
+  '/pages/login/bind' // 绑定手机
+  ];
+  var token = uni.getStorageSync('token');
+  if (to.path === '/pages/login/login' || to.path === '/pages/register/register' || to.path ===
+  '/pages/password/password' || to.path === '/pages/login/index' || to.path === '/pages/login/bind') {
+    // 存在token直接跳转到首页
+    if (token) {
+      return next('/pages/index/index');
+    }
+  }
+  if (!token) {
+    if (noNeedLogin.indexOf(to.path) === -1) {
+      return next('/pages/login/index');
+    }
+  }
+  next();
+});
+// 全局路由后置守卫
+// router.afterEach((to, from) => {
+// 	console.log('跳转结束')
+// })
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 173 */
+/*!**********************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/uni-simple-router/dist/uni-simple-router.js ***!
+  \**********************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(uni) {!function (e, t) { true ? module.exports = t() : undefined;}(self, function () {return e = { 779: function _(e, t, r) {var o = r(173);e.exports = function e(t, r, n) {return o(r) || (n = r || n, r = []), n = n || {}, t instanceof RegExp ? function (e, t) {var r = e.source.match(/\((?!\?)/g);if (r) for (var o = 0; o < r.length; o++) {t.push({ name: o, prefix: null, delimiter: null, optional: !1, repeat: !1, partial: !1, asterisk: !1, pattern: null });}return c(e, t);}(t, r) : o(t) ? function (t, r, o) {for (var n = [], a = 0; a < t.length; a++) {n.push(e(t[a], r, o).source);}return c(new RegExp("(?:" + n.join("|") + ")", s(o)), r);}(t, r, n) : function (e, t, r) {return f(a(e, r), t, r);}(t, r, n);}, e.exports.parse = a, e.exports.compile = function (e, t) {return u(a(e, t), t);}, e.exports.tokensToFunction = u, e.exports.tokensToRegExp = f;var n = new RegExp(["(\\\\.)", "([\\/.])?(?:(?:\\:(\\w+)(?:\\(((?:\\\\.|[^\\\\()])+)\\))?|\\(((?:\\\\.|[^\\\\()])+)\\))([+*?])?|(\\*))"].join("|"), "g");function a(e, t) {for (var r, o = [], a = 0, i = 0, u = "", c = t && t.delimiter || "/"; null != (r = n.exec(e));) {var s = r[0],f = r[1],h = r.index;if (u += e.slice(i, h), i = h + s.length, f) u += f[1];else {var v = e[i],y = r[2],g = r[3],d = r[4],m = r[5],b = r[6],O = r[7];u && (o.push(u), u = "");var P = null != y && null != v && v !== y,k = "+" === b || "*" === b,j = "?" === b || "*" === b,w = r[2] || c,R = d || m;o.push({ name: g || a++, prefix: y || "", delimiter: w, optional: j, repeat: k, partial: P, asterisk: !!O, pattern: R ? p(R) : O ? ".*" : "[^" + l(w) + "]+?" });}}return i < e.length && (u += e.substr(i)), u && o.push(u), o;}function i(e) {return encodeURI(e).replace(/[\/?#]/g, function (e) {return "%" + e.charCodeAt(0).toString(16).toUpperCase();});}function u(e, t) {for (var r = new Array(e.length), n = 0; n < e.length; n++) {"object" == typeof e[n] && (r[n] = new RegExp("^(?:" + e[n].pattern + ")$", s(t)));}return function (t, n) {for (var a = "", u = t || {}, l = (n || {}).pretty ? i : encodeURIComponent, p = 0; p < e.length; p++) {var c = e[p];if ("string" != typeof c) {var s,f = u[c.name];if (null == f) {if (c.optional) {c.partial && (a += c.prefix);continue;}throw new TypeError('Expected "' + c.name + '" to be defined');}if (o(f)) {if (!c.repeat) throw new TypeError('Expected "' + c.name + '" to not repeat, but received `' + JSON.stringify(f) + "`");if (0 === f.length) {if (c.optional) continue;throw new TypeError('Expected "' + c.name + '" to not be empty');}for (var h = 0; h < f.length; h++) {if (s = l(f[h]), !r[p].test(s)) throw new TypeError('Expected all "' + c.name + '" to match "' + c.pattern + '", but received `' + JSON.stringify(s) + "`");a += (0 === h ? c.prefix : c.delimiter) + s;}} else {if (s = c.asterisk ? encodeURI(f).replace(/[?#]/g, function (e) {return "%" + e.charCodeAt(0).toString(16).toUpperCase();}) : l(f), !r[p].test(s)) throw new TypeError('Expected "' + c.name + '" to match "' + c.pattern + '", but received "' + s + '"');a += c.prefix + s;}} else a += c;}return a;};}function l(e) {return e.replace(/([.+*?=^!:${}()[\]|\/\\])/g, "\\$1");}function p(e) {return e.replace(/([=!:$\/()])/g, "\\$1");}function c(e, t) {return e.keys = t, e;}function s(e) {return e && e.sensitive ? "" : "i";}function f(e, t, r) {o(t) || (r = t || r, t = []);for (var n = (r = r || {}).strict, a = !1 !== r.end, i = "", u = 0; u < e.length; u++) {var p = e[u];if ("string" == typeof p) i += l(p);else {var f = l(p.prefix),h = "(?:" + p.pattern + ")";t.push(p), p.repeat && (h += "(?:" + f + h + ")*"), i += h = p.optional ? p.partial ? f + "(" + h + ")?" : "(?:" + f + "(" + h + "))?" : f + "(" + h + ")";}}var v = l(r.delimiter || "/"),y = i.slice(-v.length) === v;return n || (i = (y ? i.slice(0, -v.length) : i) + "(?:" + v + "(?=$))?"), i += a ? "$" : n && y ? "" : "(?=" + v + "|$)", c(new RegExp("^" + i, s(r)), t);}}, 173: function _(e) {e.exports = Array.isArray || function (e) {return "[object Array]" == Object.prototype.toString.call(e);};}, 844: function _(e, t, r) {"use strict";var o = this && this.__assign || function () {return (o = Object.assign || function (e) {for (var t, r = 1, o = arguments.length; r < o; r++) {for (var n in t = arguments[r]) {Object.prototype.hasOwnProperty.call(t, n) && (e[n] = t[n]);}}return e;}).apply(this, arguments);};Object.defineProperty(t, "__esModule", { value: !0 }), t.buildVueRouter = t.buildVueRoutes = void 0;var n = r(366),a = r(883),i = r(789),u = r(169);t.buildVueRoutes = function (e, t) {for (var r = e.routesMap, o = r.pathMap, l = r.finallyPathList, p = Object.keys(t), c = 0; c < p.length; c++) {var s = p[c],f = o[s],h = t[s];if (f) {var v = i.getRoutePath(f, e).finallyPath;if (v instanceof Array) throw new Error("非 vueRouterDev 模式下，alias、aliasPath、path 无法提供数组类型！ " + JSON.stringify(f));null != f.name && (h.name = f.name);var y = h.path,g = h.alias;delete h.alias, h.path = v, "/" === y && null != g && (h.alias = g, h.path = y), f.beforeEnter && (h.beforeEnter = function (t, r, o) {u.onTriggerEachHook(t, r, e, n.hookToggle.enterHooks, o);});} else a.warn(s + " 路由地址在路由表中未找到，确定是否传递漏啦", e, !0);}return l.includes("*") && (t["*"] = o["*"]), t;}, t.buildVueRouter = function (e, t, r) {var n;n = "[object Array]" === i.getDataType(r) ? r : Object.values(r);var a = e.options.h5,u = a.scrollBehavior,l = a.fallback,p = t.options.scrollBehavior;t.options.scrollBehavior = function (e, t, r) {return p && p(e, t, r), u(e, t, r);}, t.fallback = l;var c = new t.constructor(o(o({}, e.options.h5), { base: t.options.base, mode: t.options.mode, routes: n }));t.matcher = c.matcher;};}, 147: function _(e, t) {"use strict";var _r,o = this && this.__extends || (_r = function r(e, t) {return (_r = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function (e, t) {e.__proto__ = t;} || function (e, t) {for (var r in t) {Object.prototype.hasOwnProperty.call(t, r) && (e[r] = t[r]);}})(e, t);}, function (e, t) {function o() {this.constructor = e;}_r(e, t), e.prototype = null === t ? Object.create(t) : (o.prototype = t.prototype, new o());});Object.defineProperty(t, "__esModule", { value: !0 }), t.proxyH5Mount = t.proxyEachHook = t.MyArray = void 0;var n = function (e) {function t(r, o, n, a) {var i = e.call(this) || this;return i.router = r, i.vueEachArray = o, i.myEachHook = n, i.hookName = a, Object.setPrototypeOf(i, t.prototype), i;}return o(t, e), t.prototype.push = function (e) {var t = this;this.vueEachArray.push(e);var r = this.length;this[this.length] = function (e, o, n) {r > 0 ? t.vueEachArray[r](e, o, function () {n && n();}) : t.myEachHook(e, o, function (a) {!1 === a ? n(!1) : t.vueEachArray[r](e, o, function (e) {n(a);});}, t.router, !0);};}, t;}(Array);t.MyArray = n, t.proxyEachHook = function (e, t) {for (var r = ["beforeHooks", "afterHooks"], o = 0; o < r.length; o++) {var a = r[o],i = e.lifeCycle[a][0];if (i) {var u = t[a];t[a] = new n(e, u, i, a);}}}, t.proxyH5Mount = function (e) {var t;if (0 === e.mount.length) {if (null === (t = e.options.h5) || void 0 === t ? void 0 : t.vueRouterDev) return;navigator.userAgent.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/) && setTimeout(function () {if (document.getElementsByTagName("uni-page").length > 0) return !1;window.location.reload();}, 0);} else e.mount[0].app.$mount(), e.mount = [];};}, 814: function _(e, t) {"use strict";var r = this && this.__assign || function () {return (r = Object.assign || function (e) {for (var t, r = 1, o = arguments.length; r < o; r++) {for (var n in t = arguments[r]) {Object.prototype.hasOwnProperty.call(t, n) && (e[n] = t[n]);}}return e;}).apply(this, arguments);};Object.defineProperty(t, "__esModule", { value: !0 }), t.tabIndexSelect = t.runtimeQuit = t.registerLoddingPage = void 0;var o = null,n = null;t.registerLoddingPage = function (e) {if (e.options.registerLoadingPage) {var t = e.options.APP,o = t.loadingPageHook,n = t.loadingPageStyle;o(new plus.nativeObj.View("router-loadding", r({ top: "0px", left: "0px", height: "100%", width: "100%" }, n())));}}, t.runtimeQuit = function (e) {void 0 === e && (e = "再按一次退出应用");var t = +new Date();o ? t - o < 1e3 && plus.runtime.quit() : (o = t, uni.showToast({ title: e, icon: "none", position: "bottom", duration: 1e3 }), setTimeout(function () {o = null;}, 1e3));}, t.tabIndexSelect = function (e, t) {if (!__uniConfig.tabBar || !Array.isArray(__uniConfig.tabBar.list)) return !1;for (var r = __uniConfig.tabBar.list, o = [], a = 0, i = 0; i < r.length; i++) {var u = r[i];if ("/" + u.pagePath !== e.path && "/" + u.pagePath !== t.path || (u.pagePath === t.path && (a = i), o.push(u)), 2 === o.length) break;}return 2 === o.length && (null == n && (n = uni.requireNativePlugin("uni-tabview")), n.switchSelect({ index: a }), !0);};}, 334: function _(e, t) {"use strict";Object.defineProperty(t, "__esModule", { value: !0 }), t.getEnterPath = void 0, t.getEnterPath = function (e, t) {switch (t.options.platform) {case "mp-alipay":case "mp-weixin":case "mp-toutiao":case "mp-qq":return e.$options.mpInstance.route;case "mp-baidu":return e.$options.mpInstance.is || e.$options.mpInstance.pageinstance.route;}return e.$options.mpInstance.route;};}, 282: function _(e, t, r) {"use strict";Object.defineProperty(t, "__esModule", { value: !0 }), t.proxyHookName = t.proxyHookDeps = t.lifeCycle = t.baseConfig = t.mpPlatformReg = void 0;var o = r(883);t.mpPlatformReg = "(^mp-weixin$)|(^mp-baidu$)|(^mp-alipay$)|(^mp-toutiao$)|(^mp-qq$)|(^mp-360$)", t.baseConfig = { h5: { paramsToQuery: !1, vueRouterDev: !1, vueNext: !1, mode: "hash", base: "/", linkActiveClass: "router-link-active", linkExactActiveClass: "router-link-exact-active", scrollBehavior: function scrollBehavior(e, t, r) {return { x: 0, y: 0 };}, fallback: !0 }, APP: { registerLoadingPage: !0, loadingPageStyle: function loadingPageStyle() {return JSON.parse('{"backgroundColor":"#FFF"}');}, loadingPageHook: function loadingPageHook(e) {e.show();}, launchedHook: function launchedHook() {plus.navigator.closeSplashscreen();}, animation: {} }, applet: { animationDuration: 300 }, platform: "h5", keepUniOriginNav: !1, debugger: !1, routerBeforeEach: function routerBeforeEach(e, t, r) {r();}, routerAfterEach: function routerAfterEach(e, t) {}, routerErrorEach: function routerErrorEach(e, t) {t.$lockStatus = !1, o.err(e, t, !0);}, detectBeforeLock: function detectBeforeLock(e, t, r) {}, routes: [{ path: "/choose-location" }, { path: "/open-location" }, { path: "/preview-image" }] }, t.lifeCycle = { beforeHooks: [], afterHooks: [], routerBeforeHooks: [], routerAfterHooks: [], routerErrorHooks: [] }, t.proxyHookDeps = { resetIndex: [], hooks: {}, options: {} }, t.proxyHookName = ["onLaunch", "onShow", "onHide", "onError", "onInit", "onLoad", "onReady", "onUnload", "onResize", "created", "beforeMount", "mounted", "beforeDestroy", "destroyed"];}, 801: function _(e, t, r) {"use strict";Object.defineProperty(t, "__esModule", { value: !0 }), t.createRouteMap = void 0;var o = r(883),n = r(789);t.createRouteMap = function (e, t) {var r = { finallyPathList: [], finallyPathMap: Object.create(null), aliasPathMap: Object.create(null), pathMap: Object.create(null), vueRouteMap: Object.create(null), nameMap: Object.create(null) };return t.forEach(function (t) {var a = n.getRoutePath(t, e),i = a.finallyPath,u = a.aliasPath,l = a.path;if (null == l) throw new Error("请提供一个完整的路由对象，包括以绝对路径开始的 ‘path’ 字符串 " + JSON.stringify(t));if (i instanceof Array && !e.options.h5.vueRouterDev && "h5" === e.options.platform) throw new Error("非 vueRouterDev 模式下，route.alias 目前无法提供数组类型！ " + JSON.stringify(t));var p = i,c = u;"h5" !== e.options.platform && 0 !== p.indexOf("/") && "*" !== l && o.warn("当前路由对象下，route：" + JSON.stringify(t) + " 是否缺少了前缀 ‘/’", e, !0), r.finallyPathMap[p] || (r.finallyPathMap[p] = t, r.aliasPathMap[c] = t, r.pathMap[l] = t, r.finallyPathList.push(p), null != t.name && (r.nameMap[t.name] = t));}), r;};}, 662: function _(e, t, r) {"use strict";Object.defineProperty(t, "__esModule", { value: !0 }), t.registerEachHooks = t.registerRouterHooks = t.registerHook = void 0;var o = r(366),n = r(169);function a(e, t) {e[0] = t;}t.registerHook = a, t.registerRouterHooks = function (e, t) {return a(e.routerBeforeHooks, function (e, r, o) {t.routerBeforeEach(e, r, o);}), a(e.routerAfterHooks, function (e, r) {t.routerAfterEach(e, r);}), a(e.routerErrorHooks, function (e, r) {t.routerErrorEach(e, r);}), e;}, t.registerEachHooks = function (e, t, r) {a(e.lifeCycle[t], function (e, a, i, u, l) {l ? n.onTriggerEachHook(e, a, u, o.hookToggle[t], i) : r(e, a, i);});};}, 460: function _(e, t, r) {"use strict";var o = this && this.__assign || function () {return (o = Object.assign || function (e) {for (var t, r = 1, o = arguments.length; r < o; r++) {for (var n in t = arguments[r]) {Object.prototype.hasOwnProperty.call(t, n) && (e[n] = t[n]);}}return e;}).apply(this, arguments);};Object.defineProperty(t, "__esModule", { value: !0 }), t.initMixins = t.getMixins = void 0;var n = r(801),a = r(844),i = r(147),u = r(814),l = r(845),p = r(890),c = r(789),s = r(334),f = r(282),h = !1,v = !1,y = { app: !1, page: "" };function g(e, t) {var r = t.options.platform;return new RegExp(f.mpPlatformReg, "g").test(r) && (r = "app-lets"), { h5: { beforeCreate: function beforeCreate() {var e;if (this.$options.router) {t.$route = this.$options.router;var r = [];(null === (e = t.options.h5) || void 0 === e ? void 0 : e.vueRouterDev) ? r = t.options.routes : (r = n.createRouteMap(t, this.$options.router.options.routes).finallyPathMap, t.routesMap.vueRouteMap = r, a.buildVueRoutes(t, r)), a.buildVueRouter(t, this.$options.router, r), i.proxyEachHook(t, this.$options.router);}} }, "app-plus": { beforeCreate: function beforeCreate() {h || (h = !0, l.proxyPageHook(this, t, "app"), u.registerLoddingPage(t));} }, "app-lets": { beforeCreate: function beforeCreate() {c.voidFun("UNI-SIMPLE-ROUTER");var e = !0,r = this.$options.mpType;v || ("component" === r ? e = c.assertParentChild(y.page, this) : "page" === r ? (y[r] = s.getEnterPath(this, t), t.enterPath = y[r]) : y[r] = !0, e && l.proxyPageHook(this, t, r));}, onLoad: function onLoad() {c.voidFun("UNI-SIMPLE-ROUTER"), !v && c.assertParentChild(y.page, this) && (v = !0, p.forceGuardEach(t));} } }[r];}t.getMixins = g, t.initMixins = function (e, t) {var r = n.createRouteMap(t, t.options.routes);t.routesMap = r, e.mixin(o({}, g(0, t)));};}, 789: function _(e, t, r) {"use strict";var o = this && this.__assign || function () {return (o = Object.assign || function (e) {for (var t, r = 1, o = arguments.length; r < o; r++) {for (var n in t = arguments[r]) {Object.prototype.hasOwnProperty.call(t, n) && (e[n] = t[n]);}}return e;}).apply(this, arguments);},n = this && this.__rest || function (e, t) {var r = {};for (var o in e) {Object.prototype.hasOwnProperty.call(e, o) && t.indexOf(o) < 0 && (r[o] = e[o]);}if (null != e && "function" == typeof Object.getOwnPropertySymbols) {var n = 0;for (o = Object.getOwnPropertySymbols(e); n < o.length; n++) {t.indexOf(o[n]) < 0 && Object.prototype.propertyIsEnumerable.call(e, o[n]) && (r[o[n]] = e[o[n]]);}}return r;},a = this && this.__spreadArrays || function () {for (var e = 0, t = 0, r = arguments.length; t < r; t++) {e += arguments[t].length;}var o = Array(e),n = 0;for (t = 0; t < r; t++) {for (var a = arguments[t], i = 0, u = a.length; i < u; i++, n++) {o[n] = a[i];}}return o;};Object.defineProperty(t, "__esModule", { value: !0 }), t.deepDecodeQuery = t.resolveAbsolutePath = t.assertParentChild = t.lockDetectWarn = t.deepClone = t.baseClone = t.assertDeepObject = t.paramsToQuery = t.forMatNextToFrom = t.urlToJson = t.getUniCachePage = t.copyData = t.getDataType = t.routesForMapRoute = t.notRouteTo404 = t.getWildcardRule = t.assertNewOptions = t.getRoutePath = t.notDeepClearNull = t.mergeConfig = t.timeOut = t.def = t.voidFun = void 0;var i = r(282),u = r(169),l = r(883),p = r(890),c = r(779);function s(e, t) {for (var r = Object.create(null), n = Object.keys(e).concat(["resolveQuery", "parseQuery"]), i = 0; i < n.length; i += 1) {var u = n[i];null != t[u] ? t[u].constructor === Object ? r[u] = o(o({}, e[u]), t[u]) : r[u] = "routes" === u ? a(e[u], t[u]) : t[u] : r[u] = e[u];}return r;}function f(e, t) {var r = e.aliasPath || e.alias || e.path;return "h5" !== t.options.platform && (r = e.path), { finallyPath: r, aliasPath: e.aliasPath || e.path, path: e.path, alias: e.alias };}function h(e, t) {var r = e.routesMap.finallyPathMap["*"];if (r) return r;throw t && u.ERRORHOOK[0](t, e), new Error("当前路由表匹配规则已全部匹配完成，未找到满足的匹配规则。你可以使用 '*' 通配符捕捉最后的异常");}function v(e) {return Object.prototype.toString.call(e);}function y(e, t) {if (null == e) t = e;else for (var r = 0, o = Object.keys(e); r < o.length; r++) {var n = o[r],a = n;e[n] !== e && ("object" == typeof e[n] ? (t[a] = "[object Array]" === v(e[n]) ? [] : {}, t[a] = y(e[n], t[a])) : t[a] = e[n]);}return t;}function g(e) {var t = "[object Array]" === v(e) ? [] : {};return y(e, t), t;}t.voidFun = function () {for (var e = [], t = 0; t < arguments.length; t++) {e[t] = arguments[t];}}, t.def = function (e, t, r) {Object.defineProperty(e, t, { get: function get() {return r();} });}, t.timeOut = function (e) {return new Promise(function (t) {setTimeout(function () {t();}, e);});}, t.mergeConfig = s, t.notDeepClearNull = function (e) {for (var t in e) {null == e[t] && delete e[t];}return e;}, t.getRoutePath = f, t.assertNewOptions = function (e) {var t,r = e.platform,o = e.routes;if (null == r) throw new Error("你在实例化路由时必须传递 'platform'");if (null == o || 0 === o.length) throw new Error("你在实例化路由时必须传递 routes 为空，这是无意义的。");return "h5" === e.platform && (null === (t = e.h5) || void 0 === t ? void 0 : t.vueRouterDev) && (i.baseConfig.routes = []), s(i.baseConfig, e);}, t.getWildcardRule = h, t.notRouteTo404 = function (e, t, r, o) {if ("*" !== t.path) return t;var n = t.redirect;if (void 0 === n) throw new Error(" *  通配符必须配合 redirect 使用。redirect: string | Location | Function");var a = n;return "function" == typeof a && (a = a(r)), p.navjump(a, e, o, void 0, void 0, void 0, !1);}, t.routesForMapRoute = function e(t, r, o, n) {var a;if (void 0 === n && (n = !1), null === (a = t.options.h5) || void 0 === a ? void 0 : a.vueRouterDev) return { path: r };for (var i = r.split("?")[0], u = "", l = t.routesMap, p = 0; p < o.length; p++) {for (var s = l[o[p]], f = 0, y = Object.entries(s); f < y.length; f++) {var g = y[f],d = g[0],m = g[1];if ("*" !== d) {var b = m,O = d;if ("[object Array]" === v(s) && (O = b), null != c(O).exec(i)) return "[object String]" === v(b) ? l.finallyPathMap[b] : b;} else "" === u && (u = "*");}}if (n) return {};if (l.aliasPathMap) {var P = e(t, r, ["aliasPathMap"], !0);if (Object.keys(P).length > 0) return P;}if ("" !== u) return h(t);throw new Error(r + " 路径无法在路由表中找到！检查跳转路径及路由表");}, t.getDataType = v, t.copyData = function (e) {return JSON.parse(JSON.stringify(e));}, t.getUniCachePage = function (e) {var t = getCurrentPages();if (null == e) return t;if (0 === t.length) return t;var r = t.reverse()[e];return null == r ? [] : r;}, t.urlToJson = function (e) {var t = {},r = e.split("?"),o = r[0],n = r[1];if (null != n) for (var a = 0, i = n.split("&"); a < i.length; a++) {var u = i[a].split("=");t[u[0]] = u[1];}return { path: o, query: t };}, t.forMatNextToFrom = function (e, t, r) {var o = [t, r],n = o[0],a = o[1];if ("h5" === e.options.platform) {var i = e.options.h5,u = i.vueNext,l = i.vueRouterDev;u || l || (n = p.createRoute(e, void 0, n), a = p.createRoute(e, void 0, a));} else n = p.createRoute(e, void 0, g(n)), a = p.createRoute(e, void 0, g(a));return { matTo: n, matFrom: a };}, t.paramsToQuery = function (e, t) {var r;if ("h5" === e.options.platform && !(null === (r = e.options.h5) || void 0 === r ? void 0 : r.paramsToQuery)) return t;if ("[object Object]" === v(t)) {var a = t,i = a.name,l = a.params,p = n(a, ["name", "params"]),c = l;if ("h5" !== e.options.platform && null == c && (c = {}), null != i && null != c) {var s = e.routesMap.nameMap[i];null == s && (s = h(e, { type: 2, msg: "命名路由为：" + i + " 的路由，无法在路由表中找到！", toRule: t }));var y = f(s, e).finallyPath;if (!y.includes(":")) return o(o({}, p), { path: y, query: c });u.ERRORHOOK[0]({ type: 2, msg: "动态路由：" + y + " 无法使用 paramsToQuery！", toRule: t }, e);}}return t;}, t.assertDeepObject = function (e) {var t = null;try {t = JSON.stringify(e).match(/\{|\[|\}|\]/g);} catch (e) {l.warnLock("传递的参数解析对象失败。" + e);}return null != t && t.length > 3;}, t.baseClone = y, t.deepClone = g, t.lockDetectWarn = function (e, t, r, o, n, a) {if (void 0 === n && (n = {}), "afterHooks" === a) o();else {var i = e.options.detectBeforeLock;i && i(e, t, r), e.$lockStatus ? e.options.routerErrorEach({ type: 2, msg: "当前页面正在处于跳转状态，请稍后再进行跳转....", NAVTYPE: r, uniActualData: n }, e) : o();}}, t.assertParentChild = function (e, t) {for (; null != t.$parent;) {var r = t.$parent.$mp;if (r.page && r.page.is === e) return !0;t = t.$parent;}try {if (t.$mp.page.is === e || t.$mp.page.route === e) return !0;} catch (e) {return !1;}return !1;}, t.resolveAbsolutePath = function (e, t) {var r = /^\/?([^\?\s]+)(\?.+)?$/,o = e.trim();if (!r.test(o)) throw new Error("【" + e + "】 路径错误，请提供完整的路径(10001)。");var n = o.match(r);if (null == n) throw new Error("【" + e + "】 路径错误，请提供完整的路径(10002)。");var a = n[2] || "";if (/^\.\/[^\.]+/.test(o)) return (t.currentRoute.path + e).replace(/[^\/]+\.\//, "");var i = n[1].replace(/\//g, "\\/").replace(/\.\./g, "[^\\/]+").replace(/\./g, "\\."),u = new RegExp("^\\/" + i + "$"),l = t.options.routes.filter(function (e) {return u.test(e.path);});if (1 !== l.length) throw new Error("【" + e + "】 路径错误，尝试转成绝对路径失败，请手动转成绝对路径(10003)。");return l[0].path + a;}, t.deepDecodeQuery = function e(t) {for (var r = "[object Array]" === v(t) ? [] : {}, o = Object.keys(t), n = 0; n < o.length; n++) {var a = o[n],i = t[a];if ("string" == typeof i) try {var u = JSON.parse(decodeURIComponent(i));"object" != typeof u && (u = i), r[a] = u;} catch (e) {try {r[a] = decodeURIComponent(i);} catch (e) {r[a] = i;}} else if ("object" == typeof i) {var l = e(i);r[a] = l;} else r[a] = i;}return r;};}, 883: function _(e, t) {"use strict";function r(e, t, r, o) {if (void 0 === o && (o = !1), !o) {var n = "[object Object]" === t.toString();if (!1 === t) return !1;if (n && !1 === t[e]) return !1;}return console[e](r), !0;}Object.defineProperty(t, "__esModule", { value: !0 }), t.warnLock = t.log = t.warn = t.err = t.isLog = void 0, t.isLog = r, t.err = function (e, t, o) {r("error", t.options.debugger, e, o);}, t.warn = function (e, t, o) {r("warn", t.options.debugger, e, o);}, t.log = function (e, t, o) {r("log", t.options.debugger, e, o);}, t.warnLock = function (e) {console.warn(e);};}, 607: function _(e, t, r) {"use strict";var o = this && this.__createBinding || (Object.create ? function (e, t, r, o) {void 0 === o && (o = r), Object.defineProperty(e, o, { enumerable: !0, get: function get() {return t[r];} });} : function (e, t, r, o) {void 0 === o && (o = r), e[o] = t[r];}),n = this && this.__exportStar || function (e, t) {for (var r in e) {"default" === r || Object.prototype.hasOwnProperty.call(t, r) || o(t, e, r);}};Object.defineProperty(t, "__esModule", { value: !0 }), t.createRouter = t.RouterMount = t.runtimeQuit = void 0, n(r(366), t), n(r(309), t);var a = r(814);Object.defineProperty(t, "runtimeQuit", { enumerable: !0, get: function get() {return a.runtimeQuit;} });var i = r(963);Object.defineProperty(t, "RouterMount", { enumerable: !0, get: function get() {return i.RouterMount;} }), Object.defineProperty(t, "createRouter", { enumerable: !0, get: function get() {return i.createRouter;} });}, 366: function _(e, t) {"use strict";var r, o, n;Object.defineProperty(t, "__esModule", { value: !0 }), t.rewriteMethodToggle = t.navtypeToggle = t.hookToggle = void 0, (n = t.hookToggle || (t.hookToggle = {})).beforeHooks = "beforeEach", n.afterHooks = "afterEach", n.enterHooks = "beforeEnter", (o = t.navtypeToggle || (t.navtypeToggle = {})).push = "navigateTo", o.replace = "redirectTo", o.replaceAll = "reLaunch", o.pushTab = "switchTab", o.back = "navigateBack", (r = t.rewriteMethodToggle || (t.rewriteMethodToggle = {})).navigateTo = "push", r.navigate = "push", r.redirectTo = "replace", r.reLaunch = "replaceAll", r.switchTab = "pushTab", r.navigateBack = "back";}, 309: function _(e, t) {"use strict";Object.defineProperty(t, "__esModule", { value: !0 });}, 169: function _(e, t, r) {"use strict";var o = this && this.__rest || function (e, t) {var r = {};for (var o in e) {Object.prototype.hasOwnProperty.call(e, o) && t.indexOf(o) < 0 && (r[o] = e[o]);}if (null != e && "function" == typeof Object.getOwnPropertySymbols) {var n = 0;for (o = Object.getOwnPropertySymbols(e); n < o.length; n++) {t.indexOf(o[n]) < 0 && Object.prototype.propertyIsEnumerable.call(e, o[n]) && (r[o[n]] = e[o[n]]);}}return r;};Object.defineProperty(t, "__esModule", { value: !0 }), t.loopCallHook = t.transitionTo = t.onTriggerEachHook = t.callHook = t.callBeforeRouteLeave = t.HOOKLIST = t.ERRORHOOK = void 0;var n = r(789),a = r(890),i = r(147),u = r(814);function l(e, t, r, o) {var a,i = n.getUniCachePage(0);if (Object.keys(i).length > 0) {var u = void 0;switch ("h5" === e.options.platform ? u = i.$options.beforeRouteLeave : null != i.$vm && (u = i.$vm.$options.beforeRouteLeave), n.getDataType(u)) {case "[object Array]":a = (a = u[0]).bind(i);break;case "[object Function]":a = u.bind(i.$vm);}}return p(a, t, r, e, o);}function p(e, t, r, o, n, a) {void 0 === a && (a = !0), null != e && e instanceof Function ? !0 === a ? e(t, r, n, o, !1) : (e(t, r, function () {}, o, !1), n()) : n();}function c(e, t, r, o, a, i) {var u = n.forMatNextToFrom(e, t, r),l = u.matTo,p = u.matFrom;"h5" === e.options.platform ? s(a, 0, i, e, l, p, o) : s(a.slice(0, 4), 0, function () {i(function () {s(a.slice(4), 0, n.voidFun, e, l, p, o);});}, e, l, p, o);}function s(e, r, i, l, p, c, f) {var h = n.routesForMapRoute(l, p.path, ["finallyPathMap", "pathMap"]);if (e.length - 1 < r) return i();var v = e[r],y = t.ERRORHOOK[0];v(l, p, c, h, function (t) {if ("app-plus" === l.options.platform && (!1 !== t && "string" != typeof t && "object" != typeof t || u.tabIndexSelect(p, c)), !1 === t) "h5" === l.options.platform && i(!1), y({ type: 0, msg: "管道函数传递 false 导航被终止!", matTo: p, matFrom: c, nextTo: t }, l);else if ("string" == typeof t || "object" == typeof t) {var n = f,h = t;if ("object" == typeof t) {var v = t.NAVTYPE;h = o(t, ["NAVTYPE"]), null != v && (n = v);}a.navjump(h, l, n, { from: c, next: i });} else null == t ? (r++, s(e, r, i, l, p, c, f)) : y({ type: 1, msg: "管道函数传递未知类型，无法被识别。导航被终止！", matTo: p, matFrom: c, nextTo: t }, l);});}t.ERRORHOOK = [function (e, t) {return t.lifeCycle.routerErrorHooks[0](e, t);}], t.HOOKLIST = [function (e, t, r, o, n) {return p(e.lifeCycle.routerBeforeHooks[0], t, r, e, n);}, function (e, t, r, o, n) {return l(e, t, r, n);}, function (e, t, r, o, n) {return p(e.lifeCycle.beforeHooks[0], t, r, e, n);}, function (e, t, r, o, n) {return p(o.beforeEnter, t, r, e, n);}, function (e, t, r, o, n) {return p(e.lifeCycle.afterHooks[0], t, r, e, n, !1);}, function (e, t, r, o, n) {return e.$lockStatus = !1, "h5" === e.options.platform && i.proxyH5Mount(e), p(e.lifeCycle.routerAfterHooks[0], t, r, e, n, !1);}], t.callBeforeRouteLeave = l, t.callHook = p, t.onTriggerEachHook = function (e, r, o, n, a) {var i = [];switch (n) {case "beforeEach":i = t.HOOKLIST.slice(0, 3);break;case "afterEach":i = t.HOOKLIST.slice(4);break;case "beforeEnter":i = t.HOOKLIST.slice(3, 4);}c(o, e, r, "push", i, a);}, t.transitionTo = c, t.loopCallHook = s;}, 890: function _(e, t, r) {"use strict";var o = this && this.__assign || function () {return (o = Object.assign || function (e) {for (var t, r = 1, o = arguments.length; r < o; r++) {for (var n in t = arguments[r]) {Object.prototype.hasOwnProperty.call(t, n) && (e[n] = t[n]);}}return e;}).apply(this, arguments);},n = this && this.__rest || function (e, t) {var r = {};for (var o in e) {Object.prototype.hasOwnProperty.call(e, o) && t.indexOf(o) < 0 && (r[o] = e[o]);}if (null != e && "function" == typeof Object.getOwnPropertySymbols) {var n = 0;for (o = Object.getOwnPropertySymbols(e); n < o.length; n++) {t.indexOf(o[n]) < 0 && Object.prototype.propertyIsEnumerable.call(e, o[n]) && (r[o[n]] = e[o[n]]);}}return r;};Object.defineProperty(t, "__esModule", { value: !0 }), t.createRoute = t.forceGuardEach = t.backOptionsBuild = t.navjump = t.lockNavjump = void 0;var a = r(366),i = r(99),u = r(789),l = r(169),p = r(845),c = r(169);function s(e, t, r, o, n) {u.lockDetectWarn(t, e, r, function () {"h5" !== t.options.platform && (t.$lockStatus = !0), f(e, t, r, void 0, o, n);}, n);}function f(e, t, r, n, s, f, v) {if (void 0 === v && (v = !0), "back" === r) {var y;if (y = "string" == typeof e ? +e : e.delta || 1, "h5" === t.options.platform) {t.$route.go(-y);var g = (f || { success: u.voidFun }).success || u.voidFun,d = (f || { complete: u.voidFun }).complete || u.voidFun;return g({ errMsg: "navigateBack:ok" }), void d({ errMsg: "navigateBack:ok" });}e = h(t, y, f);}var m = i.queryPageToMap(e, t).rule;m.type = a.navtypeToggle[r];var b = u.paramsToQuery(t, m),O = i.resolveQuery(b, t);if ("h5" === t.options.platform) {if ("push" !== r && (r = "replace"), null != n) n.next(o({ replace: "push" !== r }, O));else if ("push" === r && Reflect.has(O, "events")) {if (Reflect.has(O, "name")) throw new Error("在h5端上使用 'push'、'navigateTo' 跳转时，如果包含 events 不允许使用 name 跳转，因为 name 实现了动态路由。请更换为 path 或者 url 跳转！");uni.navigateTo(O, !0, u.voidFun, s);} else t.$route[r](O, O.success || u.voidFun, O.fail || u.voidFun);} else {var P = { path: "" };if (null == n) {var k = u.routesForMapRoute(t, O.path, ["finallyPathMap", "pathMap"]);k = u.notRouteTo404(t, k, O, r), O = o(o(o(o({}, k), { params: {} }), O), { path: k.path }), P = p.createToFrom(O, t);} else P = n.from;if (p.createFullPath(O, P), !1 === v) return O;l.transitionTo(t, O, P, r, c.HOOKLIST, function (e) {uni[a.navtypeToggle[r]](O, !0, e, s);});}}function h(e, t, r) {void 0 === r && (r = {});var n = v(e, t, void 0, o({ NAVTYPE: "back" }, r)),a = o(o({}, r), { path: n.path, query: n.query, delta: t });if ("[object Object]" === u.getDataType(r)) {var i = r,l = i.animationDuration,p = i.animationType;null != l && (a.animationDuration = l), null != p && (a.animationType = p);var c = r.from;null != c && (a.BACKTYPE = c);}return a;}function v(e, t, r, l) {void 0 === t && (t = 0), void 0 === l && (l = {});var p = { name: "", meta: {}, path: "", fullPath: "", NAVTYPE: "", query: {}, params: {}, BACKTYPE: (r || { BACKTYPE: "" }).BACKTYPE || "" };if (19970806 === t) return p;if ("h5" === e.options.platform) {var c = { path: "" };c = null != r ? r : e.$route.currentRoute;var s = u.copyData(c.params);delete s.__id__;var f = i.parseQuery(o(o({}, s), u.copyData(c.query)), e);c = o(o({}, c), { query: f }), p.path = c.path, p.fullPath = c.fullPath || "", p.query = u.deepDecodeQuery(c.query || {}), p.NAVTYPE = a.rewriteMethodToggle[c.type || "reLaunch"];} else {var h = {};if (null != r) h = o(o({}, r), { openType: r.type });else {var v = u.getUniCachePage(t);if (0 === Object.keys(v).length) {var y = l.NAVTYPE,g = n(l, ["NAVTYPE"]),d = "不存在的页面栈，请确保有足够的页面可用，当前 level:" + t;throw e.options.routerErrorEach({ type: 3, msg: d, NAVTYPE: y, level: t, uniActualData: g }, e), new Error(d);}var m = v.options || {};h = o(o({}, v.$page || {}), { query: u.deepDecodeQuery(m), fullPath: decodeURIComponent((v.$page || {}).fullPath || "/" + v.route) }), "app-plus" !== e.options.platform && (h.path = "/" + v.route);}var b = h.openType;p.query = h.query, p.path = h.path, p.fullPath = h.fullPath, p.NAVTYPE = a.rewriteMethodToggle[b || "reLaunch"];}var O = u.routesForMapRoute(e, p.path, ["finallyPathMap", "pathMap"]),P = o(o({}, p), O);return P.query = i.parseQuery(P.query, e), P;}t.lockNavjump = s, t.navjump = f, t.backOptionsBuild = h, t.forceGuardEach = function (e, t, r) {if (void 0 === t && (t = "replaceAll"), void 0 === r && (r = !1), "h5" === e.options.platform) throw new Error("在h5端上使用：forceGuardEach 是无意义的，目前 forceGuardEach 仅支持在非h5端上使用");var o = u.getUniCachePage(0);0 === Object.keys(o).length && e.options.routerErrorEach({ type: 3, NAVTYPE: t, uniActualData: {}, level: 0, msg: "不存在的页面栈，请确保有足够的页面可用，当前 level:0" }, e);var n = o,a = n.route,i = n.options;s({ path: "/" + a, query: u.deepDecodeQuery(i || {}) }, e, t, r);}, t.createRoute = v;}, 845: function _(e, t, r) {"use strict";Object.defineProperty(t, "__esModule", { value: !0 }), t.resetPageHook = t.resetAndCallPageHook = t.proxyPageHook = t.createFullPath = t.createToFrom = void 0;var o = r(282),n = r(789),a = r(890),i = r(99);function u(e) {for (var t = e.proxyHookDeps, r = 0, o = Object.entries(t.hooks); r < o.length; r++) {(0, o[r][1].resetHook)();}}t.createToFrom = function (e, t) {var r = n.getUniCachePage(0);return "[object Array]" === n.getDataType(r) ? n.deepClone(e) : a.createRoute(t);}, t.createFullPath = function (e, t) {if (null == e.fullPath) {var r = i.stringifyQuery(e.query);e.fullPath = e.path + r;}null == t.fullPath && (r = i.stringifyQuery(t.query), t.fullPath = t.path + r);}, t.proxyPageHook = function (e, t, r) {for (var n = t.proxyHookDeps, a = e.$options, i = function i(_i) {var u = o.proxyHookName[_i],l = a[u];if (l) for (var p = function p(o) {if (l[o].toString().includes("UNI-SIMPLE-ROUTER")) return "continue";var a = Object.keys(n.hooks).length + 1,i = function i() {for (var e = [], t = 0; t < arguments.length; t++) {e[t] = arguments[t];}n.resetIndex.push(a), n.options[a] = e;},u = l.splice(o, 1, i)[0];n.hooks[a] = { proxyHook: i, callHook: function callHook(o) {if (t.enterPath.replace(/^\//, "") === o.replace(/^\//, "") || "app" === r) {var i = n.options[a];u.apply(e, i);}}, resetHook: function resetHook() {l.splice(o, 1, u);} };}, c = 0; c < l.length; c++) {p(c);}}, u = 0; u < o.proxyHookName.length; u++) {i(u);}}, t.resetAndCallPageHook = function (e, t, r) {void 0 === r && (r = !0);var o = t.trim().match(/^(\/?[^\?\s]+)(\?[\s\S]*$)?$/);if (null == o) throw new Error("还原hook失败。请检查 【" + t + "】 路径是否正确。");t = o[1];for (var n = e.proxyHookDeps, a = n.resetIndex, i = 0; i < a.length; i++) {var l = a[i];(0, n.hooks[l].callHook)(t);}r && u(e);}, t.resetPageHook = u;}, 99: function _(e, t, r) {"use strict";var o = this && this.__assign || function () {return (o = Object.assign || function (e) {for (var t, r = 1, o = arguments.length; r < o; r++) {for (var n in t = arguments[r]) {Object.prototype.hasOwnProperty.call(t, n) && (e[n] = t[n]);}}return e;}).apply(this, arguments);};Object.defineProperty(t, "__esModule", { value: !0 }), t.stringifyQuery = t.parseQuery = t.resolveQuery = t.queryPageToMap = void 0;var n = r(789),a = r(169),i = r(883),u = /[!'()*]/g,l = function l(e) {return "%" + e.charCodeAt(0).toString(16);},p = /%2C/g,c = function c(e) {return encodeURIComponent(e).replace(u, l).replace(p, ",");};t.queryPageToMap = function (e, t) {var r = {},i = "",u = e.success,l = e.fail;if ("[object Object]" === n.getDataType(e)) {var p = e;if (null != p.path) {var c = n.urlToJson(p.path),s = c.path,f = c.query;i = n.routesForMapRoute(t, s, ["finallyPathList", "pathMap"]), r = o(o({}, f), e.query || {}), p.path = s, p.query = r, delete e.params;} else null != p.name ? null == (i = t.routesMap.nameMap[p.name]) ? i = n.getWildcardRule(t, { type: 2, msg: "命名路由为：" + p.name + " 的路由，无法在路由表中找到！", toRule: e }) : (r = e.params || {}, delete e.query) : i = n.getWildcardRule(t, { type: 2, msg: e + " 解析失败，请检测当前路由表下是否有包含。", toRule: e });} else e = n.urlToJson(e), i = n.routesForMapRoute(t, e.path, ["finallyPathList", "pathMap"]), r = e.query;if ("h5" === t.options.platform) {n.getRoutePath(i, t).finallyPath.includes(":") && null == e.name && a.ERRORHOOK[0]({ type: 2, msg: "当有设置 alias或者aliasPath 为动态路由时，不允许使用 path 跳转。请使用 name 跳转！", route: i }, t);var h = e.complete,v = e.success,y = e.fail;if ("[object Function]" === n.getDataType(h)) {var g = function g(e, t) {"[object Function]" === n.getDataType(t) && t.apply(this, e), h.apply(this, e);};u = function u() {for (var e = [], t = 0; t < arguments.length; t++) {e[t] = arguments[t];}g.call(this, e, v);}, l = function l() {for (var e = [], t = 0; t < arguments.length; t++) {e[t] = arguments[t];}g.call(this, e, y);};}}var d = e;return "[object Function]" === n.getDataType(d.success) && (d.success = u), "[object Function]" === n.getDataType(d.fail) && (d.fail = l), { rule: d, route: i, query: r };}, t.resolveQuery = function (e, t) {var r = "query";null != e.params && (r = "params"), null != e.query && (r = "query");var o = n.copyData(e[r] || {}),a = t.options.resolveQuery;if (a) {var u = a(o);"[object Object]" !== n.getDataType(u) ? i.warn("请按格式返回参数： resolveQuery?:(jsonQuery:{[propName: string]: any;})=>{[propName: string]: any;}", t) : e[r] = u;} else {if (!n.assertDeepObject(o)) return e;var l = JSON.stringify(o);e[r] = { query: l };}return e;}, t.parseQuery = function (e, t) {var r = t.options.parseQuery;if (r) e = r(n.copyData(e)), "[object Object]" !== n.getDataType(e) && i.warn("请按格式返回参数： parseQuery?:(jsonQuery:{[propName: string]: any;})=>{[propName: string]: any;}", t);else if (Reflect.get(e, "query")) {var o = Reflect.get(e, "query");if ("string" == typeof o) try {o = JSON.parse(o);} catch (e) {i.warn("尝试解析深度对象失败，按原样输出。" + e, t);}if ("object" == typeof o) return n.deepDecodeQuery(o);}return e;}, t.stringifyQuery = function (e) {var t = e ? Object.keys(e).map(function (t) {var r = e[t];if (void 0 === r) return "";if (null === r) return c(t);if (Array.isArray(r)) {var o = [];return r.forEach(function (e) {void 0 !== e && (null === e ? o.push(c(t)) : o.push(c(t) + "=" + c(e)));}), o.join("&");}return c(t) + "=" + c(r);}).filter(function (e) {return e.length > 0;}).join("&") : null;return t ? "?" + t : "";};}, 314: function _(e, t, r) {"use strict";Object.defineProperty(t, "__esModule", { value: !0 }), t.rewriteMethod = void 0;var o = r(366),n = r(789),a = r(883),i = r(809),u = ["navigateTo", "redirectTo", "reLaunch", "switchTab", "navigateBack"];t.rewriteMethod = function (e) {!1 === e.options.keepUniOriginNav && u.forEach(function (t) {var r = uni[t];uni[t] = function (u, l, p, c) {void 0 === l && (l = !1), l ? i.uniOriginJump(e, r, t, u, p, c) : ("app-plus" === e.options.platform && 0 === Object.keys(e.appMain).length && (e.appMain = { NAVTYPE: t, path: u.url }), function (e, t, r) {if ("app-plus" === r.options.platform) {var i = null;e && (i = e.openType), null != i && "appLaunch" === i && (t = "reLaunch");}if ("reLaunch" === t && '{"url":"/"}' === JSON.stringify(e) && (a.warn("uni-app 原生方法：reLaunch({url:'/'}) 默认被重写啦！你可以使用 this.$Router.replaceAll() 或者 uni.reLaunch({url:'/?xxx=xxx'})", r, !0), t = "navigateBack", e = { from: "backbutton" }), "navigateBack" === t) {var u = 1;null == e && (e = { delta: 1 }), "[object Number]" === n.getDataType(e.delta) && (u = e.delta), r.back(u, e);} else {var l = o.rewriteMethodToggle[t],p = e.url;if (!p.startsWith("/")) {var c = n.resolveAbsolutePath(p, r);p = c, e.url = c;}if ("switchTab" === t) {var s = n.routesForMapRoute(r, p, ["pathMap", "finallyPathList"]),f = n.getRoutePath(s, r).finallyPath;if ("[object Array]" === n.getDataType(f) && a.warn("uni-app 原生方法跳转路径为：" + p + "。此路为是tab页面时，不允许设置 alias 为数组的情况，并且不能为动态路由！当然你可以通过通配符*解决！", r, !0), "*" === f && a.warn("uni-app 原生方法跳转路径为：" + p + "。在路由表中找不到相关路由表！当然你可以通过通配符*解决！", r, !0), "h5" === r.options.platform) {var h = e.success;e.success = function () {for (var t = [], r = 0; r < arguments.length; r++) {t[r] = arguments[r];}null == h || h.apply(null, t), n.timeOut(150).then(function () {var t = e.detail || {};if (Object.keys(t).length > 0 && Reflect.has(t, "index")) {var r = n.getUniCachePage(0);if (0 === Object.keys(r).length) return !1;var o = r,a = o.$options.onTabItemTap;if (a) for (var i = 0; i < a.length; i++) {a[i].call(o, t);}}});};}p = f;}var v = e,y = v.events,g = v.success,d = v.fail,m = v.complete,b = v.animationType,O = { path: p, events: y, success: g, fail: d, complete: m, animationDuration: v.animationDuration, animationType: b };r[l](n.notDeepClearNull(O));}}(u, t, e));};});};}, 963: function _(e, t, r) {"use strict";var o = this && this.__assign || function () {return (o = Object.assign || function (e) {for (var t, r = 1, o = arguments.length; r < o; r++) {for (var n in t = arguments[r]) {Object.prototype.hasOwnProperty.call(t, n) && (e[n] = t[n]);}}return e;}).apply(this, arguments);};Object.defineProperty(t, "__esModule", { value: !0 }), t.createRouter = t.RouterMount = void 0;var n = r(282),a = r(789),i = r(662),u = r(460),l = r(890),p = r(314),c = function c() {},s = new Promise(function (e) {return c = e;});t.createRouter = function (e) {var t = a.assertNewOptions(e),r = { options: t, mount: [], Vue: null, proxyHookDeps: n.proxyHookDeps, appMain: {}, enterPath: "", $route: null, $lockStatus: !1, routesMap: {}, lifeCycle: i.registerRouterHooks(n.lifeCycle, t), push: function push(e) {l.lockNavjump(e, r, "push");}, replace: function replace(e) {l.lockNavjump(e, r, "replace");}, replaceAll: function replaceAll(e) {l.lockNavjump(e, r, "replaceAll");}, pushTab: function pushTab(e) {l.lockNavjump(e, r, "pushTab");}, back: function back(e, t) {void 0 === e && (e = 1), "[object Object]" !== a.getDataType(t) ? t = { from: "navigateBack" } : Reflect.has(t, "from") || (t = o(o({}, t), { from: "navigateBack" })), l.lockNavjump(e + "", r, "back", void 0, t);}, forceGuardEach: function forceGuardEach(e, t) {l.forceGuardEach(r, e, t);}, beforeEach: function beforeEach(e) {i.registerEachHooks(r, "beforeHooks", e);}, afterEach: function afterEach(e) {i.registerEachHooks(r, "afterHooks", e);}, install: function install(e) {r.Vue = e, p.rewriteMethod(this), u.initMixins(e, this), Object.defineProperty(e.prototype, "$Router", { get: function get() {var e = r;return Object.defineProperty(this, "$Router", { value: e, writable: !1, configurable: !1, enumerable: !1 }), Object.seal(e);} }), Object.defineProperty(e.prototype, "$Route", { get: function get() {return l.createRoute(r);} }), Object.defineProperty(e.prototype, "$AppReady", { get: function get() {return "h5" === r.options.platform ? Promise.resolve() : s;}, set: function set(e) {!0 === e && c();} });} };return a.def(r, "currentRoute", function () {return l.createRoute(r);}), r.beforeEach(function (e, t, r) {return r();}), r.afterEach(function () {}), r;}, t.RouterMount = function (e, t, r) {if (void 0 === r && (r = "#app"), "[object Array]" !== a.getDataType(t.mount)) throw new Error("挂载路由失败，router.app 应该为数组类型。当前类型：" + typeof t.mount);if (t.mount.push({ app: e, el: r }), "h5" === t.options.platform) {var o = t.$route;o.replace({ path: o.currentRoute.fullPath });}};}, 809: function _(e, t, r) {"use strict";var o = this && this.__assign || function () {return (o = Object.assign || function (e) {for (var t, r = 1, o = arguments.length; r < o; r++) {for (var n in t = arguments[r]) {Object.prototype.hasOwnProperty.call(t, n) && (e[n] = t[n]);}}return e;}).apply(this, arguments);},n = this && this.__awaiter || function (e, t, r, o) {return new (r || (r = Promise))(function (n, a) {function i(e) {try {l(o.next(e));} catch (e) {a(e);}}function u(e) {try {l(o.throw(e));} catch (e) {a(e);}}function l(e) {var t;e.done ? n(e.value) : (t = e.value, t instanceof r ? t : new r(function (e) {e(t);})).then(i, u);}l((o = o.apply(e, t || [])).next());});},a = this && this.__generator || function (e, t) {var r,o,n,a,i = { label: 0, sent: function sent() {if (1 & n[0]) throw n[1];return n[1];}, trys: [], ops: [] };return a = { next: u(0), throw: u(1), return: u(2) }, "function" == typeof Symbol && (a[Symbol.iterator] = function () {return this;}), a;function u(a) {return function (u) {return function (a) {if (r) throw new TypeError("Generator is already executing.");for (; i;) {try {if (r = 1, o && (n = 2 & a[0] ? o.return : a[0] ? o.throw || ((n = o.return) && n.call(o), 0) : o.next) && !(n = n.call(o, a[1])).done) return n;switch (o = 0, n && (a = [2 & a[0], n.value]), a[0]) {case 0:case 1:n = a;break;case 4:return i.label++, { value: a[1], done: !1 };case 5:i.label++, o = a[1], a = [0];continue;case 7:a = i.ops.pop(), i.trys.pop();continue;default:if (!((n = (n = i.trys).length > 0 && n[n.length - 1]) || 6 !== a[0] && 2 !== a[0])) {i = 0;continue;}if (3 === a[0] && (!n || a[1] > n[0] && a[1] < n[3])) {i.label = a[1];break;}if (6 === a[0] && i.label < n[1]) {i.label = n[1], n = a;break;}if (n && i.label < n[2]) {i.label = n[2], i.ops.push(a);break;}n[2] && i.ops.pop(), i.trys.pop();continue;}a = t.call(e, i);} catch (e) {a = [6, e], o = 0;} finally {r = n = 0;}}if (5 & a[0]) throw a[1];return { value: a[0] ? a[1] : void 0, done: !0 };}([a, u]);};}},i = this && this.__rest || function (e, t) {var r = {};for (var o in e) {Object.prototype.hasOwnProperty.call(e, o) && t.indexOf(o) < 0 && (r[o] = e[o]);}if (null != e && "function" == typeof Object.getOwnPropertySymbols) {var n = 0;for (o = Object.getOwnPropertySymbols(e); n < o.length; n++) {t.indexOf(o[n]) < 0 && Object.prototype.propertyIsEnumerable.call(e, o[n]) && (r[o[n]] = e[o[n]]);}}return r;};Object.defineProperty(t, "__esModule", { value: !0 }), t.formatOriginURLQuery = t.uniOriginJump = void 0;var u = r(99),l = r(789),p = r(282),c = r(845),s = 0,f = "reLaunch";function h(e, t, r) {var n,a = t.url,i = t.path,p = t.query,c = t.animationType,s = t.animationDuration,f = t.events,h = t.success,v = t.fail,y = t.complete,g = t.delta,d = t.animation,m = u.stringifyQuery(p || {}),b = "" === m ? i || a : (i || a) + m,O = {};return "app-plus" === e.options.platform && "navigateBack" !== r && (O = (null === (n = e.options.APP) || void 0 === n ? void 0 : n.animation) || {}, O = o(o({}, O), d || {})), l.notDeepClearNull({ delta: g, url: b, animationType: c || O.animationType, animationDuration: s || O.animationDuration, events: f, success: h, fail: v, complete: y });}t.uniOriginJump = function (e, t, r, u, v, y) {var g = h(e, u, r),d = g.complete,m = i(g, ["complete"]),b = e.options.platform;null != y && !1 === y ? (0 === s && (s++, "h5" !== b && (c.resetAndCallPageHook(e, m.url), e.Vue.prototype.$AppReady = !0)), d && d.apply(null, { msg: "forceGuardEach强制触发并且不执行跳转" }), v && v.apply(null, { msg: "forceGuardEach强制触发并且不执行跳转" })) : (0 === s && ("app-plus" === b ? c.resetAndCallPageHook(e, m.url) : new RegExp(p.mpPlatformReg, "g").test(b) && c.resetAndCallPageHook(e, m.url, !1)), t(o(o({}, m), { from: u.BACKTYPE, complete: function complete() {for (var t, o, i, u, h = [], y = 0; y < arguments.length; y++) {h[y] = arguments[y];}return n(this, void 0, void 0, function () {var n, y, g;return a(this, function (a) {switch (a.label) {case 0:return 0 === s && (s++, "h5" !== b && (new RegExp(p.mpPlatformReg, "g").test(b) && c.resetPageHook(e), e.Vue.prototype.$AppReady = !0, "app-plus" === b && ((n = plus.nativeObj.View.getViewById("router-loadding")) && n.close(), (y = null === (t = e.options.APP) || void 0 === t ? void 0 : t.launchedHook) && y()))), g = 0, new RegExp(p.mpPlatformReg, "g").test(b) ? g = null === (o = e.options.applet) || void 0 === o ? void 0 : o.animationDuration : "app-plus" === b && "navigateBack" === r && "navigateTo" === f && (g = null === (u = null === (i = e.options.APP) || void 0 === i ? void 0 : i.animation) || void 0 === u ? void 0 : u.animationDuration), "navigateTo" !== r && "navigateBack" !== r || 0 === g ? [3, 2] : [4, l.timeOut(g)];case 1:a.sent(), a.label = 2;case 2:return f = r, d && d.apply(null, h), v && v.apply(null, h), [2];}});});} })));}, t.formatOriginURLQuery = h;} }, t = {}, function r(o) {if (t[o]) return t[o].exports;var n = t[o] = { exports: {} };return e[o].call(n.exports, n, n.exports, r), n.exports;}(607);var e, t;});
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 174 */,
+/* 175 */,
+/* 176 */,
+/* 177 */,
+/* 178 */,
+/* 179 */,
+/* 180 */,
+/* 181 */,
+/* 182 */,
+/* 183 */,
+/* 184 */,
+/* 185 */,
+/* 186 */,
+/* 187 */,
+/* 188 */,
+/* 189 */,
+/* 190 */,
+/* 191 */,
+/* 192 */,
+/* 193 */,
+/* 194 */,
+/* 195 */,
+/* 196 */,
+/* 197 */,
+/* 198 */,
+/* 199 */,
+/* 200 */,
+/* 201 */,
+/* 202 */,
+/* 203 */,
+/* 204 */,
+/* 205 */,
+/* 206 */,
+/* 207 */,
+/* 208 */,
+/* 209 */,
+/* 210 */,
+/* 211 */,
+/* 212 */,
+/* 213 */,
+/* 214 */,
+/* 215 */,
+/* 216 */,
+/* 217 */,
+/* 218 */,
+/* 219 */,
+/* 220 */,
+/* 221 */,
+/* 222 */,
+/* 223 */,
+/* 224 */,
+/* 225 */,
+/* 226 */,
+/* 227 */,
+/* 228 */,
+/* 229 */,
+/* 230 */,
+/* 231 */,
+/* 232 */,
+/* 233 */,
+/* 234 */,
+/* 235 */,
+/* 236 */,
+/* 237 */,
+/* 238 */,
+/* 239 */,
+/* 240 */,
+/* 241 */,
+/* 242 */,
+/* 243 */,
+/* 244 */,
+/* 245 */,
+/* 246 */,
+/* 247 */,
+/* 248 */,
+/* 249 */,
+/* 250 */,
+/* 251 */,
+/* 252 */,
+/* 253 */,
+/* 254 */,
+/* 255 */,
+/* 256 */,
+/* 257 */,
+/* 258 */,
+/* 259 */,
+/* 260 */,
+/* 261 */,
+/* 262 */,
+/* 263 */,
+/* 264 */,
+/* 265 */,
+/* 266 */,
+/* 267 */,
+/* 268 */,
+/* 269 */,
+/* 270 */,
+/* 271 */,
+/* 272 */,
+/* 273 */,
+/* 274 */,
+/* 275 */,
+/* 276 */,
+/* 277 */,
+/* 278 */,
+/* 279 */,
+/* 280 */,
+/* 281 */,
+/* 282 */,
+/* 283 */,
+/* 284 */,
+/* 285 */,
+/* 286 */,
+/* 287 */,
+/* 288 */,
+/* 289 */,
+/* 290 */,
+/* 291 */,
+/* 292 */,
+/* 293 */,
+/* 294 */,
+/* 295 */,
+/* 296 */,
+/* 297 */,
+/* 298 */,
+/* 299 */,
+/* 300 */,
+/* 301 */,
+/* 302 */
+/*!**********************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/static/image/captcha/default.jpg ***!
+  \**********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = "data:image/jpeg;base64,/9j/4QAYRXhpZgAASUkqAAgAAAAAAAAAAAAAAP/sABFEdWNreQABAAQAAAA8AAD/4QMdaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLwA8P3hwYWNrZXQgYmVnaW49Iu+7vyIgaWQ9Ilc1TTBNcENlaGlIenJlU3pOVGN6a2M5ZCI/PiA8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIiB4OnhtcHRrPSJBZG9iZSBYTVAgQ29yZSA1LjYtYzEzOCA3OS4xNTk4MjQsIDIwMTYvMDkvMTQtMDE6MDk6MDEgICAgICAgICI+IDxyZGY6UkRGIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+IDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSIiIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bWxuczpzdFJlZj0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL3NUeXBlL1Jlc291cmNlUmVmIyIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOkE3NkQ1QTU3NjExMDExRUI5QUYyRTE3NEY0NzdBRjI0IiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOkE3NkQ1QTU2NjExMDExRUI5QUYyRTE3NEY0NzdBRjI0IiB4bXA6Q3JlYXRvclRvb2w9IkFkb2JlIFBob3Rvc2hvcCBDQyAyMDE3IFdpbmRvd3MiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0iQTY2QkZFNkYxMUE0OEJFNjYzM0NCQUFCMjU3MkVGOUIiIHN0UmVmOmRvY3VtZW50SUQ9IkE2NkJGRTZGMTFBNDhCRTY2MzNDQkFBQjI1NzJFRjlCIi8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+/+4AJkFkb2JlAGTAAAAAAQMAFQQDBgoNAAAWbwAAHxwAADJKAABO5v/bAIQABgQEBAUEBgUF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"
+
+/***/ }),
+/* 303 */,
+/* 304 */,
+/* 305 */,
+/* 306 */,
+/* 307 */,
+/* 308 */,
+/* 309 */,
+/* 310 */
+/*!*************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-form/props.js ***!
+  \*************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    // 当前form的需要验证字段的集合
+    model: {
+      type: Object,
+      default: uni.$u.props.form.model },
+
+    // 验证规则
+    rules: {
+      type: [Object, Function, Array],
+      default: uni.$u.props.form.rules },
+
+    // 有错误时的提示方式，message-提示信息，toast-进行toast提示
+    // border-bottom-下边框呈现红色，none-无提示
+    errorType: {
+      type: String,
+      default: uni.$u.props.form.errorType },
+
+    // 是否显示表单域的下划线边框
+    borderBottom: {
+      type: Boolean,
+      default: uni.$u.props.form.borderBottom },
+
+    // label的位置，left-左边，top-上边
+    labelPosition: {
+      type: String,
+      default: uni.$u.props.form.labelPosition },
+
+    // label的宽度，单位px
+    labelWidth: {
+      type: [String, Number],
+      default: uni.$u.props.form.labelWidth },
+
+    // lable字体的对齐方式
+    labelAlign: {
+      type: String,
+      default: uni.$u.props.form.labelAlign },
+
+    // lable的样式，对象形式
+    labelStyle: {
+      type: Object,
+      default: uni.$u.props.form.labelStyle } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 311 */,
+/* 312 */,
+/* 313 */,
+/* 314 */,
+/* 315 */,
+/* 316 */
+/*!******************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-form-item/props.js ***!
+  \******************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    // input的label提示语
+    label: {
+      type: String,
+      default: uni.$u.props.formItem.label },
+
+    // 绑定的值
+    prop: {
+      type: String,
+      default: uni.$u.props.formItem.prop },
+
+    // 是否显示表单域的下划线边框
+    borderBottom: {
+      type: [String, Boolean],
+      default: uni.$u.props.formItem.borderBottom },
+
+    // label的宽度，单位px
+    labelWidth: {
+      type: [String, Number],
+      default: uni.$u.props.formItem.labelWidth },
+
+    // 右侧图标
+    rightIcon: {
+      type: String,
+      default: uni.$u.props.formItem.rightIcon },
+
+    // 左侧图标
+    leftIcon: {
+      type: String,
+      default: uni.$u.props.formItem.leftIcon },
+
+    // 是否显示左边的必填星号，只作显示用，具体校验必填的逻辑，请在rules中配置
+    required: {
+      type: Boolean,
+      default: uni.$u.props.formItem.required } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 317 */,
+/* 318 */,
+/* 319 */,
+/* 320 */,
+/* 321 */,
+/* 322 */,
+/* 323 */,
+/* 324 */
+/*!*************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-text/props.js ***!
+  \*************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    // 主题颜色
+    type: {
+      type: String,
+      default: uni.$u.props.text.type },
+
+    // 是否显示
+    show: {
+      type: Boolean,
+      default: uni.$u.props.text.show },
+
+    // 显示的值
+    text: {
+      type: [String, Number],
+      default: uni.$u.props.text.text },
+
+    // 前置图标
+    prefixIcon: {
+      type: String,
+      default: uni.$u.props.text.prefixIcon },
+
+    // 后置图标
+    suffixIcon: {
+      type: String,
+      default: uni.$u.props.text.suffixIcon },
+
+    // 文本处理的匹配模式
+    // text-普通文本，price-价格，phone-手机号，name-姓名，date-日期，link-超链接
+    mode: {
+      type: String,
+      default: uni.$u.props.text.mode },
+
+    // mode=link下，配置的链接
+    href: {
+      type: String,
+      default: uni.$u.props.text.href },
+
+    // 格式化规则
+    format: {
+      type: [String, Function],
+      default: uni.$u.props.text.format },
+
+    // mode=phone时，点击文本是否拨打电话
+    call: {
+      type: Boolean,
+      default: uni.$u.props.text.call },
+
+    // 小程序的打开方式
+    openType: {
+      type: String,
+      default: uni.$u.props.text.openType },
+
+    // 是否粗体，默认normal
+    bold: {
+      type: Boolean,
+      default: uni.$u.props.text.bold },
+
+    // 是否块状
+    block: {
+      type: Boolean,
+      default: uni.$u.props.text.block },
+
+    // 文本显示的行数，如果设置，超出此行数，将会显示省略号
+    lines: {
+      type: [String, Number],
+      default: uni.$u.props.text.lines },
+
+    // 文本颜色
+    color: {
+      type: String,
+      default: uni.$u.props.text.color },
+
+    // 字体大小
+    size: {
+      type: [String, Number],
+      default: uni.$u.props.text.size },
+
+    // 图标的样式
+    iconStyle: {
+      type: [Object, String],
+      default: uni.$u.props.text.iconStyle },
+
+    // 文字装饰，下划线，中划线等，可选值 none|underline|line-through
+    decoration: {
+      tepe: String,
+      default: uni.$u.props.text.decoration },
+
+    // 外边距，对象、字符串，数值形式均可
+    margin: {
+      type: [Object, String, Number],
+      default: uni.$u.props.text.margin },
+
+    // 文本行高
+    lineHeight: {
+      type: [String, Number],
+      default: uni.$u.props.text.lineHeight },
+
+    // 文本对齐方式，可选值left|center|right
+    align: {
+      type: String,
+      default: uni.$u.props.text.align },
+
+    // 文字换行，可选值break-word|normal|anywhere
+    wordWrap: {
+      type: String,
+      default: uni.$u.props.text.wordWrap } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 325 */,
+/* 326 */,
+/* 327 */,
+/* 328 */,
+/* 329 */,
+/* 330 */
+/*!**************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-input/props.js ***!
+  \**************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    // 输入的值
+    value: {
+      type: [String, Number],
+      default: uni.$u.props.input.value },
+
+    // 输入框类型
+    // number-数字输入键盘，app-vue下可以输入浮点数，app-nvue和小程序平台下只能输入整数
+    // idcard-身份证输入键盘，微信、支付宝、百度、QQ小程序
+    // digit-带小数点的数字键盘，App的nvue页面、微信、支付宝、百度、头条、QQ小程序
+    // text-文本输入键盘
+    type: {
+      type: String,
+      default: uni.$u.props.input.type },
+
+    // 如果 textarea 是在一个 position:fixed 的区域，需要显示指定属性 fixed 为 true，
+    // 兼容性：微信小程序、百度小程序、字节跳动小程序、QQ小程序
+    fixed: {
+      type: Boolean,
+      default: uni.$u.props.input.fixed },
+
+    // 是否禁用输入框
+    disabled: {
+      type: Boolean,
+      default: uni.$u.props.input.disabled },
+
+    // 禁用状态时的背景色
+    disabledColor: {
+      type: String,
+      default: uni.$u.props.input.disabledColor },
+
+    // 是否显示清除控件
+    clearable: {
+      type: Boolean,
+      default: uni.$u.props.input.clearable },
+
+    // 是否密码类型
+    password: {
+      type: Boolean,
+      default: uni.$u.props.input.password },
+
+    // 最大输入长度，设置为 -1 的时候不限制最大长度
+    maxlength: {
+      type: [String, Number],
+      default: uni.$u.props.input.maxlength },
+
+    // 	输入框为空时的占位符
+    placeholder: {
+      type: String,
+      default: uni.$u.props.input.placeholder },
+
+    // 指定placeholder的样式类，注意页面或组件的style中写了scoped时，需要在类名前写/deep/
+    placeholderClass: {
+      type: String,
+      default: uni.$u.props.input.placeholderClass },
+
+    // 指定placeholder的样式
+    placeholderStyle: {
+      type: [String, Object],
+      default: uni.$u.props.input.placeholderStyle },
+
+    // 是否显示输入字数统计，只在 type ="text"或type ="textarea"时有效
+    showWordLimit: {
+      type: Boolean,
+      default: uni.$u.props.input.showWordLimit },
+
+    // 设置右下角按钮的文字，有效值：send|search|next|go|done，兼容性详见uni-app文档
+    // https://uniapp.dcloud.io/component/input
+    // https://uniapp.dcloud.io/component/textarea
+    confirmType: {
+      type: String,
+      default: uni.$u.props.input.confirmType },
+
+    // 点击键盘右下角按钮时是否保持键盘不收起，H5无效
+    confirmHold: {
+      type: Boolean,
+      default: uni.$u.props.input.confirmHold },
+
+    // focus时，点击页面的时候不收起键盘，微信小程序有效
+    holdKeyboard: {
+      type: Boolean,
+      default: uni.$u.props.input.holdKeyboard },
+
+    // 自动获取焦点
+    // 在 H5 平台能否聚焦以及软键盘是否跟随弹出，取决于当前浏览器本身的实现。nvue 页面不支持，需使用组件的 focus()、blur() 方法控制焦点
+    focus: {
+      type: Boolean,
+      default: uni.$u.props.input.focus },
+
+    // 键盘收起时，是否自动失去焦点，目前仅App3.0.0+有效
+    autoBlur: {
+      type: Boolean,
+      default: uni.$u.props.input.autoBlur },
+
+    // 是否去掉 iOS 下的默认内边距，仅微信小程序，且type=textarea时有效
+    disableDefaultPadding: {
+      type: Boolean,
+      default: uni.$u.props.input.disableDefaultPadding },
+
+    // 指定focus时光标的位置
+    cursor: {
+      type: [String, Number],
+      default: uni.$u.props.input.cursor },
+
+    // 输入框聚焦时底部与键盘的距离
+    cursorSpacing: {
+      type: [String, Number],
+      default: uni.$u.props.input.cursorSpacing },
+
+    // 光标起始位置，自动聚集时有效，需与selection-end搭配使用
+    selectionStart: {
+      type: [String, Number],
+      default: uni.$u.props.input.selectionStart },
+
+    // 光标结束位置，自动聚集时有效，需与selection-start搭配使用
+    selectionEnd: {
+      type: [String, Number],
+      default: uni.$u.props.input.selectionEnd },
+
+    // 键盘弹起时，是否自动上推页面
+    adjustPosition: {
+      type: Boolean,
+      default: uni.$u.props.input.adjustPosition },
+
+    // 输入框内容对齐方式，可选值为：left|center|right
+    inputAlign: {
+      type: String,
+      default: uni.$u.props.input.inputAlign },
+
+    // 输入框字体的大小
+    fontSize: {
+      type: [String, Number],
+      default: uni.$u.props.input.fontSize },
+
+    // 输入框字体颜色
+    color: {
+      type: String,
+      default: uni.$u.props.input.color },
+
+    // 输入框前置图标
+    prefixIcon: {
+      type: String,
+      default: uni.$u.props.input.prefixIcon },
+
+    // 前置图标样式，对象或字符串
+    prefixIconStyle: {
+      type: [String, Object],
+      default: uni.$u.props.input.prefixIconStyle },
+
+    // 输入框后置图标
+    suffixIcon: {
+      type: String,
+      default: uni.$u.props.input.suffixIcon },
+
+    // 后置图标样式，对象或字符串
+    suffixIconStyle: {
+      type: [String, Object],
+      default: uni.$u.props.input.suffixIconStyle },
+
+    // 边框类型，surround-四周边框，bottom-底部边框，none-无边框
+    border: {
+      type: String,
+      default: uni.$u.props.input.border },
+
+    // 是否只读，与disabled不同之处在于disabled会置灰组件，而readonly则不会
+    readonly: {
+      type: Boolean,
+      default: uni.$u.props.input.readonly },
+
+    // 输入框形状，circle-圆形，square-方形
+    shape: {
+      type: String,
+      default: uni.$u.props.input.shape },
+
+    // 用于处理或者过滤输入框内容的方法
+    formatter: {
+      type: [Function, null],
+      default: uni.$u.props.input.formatter } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 331 */,
+/* 332 */,
+/* 333 */,
+/* 334 */,
+/* 335 */,
+/* 336 */
+/*!*************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-icon/icons.js ***!
+  \*************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  'uicon-level': "\uE693",
+  'uicon-column-line': "\uE68E",
+  'uicon-checkbox-mark': "\uE807",
+  'uicon-folder': "\uE7F5",
+  'uicon-movie': "\uE7F6",
+  'uicon-star-fill': "\uE669",
+  'uicon-star': "\uE65F",
+  'uicon-phone-fill': "\uE64F",
+  'uicon-phone': "\uE622",
+  'uicon-apple-fill': "\uE881",
+  'uicon-chrome-circle-fill': "\uE885",
+  'uicon-backspace': "\uE67B",
+  'uicon-attach': "\uE632",
+  'uicon-cut': "\uE948",
+  'uicon-empty-car': "\uE602",
+  'uicon-empty-coupon': "\uE682",
+  'uicon-empty-address': "\uE646",
+  'uicon-empty-favor': "\uE67C",
+  'uicon-empty-permission': "\uE686",
+  'uicon-empty-news': "\uE687",
+  'uicon-empty-search': "\uE664",
+  'uicon-github-circle-fill': "\uE887",
+  'uicon-rmb': "\uE608",
+  'uicon-person-delete-fill': "\uE66A",
+  'uicon-reload': "\uE788",
+  'uicon-order': "\uE68F",
+  'uicon-server-man': "\uE6BC",
+  'uicon-search': "\uE62A",
+  'uicon-fingerprint': "\uE955",
+  'uicon-more-dot-fill': "\uE630",
+  'uicon-scan': "\uE662",
+  'uicon-share-square': "\uE60B",
+  'uicon-map': "\uE61D",
+  'uicon-map-fill': "\uE64E",
+  'uicon-tags': "\uE629",
+  'uicon-tags-fill': "\uE651",
+  'uicon-bookmark-fill': "\uE63B",
+  'uicon-bookmark': "\uE60A",
+  'uicon-eye': "\uE613",
+  'uicon-eye-fill': "\uE641",
+  'uicon-mic': "\uE64A",
+  'uicon-mic-off': "\uE649",
+  'uicon-calendar': "\uE66E",
+  'uicon-calendar-fill': "\uE634",
+  'uicon-trash': "\uE623",
+  'uicon-trash-fill': "\uE658",
+  'uicon-play-left': "\uE66D",
+  'uicon-play-right': "\uE610",
+  'uicon-minus': "\uE618",
+  'uicon-plus': "\uE62D",
+  'uicon-info': "\uE653",
+  'uicon-info-circle': "\uE7D2",
+  'uicon-info-circle-fill': "\uE64B",
+  'uicon-question': "\uE715",
+  'uicon-error': "\uE6D3",
+  'uicon-close': "\uE685",
+  'uicon-checkmark': "\uE6A8",
+  'uicon-android-circle-fill': "\uE67E",
+  'uicon-android-fill': "\uE67D",
+  'uicon-ie': "\uE87B",
+  'uicon-IE-circle-fill': "\uE889",
+  'uicon-google': "\uE87A",
+  'uicon-google-circle-fill': "\uE88A",
+  'uicon-setting-fill': "\uE872",
+  'uicon-setting': "\uE61F",
+  'uicon-minus-square-fill': "\uE855",
+  'uicon-plus-square-fill': "\uE856",
+  'uicon-heart': "\uE7DF",
+  'uicon-heart-fill': "\uE851",
+  'uicon-camera': "\uE7D7",
+  'uicon-camera-fill': "\uE870",
+  'uicon-more-circle': "\uE63E",
+  'uicon-more-circle-fill': "\uE645",
+  'uicon-chat': "\uE620",
+  'uicon-chat-fill': "\uE61E",
+  'uicon-bag-fill': "\uE617",
+  'uicon-bag': "\uE619",
+  'uicon-error-circle-fill': "\uE62C",
+  'uicon-error-circle': "\uE624",
+  'uicon-close-circle': "\uE63F",
+  'uicon-close-circle-fill': "\uE637",
+  'uicon-checkmark-circle': "\uE63D",
+  'uicon-checkmark-circle-fill': "\uE635",
+  'uicon-question-circle-fill': "\uE666",
+  'uicon-question-circle': "\uE625",
+  'uicon-share': "\uE631",
+  'uicon-share-fill': "\uE65E",
+  'uicon-shopping-cart': "\uE621",
+  'uicon-shopping-cart-fill': "\uE65D",
+  'uicon-bell': "\uE609",
+  'uicon-bell-fill': "\uE640",
+  'uicon-list': "\uE650",
+  'uicon-list-dot': "\uE616",
+  'uicon-zhihu': "\uE6BA",
+  'uicon-zhihu-circle-fill': "\uE709",
+  'uicon-zhifubao': "\uE6B9",
+  'uicon-zhifubao-circle-fill': "\uE6B8",
+  'uicon-weixin-circle-fill': "\uE6B1",
+  'uicon-weixin-fill': "\uE6B2",
+  'uicon-twitter-circle-fill': "\uE6AB",
+  'uicon-twitter': "\uE6AA",
+  'uicon-taobao-circle-fill': "\uE6A7",
+  'uicon-taobao': "\uE6A6",
+  'uicon-weibo-circle-fill': "\uE6A5",
+  'uicon-weibo': "\uE6A4",
+  'uicon-qq-fill': "\uE6A1",
+  'uicon-qq-circle-fill': "\uE6A0",
+  'uicon-moments-circel-fill': "\uE69A",
+  'uicon-moments': "\uE69B",
+  'uicon-qzone': "\uE695",
+  'uicon-qzone-circle-fill': "\uE696",
+  'uicon-baidu-circle-fill': "\uE680",
+  'uicon-baidu': "\uE681",
+  'uicon-facebook-circle-fill': "\uE68A",
+  'uicon-facebook': "\uE689",
+  'uicon-car': "\uE60C",
+  'uicon-car-fill': "\uE636",
+  'uicon-warning-fill': "\uE64D",
+  'uicon-warning': "\uE694",
+  'uicon-clock-fill': "\uE638",
+  'uicon-clock': "\uE60F",
+  'uicon-edit-pen': "\uE612",
+  'uicon-edit-pen-fill': "\uE66B",
+  'uicon-email': "\uE611",
+  'uicon-email-fill': "\uE642",
+  'uicon-minus-circle': "\uE61B",
+  'uicon-minus-circle-fill': "\uE652",
+  'uicon-plus-circle': "\uE62E",
+  'uicon-plus-circle-fill': "\uE661",
+  'uicon-file-text': "\uE663",
+  'uicon-file-text-fill': "\uE665",
+  'uicon-pushpin': "\uE7E3",
+  'uicon-pushpin-fill': "\uE86E",
+  'uicon-grid': "\uE673",
+  'uicon-grid-fill': "\uE678",
+  'uicon-play-circle': "\uE647",
+  'uicon-play-circle-fill': "\uE655",
+  'uicon-pause-circle-fill': "\uE654",
+  'uicon-pause': "\uE8FA",
+  'uicon-pause-circle': "\uE643",
+  'uicon-eye-off': "\uE648",
+  'uicon-eye-off-outline': "\uE62B",
+  'uicon-gift-fill': "\uE65C",
+  'uicon-gift': "\uE65B",
+  'uicon-rmb-circle-fill': "\uE657",
+  'uicon-rmb-circle': "\uE677",
+  'uicon-kefu-ermai': "\uE656",
+  'uicon-server-fill': "\uE751",
+  'uicon-coupon-fill': "\uE8C4",
+  'uicon-coupon': "\uE8AE",
+  'uicon-integral': "\uE704",
+  'uicon-integral-fill': "\uE703",
+  'uicon-home-fill': "\uE964",
+  'uicon-home': "\uE965",
+  'uicon-hourglass-half-fill': "\uE966",
+  'uicon-hourglass': "\uE967",
+  'uicon-account': "\uE628",
+  'uicon-plus-people-fill': "\uE626",
+  'uicon-minus-people-fill': "\uE615",
+  'uicon-account-fill': "\uE614",
+  'uicon-thumb-down-fill': "\uE726",
+  'uicon-thumb-down': "\uE727",
+  'uicon-thumb-up': "\uE733",
+  'uicon-thumb-up-fill': "\uE72F",
+  'uicon-lock-fill': "\uE979",
+  'uicon-lock-open': "\uE973",
+  'uicon-lock-opened-fill': "\uE974",
+  'uicon-lock': "\uE97A",
+  'uicon-red-packet-fill': "\uE690",
+  'uicon-photo-fill': "\uE98B",
+  'uicon-photo': "\uE98D",
+  'uicon-volume-off-fill': "\uE659",
+  'uicon-volume-off': "\uE644",
+  'uicon-volume-fill': "\uE670",
+  'uicon-volume': "\uE633",
+  'uicon-red-packet': "\uE691",
+  'uicon-download': "\uE63C",
+  'uicon-arrow-up-fill': "\uE6B0",
+  'uicon-arrow-down-fill': "\uE600",
+  'uicon-play-left-fill': "\uE675",
+  'uicon-play-right-fill': "\uE676",
+  'uicon-rewind-left-fill': "\uE679",
+  'uicon-rewind-right-fill': "\uE67A",
+  'uicon-arrow-downward': "\uE604",
+  'uicon-arrow-leftward': "\uE601",
+  'uicon-arrow-rightward': "\uE603",
+  'uicon-arrow-upward': "\uE607",
+  'uicon-arrow-down': "\uE60D",
+  'uicon-arrow-right': "\uE605",
+  'uicon-arrow-left': "\uE60E",
+  'uicon-arrow-up': "\uE606",
+  'uicon-skip-back-left': "\uE674",
+  'uicon-skip-forward-right': "\uE672",
+  'uicon-rewind-right': "\uE66F",
+  'uicon-rewind-left': "\uE671",
+  'uicon-arrow-right-double': "\uE68D",
+  'uicon-arrow-left-double': "\uE68C",
+  'uicon-wifi-off': "\uE668",
+  'uicon-wifi': "\uE667",
+  'uicon-empty-data': "\uE62F",
+  'uicon-empty-history': "\uE684",
+  'uicon-empty-list': "\uE68B",
+  'uicon-empty-page': "\uE627",
+  'uicon-empty-order': "\uE639",
+  'uicon-man': "\uE697",
+  'uicon-woman': "\uE69C",
+  'uicon-man-add': "\uE61C",
+  'uicon-man-add-fill': "\uE64C",
+  'uicon-man-delete': "\uE61A",
+  'uicon-man-delete-fill': "\uE66A",
+  'uicon-zh': "\uE70A",
+  'uicon-en': "\uE692" };exports.default = _default;
+
+/***/ }),
+/* 337 */
+/*!*************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-icon/props.js ***!
+  \*************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    // 图标类名
+    name: {
+      type: String,
+      default: uni.$u.props.icon.name },
+
+    // 图标颜色，可接受主题色
+    color: {
+      type: String,
+      default: uni.$u.props.icon.color },
+
+    // 字体大小，单位px
+    size: {
+      type: [String, Number],
+      default: uni.$u.props.icon.size },
+
+    // 是否显示粗体
+    bold: {
+      type: Boolean,
+      default: uni.$u.props.icon.bold },
+
+    // 点击图标的时候传递事件出去的index（用于区分点击了哪一个）
+    index: {
+      type: [String, Number],
+      default: uni.$u.props.icon.index },
+
+    // 触摸图标时的类名
+    hoverClass: {
+      type: String,
+      default: uni.$u.props.icon.hoverClass },
+
+    // 自定义扩展前缀，方便用户扩展自己的图标库
+    customPrefix: {
+      type: String,
+      default: uni.$u.props.icon.customPrefix },
+
+    // 图标右边或者下面的文字
+    label: {
+      type: [String, Number],
+      default: uni.$u.props.icon.label },
+
+    // label的位置，只能右边或者下边
+    labelPos: {
+      type: String,
+      default: uni.$u.props.icon.labelPos },
+
+    // label的大小
+    labelSize: {
+      type: [String, Number],
+      default: uni.$u.props.icon.labelSize },
+
+    // label的颜色
+    labelColor: {
+      type: String,
+      default: uni.$u.props.icon.labelColor },
+
+    // label与图标的距离
+    space: {
+      type: [String, Number],
+      default: uni.$u.props.icon.space },
+
+    // 图片的mode
+    imgMode: {
+      type: String,
+      default: uni.$u.props.icon.imgMode },
+
+    // 用于显示图片小图标时，图片的宽度
+    width: {
+      type: [String, Number],
+      default: uni.$u.props.icon.width },
+
+    // 用于显示图片小图标时，图片的高度
+    height: {
+      type: [String, Number],
+      default: uni.$u.props.icon.height },
+
+    // 用于解决某些情况下，让图标垂直居中的用途
+    top: {
+      type: [String, Number],
+      default: uni.$u.props.icon.top },
+
+    // 是否阻止事件传播
+    stop: {
+      type: Boolean,
+      default: uni.$u.props.icon.stop } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 338 */,
+/* 339 */,
+/* 340 */,
+/* 341 */,
+/* 342 */,
+/* 343 */,
+/* 344 */,
+/* 345 */,
+/* 346 */,
+/* 347 */,
+/* 348 */,
+/* 349 */,
+/* 350 */,
+/* 351 */,
+/* 352 */
+/*!*******************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/mixin/button.js ***!
+  \*******************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    lang: String,
+    sessionFrom: String,
+    sendMessageTitle: String,
+    sendMessagePath: String,
+    sendMessageImg: String,
+    showMessageCard: Boolean,
+    appParameter: String,
+    formType: String,
+    openType: String } };exports.default = _default;
+
+/***/ }),
+/* 353 */
+/*!*********************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/mixin/openType.js ***!
+  \*********************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    openType: String },
+
+  methods: {
+    onGetUserInfo: function onGetUserInfo(event) {
+      this.$emit('getuserinfo', event.detail);
+    },
+    onContact: function onContact(event) {
+      this.$emit('contact', event.detail);
+    },
+    onGetPhoneNumber: function onGetPhoneNumber(event) {
+      this.$emit('getphonenumber', event.detail);
+    },
+    onError: function onError(event) {
+      this.$emit('error', event.detail);
+    },
+    onLaunchApp: function onLaunchApp(event) {
+      this.$emit('launchapp', event.detail);
+    },
+    onOpenSetting: function onOpenSetting(event) {
+      this.$emit('opensetting', event.detail);
+    } } };exports.default = _default;
+
+/***/ }),
+/* 354 */
+/*!***************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-button/props.js ***!
+  \***************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /*
+                                                                                                      * @Author       : LQ
+                                                                                                      * @Description  :
+                                                                                                      * @version      : 1.0
+                                                                                                      * @Date         : 2021-08-16 10:04:04
+                                                                                                      * @LastAuthor   : LQ
+                                                                                                      * @lastTime     : 2021-08-16 10:04:24
+                                                                                                      * @FilePath     : /u-view2.0/uview-ui/components/u-button/props.js
+                                                                                                      */var _default =
+{
+  props: {
+    // 是否细边框
+    hairline: {
+      type: Boolean,
+      default: uni.$u.props.button.hairline },
+
+    // 按钮的预置样式，info，primary，error，warning，success
+    type: {
+      type: String,
+      default: uni.$u.props.button.type },
+
+    // 按钮尺寸，large，normal，small，mini
+    size: {
+      type: String,
+      default: uni.$u.props.button.size },
+
+    // 按钮形状，circle（两边为半圆），square（带圆角）
+    shape: {
+      type: String,
+      default: uni.$u.props.button.shape },
+
+    // 按钮是否镂空
+    plain: {
+      type: Boolean,
+      default: uni.$u.props.button.plain },
+
+    // 是否禁止状态
+    disabled: {
+      type: Boolean,
+      default: uni.$u.props.button.disabled },
+
+    // 是否加载中
+    loading: {
+      type: Boolean,
+      default: uni.$u.props.button.loading },
+
+    // 加载中提示文字
+    loadingText: {
+      type: [String, Number],
+      default: uni.$u.props.button.loadingText },
+
+    // 加载状态图标类型
+    loadingMode: {
+      type: String,
+      default: uni.$u.props.button.loadingMode },
+
+    // 加载图标大小
+    loadingSize: {
+      type: [String, Number],
+      default: uni.$u.props.button.loadingSize },
+
+    // 开放能力，具体请看uniapp稳定关于button组件部分说明
+    // https://uniapp.dcloud.io/component/button
+    openType: {
+      type: String,
+      default: uni.$u.props.button.openType },
+
+    // 用于 <form> 组件，点击分别会触发 <form> 组件的 submit/reset 事件
+    // 取值为submit（提交表单），reset（重置表单）
+    formType: {
+      type: String,
+      default: uni.$u.props.button.formType },
+
+    // 打开 APP 时，向 APP 传递的参数，open-type=launchApp时有效
+    // 只微信小程序、QQ小程序有效
+    appParameter: {
+      type: String,
+      default: uni.$u.props.button.appParameter },
+
+    // 指定是否阻止本节点的祖先节点出现点击态，微信小程序有效
+    hoverStopPropagation: {
+      type: Boolean,
+      default: uni.$u.props.button.hoverStopPropagation },
+
+    // 指定返回用户信息的语言，zh_CN 简体中文，zh_TW 繁体中文，en 英文。只微信小程序有效
+    lang: {
+      type: String,
+      default: uni.$u.props.button.lang },
+
+    // 会话来源，open-type="contact"时有效。只微信小程序有效
+    sessionFrom: {
+      type: String,
+      default: uni.$u.props.button.sessionFrom },
+
+    // 会话内消息卡片标题，open-type="contact"时有效
+    // 默认当前标题，只微信小程序有效
+    sendMessageTitle: {
+      type: String,
+      default: uni.$u.props.button.sendMessageTitle },
+
+    // 会话内消息卡片点击跳转小程序路径，open-type="contact"时有效
+    // 默认当前分享路径，只微信小程序有效
+    sendMessagePath: {
+      type: String,
+      default: uni.$u.props.button.sendMessagePath },
+
+    // 会话内消息卡片图片，open-type="contact"时有效
+    // 默认当前页面截图，只微信小程序有效
+    sendMessageImg: {
+      type: String,
+      default: uni.$u.props.button.sendMessageImg },
+
+    // 是否显示会话内消息卡片，设置此参数为 true，用户进入客服会话会在右下角显示"可能要发送的小程序"提示，
+    // 用户点击后可以快速发送小程序消息，open-type="contact"时有效
+    showMessageCard: {
+      type: Boolean,
+      default: uni.$u.props.button.showMessageCard },
+
+    // 额外传参参数，用于小程序的data-xxx属性，通过target.dataset.name获取
+    dataName: {
+      type: String,
+      default: uni.$u.props.button.dataName },
+
+    // 节流，一定时间内只能触发一次
+    throttleTime: {
+      type: [String, Number],
+      default: uni.$u.props.button.throttleTime },
+
+    // 按住后多久出现点击态，单位毫秒
+    hoverStartTime: {
+      type: [String, Number],
+      default: uni.$u.props.button.hoverStartTime },
+
+    // 手指松开后点击态保留时间，单位毫秒
+    hoverStayTime: {
+      type: [String, Number],
+      default: uni.$u.props.button.hoverStayTime },
+
+    // 按钮文字，之所以通过props传入，是因为slot传入的话
+    // nvue中无法控制文字的样式
+    text: {
+      type: [String, Number],
+      default: uni.$u.props.button.text },
+
+    // 按钮图标
+    icon: {
+      type: String,
+      default: uni.$u.props.button.icon },
+
+    // 按钮图标
+    iconColor: {
+      type: String,
+      default: uni.$u.props.button.icon },
+
+    // 按钮颜色，支持传入linear-gradient渐变色
+    color: {
+      type: String,
+      default: uni.$u.props.button.color } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 355 */,
+/* 356 */,
+/* 357 */,
+/* 358 */,
+/* 359 */,
+/* 360 */,
+/* 361 */,
+/* 362 */
+/*!*********************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-action-sheet/props.js ***!
+  \*********************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    // 操作菜单是否展示 （默认false）
+    show: {
+      type: Boolean,
+      default: uni.$u.props.actionSheet.show },
+
+    // 标题
+    title: {
+      type: String,
+      default: uni.$u.props.actionSheet.title },
+
+    // 选项上方的描述信息
+    description: {
+      type: String,
+      default: uni.$u.props.actionSheet.description },
+
+    // 数据
+    actions: {
+      type: Array,
+      default: uni.$u.props.actionSheet.actions },
+
+    // 取消按钮的文字，不为空时显示按钮
+    cancelText: {
+      type: String,
+      default: uni.$u.props.actionSheet.cancelText },
+
+    // 点击某个菜单项时是否关闭弹窗
+    closeOnClickAction: {
+      type: Boolean,
+      default: uni.$u.props.actionSheet.closeOnClickAction },
+
+    // 处理底部安全区（默认true）
+    safeAreaInsetBottom: {
+      type: Boolean,
+      default: uni.$u.props.actionSheet.safeAreaInsetBottom },
+
+    // 小程序的打开方式
+    openType: {
+      type: String,
+      default: uni.$u.props.actionSheet.openType },
+
+    // 点击遮罩是否允许关闭 (默认true)
+    closeOnClickOverlay: {
+      type: Boolean,
+      default: uni.$u.props.actionSheet.closeOnClickOverlay },
+
+    // 圆角值
+    round: {
+      type: [Boolean, String, Number],
+      default: uni.$u.props.actionSheet.round } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 363 */,
+/* 364 */,
+/* 365 */,
+/* 366 */,
+/* 367 */,
+/* 368 */,
+/* 369 */,
+/* 370 */
+/*!*****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-keyboard/props.js ***!
+  \*****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    // 键盘的类型，number-数字键盘，card-身份证键盘，car-车牌号键盘
+    mode: {
+      type: String,
+      default: uni.$u.props.keyboard.mode },
+
+    // 是否显示键盘的"."符号
+    dotDisabled: {
+      type: Boolean,
+      default: uni.$u.props.keyboard.dotDisabled },
+
+    // 是否显示顶部工具条
+    tooltip: {
+      type: Boolean,
+      default: uni.$u.props.keyboard.tooltip },
+
+    // 是否显示工具条中间的提示
+    showTips: {
+      type: Boolean,
+      default: uni.$u.props.keyboard.showTips },
+
+    // 工具条中间的提示文字
+    tips: {
+      type: String,
+      default: uni.$u.props.keyboard.tips },
+
+    // 是否显示工具条左边的"取消"按钮
+    showCancel: {
+      type: Boolean,
+      default: uni.$u.props.keyboard.showCancel },
+
+    // 是否显示工具条右边的"完成"按钮
+    showConfirm: {
+      type: Boolean,
+      default: uni.$u.props.keyboard.showConfirm },
+
+    // 是否打乱键盘按键的顺序
+    random: {
+      type: Boolean,
+      default: uni.$u.props.keyboard.random },
+
+    // 是否开启底部安全区适配，开启的话，会在iPhoneX机型底部添加一定的内边距
+    safeAreaInsetBottom: {
+      type: Boolean,
+      default: uni.$u.props.keyboard.safeAreaInsetBottom },
+
+    // 是否允许通过点击遮罩关闭键盘
+    closeOnClickOverlay: {
+      type: Boolean,
+      default: uni.$u.props.keyboard.closeOnClickOverlay },
+
+    // 控制键盘的弹出与收起
+    show: {
+      type: Boolean,
+      default: uni.$u.props.keyboard.show },
+
+    // 是否显示遮罩，某些时候数字键盘时，用户希望看到自己的数值，所以可能不想要遮罩
+    overlay: {
+      type: Boolean,
+      default: uni.$u.props.keyboard.overlay },
+
+    // z-index值
+    zIndex: {
+      type: [String, Number],
+      default: uni.$u.props.keyboard.zIndex },
+
+    // 取消按钮的文字
+    cancelText: {
+      type: String,
+      default: uni.$u.props.keyboard.cancelText },
+
+    // 确认按钮的文字
+    confirmText: {
+      type: String,
+      default: uni.$u.props.keyboard.confirmText },
+
+    // 输入一个中文后，是否自动切换到英文
+    autoChange: {
+      type: Boolean,
+      default: uni.$u.props.keyboard.autoChange } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 371 */,
+/* 372 */,
+/* 373 */,
+/* 374 */,
+/* 375 */,
+/* 376 */,
+/* 377 */,
+/* 378 */
+/*!**************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-popup/props.js ***!
+  \**************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    // 是否展示弹窗
+    show: {
+      type: Boolean,
+      default: uni.$u.props.popup.show },
+
+    // 是否显示遮罩
+    overlay: {
+      type: Boolean,
+      default: uni.$u.props.popup.overlay },
+
+    // 弹出的方向，可选值为 top bottom right left center
+    mode: {
+      type: String,
+      default: uni.$u.props.popup.mode },
+
+    // 动画时长，单位ms
+    duration: {
+      type: [String, Number],
+      default: uni.$u.props.popup.duration },
+
+    // 是否显示关闭图标
+    closeable: {
+      type: Boolean,
+      default: uni.$u.props.popup.closeable },
+
+    // 自定义遮罩的样式
+    overlayStyle: {
+      type: [Object, String],
+      default: uni.$u.props.popup.overlayStyle },
+
+    // 点击遮罩是否关闭弹窗
+    closeOnClickOverlay: {
+      type: Boolean,
+      default: uni.$u.props.popup.closeOnClickOverlay },
+
+    // 层级
+    zIndex: {
+      type: [String, Number],
+      default: uni.$u.props.popup.zIndex },
+
+    // 是否为iPhoneX留出底部安全距离
+    safeAreaInsetBottom: {
+      type: Boolean,
+      default: uni.$u.props.popup.safeAreaInsetBottom },
+
+    // 是否留出顶部安全距离（状态栏高度）
+    safeAreaInsetTop: {
+      type: Boolean,
+      default: uni.$u.props.popup.safeAreaInsetTop },
+
+    // 自定义关闭图标位置，top-left为左上角，top-right为右上角，bottom-left为左下角，bottom-right为右下角
+    closeIconPos: {
+      type: String,
+      default: uni.$u.props.popup.closeIconPos },
+
+    // 是否显示圆角
+    round: {
+      type: [Boolean, String, Number],
+      default: uni.$u.props.popup.round },
+
+    // mode=center，也即中部弹出时，是否使用缩放模式
+    zoom: {
+      type: Boolean,
+      default: uni.$u.props.popup.zoom },
+
+    // 弹窗背景色，设置为transparent可去除白色背景
+    bgColor: {
+      type: String,
+      default: uni.$u.props.popup.bgColor },
+
+    // 遮罩的透明度，0-1之间
+    overlayOpacity: {
+      type: [Number, String],
+      default: uni.$u.props.popup.overlayOpacity } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 379 */,
+/* 380 */,
+/* 381 */,
+/* 382 */,
+/* 383 */,
+/* 384 */,
+/* 385 */,
+/* 386 */
+/*!*******************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-code-input/props.js ***!
+  \*******************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    // 最大输入长度
+    maxlength: {
+      type: [String, Number],
+      default: uni.$u.props.codeInput.maxlength },
+
+    // 是否用圆点填充
+    dot: {
+      type: Boolean,
+      default: uni.$u.props.codeInput.dot },
+
+    // 显示模式，box-盒子模式，line-底部横线模式
+    mode: {
+      type: String,
+      default: uni.$u.props.codeInput.mode },
+
+    // 是否细边框
+    hairline: {
+      type: Boolean,
+      default: uni.$u.props.codeInput.hairline },
+
+    // 字符间的距离
+    space: {
+      type: [String, Number],
+      default: uni.$u.props.codeInput.space },
+
+    // 预置值
+    value: {
+      type: [String, Number],
+      default: uni.$u.props.codeInput.value },
+
+    // 是否自动获取焦点
+    focus: {
+      type: Boolean,
+      default: uni.$u.props.codeInput.focus },
+
+    // 字体是否加粗
+    bold: {
+      type: Boolean,
+      default: uni.$u.props.codeInput.bold },
+
+    // 字体颜色
+    color: {
+      type: String,
+      default: uni.$u.props.codeInput.color },
+
+    // 字体大小
+    fontSize: {
+      type: [String, Number],
+      default: uni.$u.props.codeInput.fontSize },
+
+    // 输入框的大小，宽等于高
+    size: {
+      type: [String, Number],
+      default: uni.$u.props.codeInput.size },
+
+    // 是否隐藏原生键盘，如果想用自定义键盘的话，需设置此参数为true
+    disabledKeyboard: {
+      type: Boolean,
+      default: uni.$u.props.codeInput.disabledKeyboard },
+
+    // 边框和线条颜色
+    borderColor: {
+      type: String,
+      default: uni.$u.props.codeInput.borderColor },
+
+    // 是否禁止输入"."符号
+    disabledDot: {
+      type: Boolean,
+      default: uni.$u.props.codeInput.disabledDot } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 387 */,
+/* 388 */,
+/* 389 */,
+/* 390 */,
+/* 391 */,
+/* 392 */,
+/* 393 */,
+/* 394 */
+/*!*************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-line/props.js ***!
+  \*************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    color: {
+      type: String,
+      default: uni.$u.props.line.color },
+
+    // 长度，竖向时表现为高度，横向时表现为长度，可以为百分比，带px单位的值等
+    length: {
+      type: [String, Number],
+      default: uni.$u.props.line.length },
+
+    // 线条方向，col-竖向，row-横向
+    direction: {
+      type: String,
+      default: uni.$u.props.line.direction },
+
+    // 是否显示细边框
+    hairline: {
+      type: Boolean,
+      default: uni.$u.props.line.hairline },
+
+    // 线条与上下左右元素的间距，字符串形式，如"30px"、"20px 30px"
+    margin: {
+      type: [String, Number],
+      default: uni.$u.props.line.margin },
+
+    // 是否虚线，true-实线，false-虚线
+    dashed: {
+      type: Boolean,
+      default: uni.$u.props.line.dashed } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 395 */,
+/* 396 */,
+/* 397 */,
+/* 398 */,
+/* 399 */,
+/* 400 */,
+/* 401 */,
+/* 402 */
+/*!**************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-image/props.js ***!
+  \**************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    // 图片地址
+    src: {
+      type: String,
+      default: uni.$u.props.image.src },
+
+    // 裁剪模式
+    mode: {
+      type: String,
+      default: uni.$u.props.image.mode },
+
+    // 宽度，单位任意
+    width: {
+      type: [String, Number],
+      default: uni.$u.props.image.width },
+
+    // 高度，单位任意
+    height: {
+      type: [String, Number],
+      default: uni.$u.props.image.height },
+
+    // 图片形状，circle-圆形，square-方形
+    shape: {
+      type: String,
+      default: uni.$u.props.image.shape },
+
+    // 圆角，单位任意
+    radius: {
+      type: [String, Number],
+      default: uni.$u.props.image.radius },
+
+    // 是否懒加载，微信小程序、App、百度小程序、字节跳动小程序
+    lazyLoad: {
+      type: Boolean,
+      default: uni.$u.props.image.lazyLoad },
+
+    // 开启长按图片显示识别微信小程序码菜单
+    showMenuByLongpress: {
+      type: Boolean,
+      default: uni.$u.props.image.showMenuByLongpress },
+
+    // 加载中的图标，或者小图片
+    loadingIcon: {
+      type: String,
+      default: uni.$u.props.image.loadingIcon },
+
+    // 加载失败的图标，或者小图片
+    errorIcon: {
+      type: String,
+      default: uni.$u.props.image.errorIcon },
+
+    // 是否显示加载中的图标或者自定义的slot
+    showLoading: {
+      type: Boolean,
+      default: uni.$u.props.image.showLoading },
+
+    // 是否显示加载错误的图标或者自定义的slot
+    showError: {
+      type: Boolean,
+      default: uni.$u.props.image.showError },
+
+    // 是否需要淡入效果
+    fade: {
+      type: Boolean,
+      default: uni.$u.props.image.fade },
+
+    // 只支持网络资源，只对微信小程序有效
+    webp: {
+      type: Boolean,
+      default: uni.$u.props.image.webp },
+
+    // 过渡时间，单位ms
+    duration: {
+      type: [String, Number],
+      default: uni.$u.props.image.duration },
+
+    // 背景颜色，用于深色页面加载图片时，为了和背景色融合
+    bgColor: {
+      type: String,
+      default: uni.$u.props.image.bgColor } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 403 */,
+/* 404 */,
+/* 405 */,
+/* 406 */,
+/* 407 */,
+/* 408 */,
+/* 409 */
+/*!*****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-textarea/props.js ***!
+  \*****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    // 输入框的内容
+    value: {
+      type: [String, Number],
+      default: uni.$u.props.textarea.value },
+
+    // 输入框为空时占位符
+    placeholder: {
+      type: [String, Number],
+      default: uni.$u.props.textarea.placeholder },
+
+    // 指定placeholder的样式类，注意页面或组件的style中写了scoped时，需要在类名前写/deep/
+    placeholderClass: {
+      type: String,
+      default: uni.$u.props.input.placeholderClass },
+
+    // 指定placeholder的样式
+    placeholderStyle: {
+      type: [String, Object],
+      default: uni.$u.props.input.placeholderStyle },
+
+    // 输入框高度
+    height: {
+      type: [String, Number],
+      default: uni.$u.props.textarea.height },
+
+    // 设置键盘右下角按钮的文字，仅微信小程序，App-vue和H5有效
+    confirmType: {
+      type: String,
+      default: uni.$u.props.textarea.confirmType },
+
+    // 是否禁用
+    disabled: {
+      type: Boolean,
+      default: uni.$u.props.textarea.disabled },
+
+    // 是否显示统计字数
+    count: {
+      type: Boolean,
+      default: uni.$u.props.textarea.count },
+
+    // 是否自动获取焦点，nvue不支持，H5取决于浏览器的实现
+    focus: {
+      type: Boolean,
+      default: uni.$u.props.textarea.focus },
+
+    // 是否自动增加高度
+    autoHeight: {
+      type: Boolean,
+      default: uni.$u.props.textarea.autoHeight },
+
+    // 如果textarea是在一个position:fixed的区域，需要显示指定属性fixed为true
+    fixed: {
+      type: Boolean,
+      default: uni.$u.props.textarea.fixed },
+
+    // 指定光标与键盘的距离
+    cursorSpacing: {
+      type: Number,
+      default: uni.$u.props.textarea.cursorSpacing },
+
+    // 指定focus时的光标位置
+    cursor: {
+      type: [String, Number],
+      default: uni.$u.props.textarea.cursor },
+
+    // 是否显示键盘上方带有”完成“按钮那一栏，
+    showConfirmBar: {
+      type: Boolean,
+      default: uni.$u.props.textarea.showConfirmBar },
+
+    // 光标起始位置，自动聚焦时有效，需与selection-end搭配使用
+    selectionStart: {
+      type: Number,
+      default: uni.$u.props.textarea.selectionStart },
+
+    // 光标结束位置，自动聚焦时有效，需与selection-start搭配使用
+    selectionEnd: {
+      type: Number,
+      default: uni.$u.props.textarea.selectionEnd },
+
+    // 键盘弹起时，是否自动上推页面
+    adjustPosition: {
+      type: Boolean,
+      default: uni.$u.props.textarea.adjustPosition },
+
+    // 是否去掉 iOS 下的默认内边距，只微信小程序有效
+    disableDefaultPadding: {
+      type: Boolean,
+      default: uni.$u.props.textarea.disableDefaultPadding },
+
+    // focus时，点击页面的时候不收起键盘，只微信小程序有效
+    holdKeyboard: {
+      type: Boolean,
+      default: uni.$u.props.textarea.holdKeyboard },
+
+    // 最大输入长度，设置为 -1 的时候不限制最大长度
+    maxlength: {
+      type: [String, Number],
+      default: uni.$u.props.textarea.maxlength },
+
+    // 边框类型，surround-四周边框，bottom-底部边框
+    border: {
+      type: String,
+      default: uni.$u.props.textarea.border },
+
+    // 用于处理或者过滤输入框内容的方法
+    formatter: {
+      type: [Function, null],
+      default: uni.$u.props.textarea.formatter } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 410 */,
+/* 411 */,
+/* 412 */,
+/* 413 */,
+/* 414 */,
+/* 415 */,
+/* 416 */,
+/* 417 */,
+/* 418 */
+/*!********************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/components/verify/utils/ase.js ***!
+  \********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.aesEncrypt = aesEncrypt;var _cryptoJs = _interopRequireDefault(__webpack_require__(/*! crypto-js */ 419));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}
+/**
+                                                                                                                                                                                                                                                                       * @word 要加密的内容
+                                                                                                                                                                                                                                                                       * @keyWord String  服务器随机返回的关键字
+                                                                                                                                                                                                                                                                       *  */
+function aesEncrypt(word) {var keyWord = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "XwKsGlMcdPMEhR1B";
+  var key = _cryptoJs.default.enc.Utf8.parse(keyWord);
+  var srcs = _cryptoJs.default.enc.Utf8.parse(word);
+  var encrypted = _cryptoJs.default.AES.encrypt(srcs, key, { mode: _cryptoJs.default.mode.ECB, padding: _cryptoJs.default.pad.Pkcs7 });
+  return encrypted.toString();
+}
+
+/***/ }),
+/* 419 */
+/*!*********************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/index.js ***!
+  \*********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./x64-core */ 422), __webpack_require__(/*! ./lib-typedarrays */ 423), __webpack_require__(/*! ./enc-utf16 */ 424), __webpack_require__(/*! ./enc-base64 */ 425), __webpack_require__(/*! ./enc-base64url */ 426), __webpack_require__(/*! ./md5 */ 427), __webpack_require__(/*! ./sha1 */ 428), __webpack_require__(/*! ./sha256 */ 429), __webpack_require__(/*! ./sha224 */ 430), __webpack_require__(/*! ./sha512 */ 431), __webpack_require__(/*! ./sha384 */ 432), __webpack_require__(/*! ./sha3 */ 433), __webpack_require__(/*! ./ripemd160 */ 434), __webpack_require__(/*! ./hmac */ 435), __webpack_require__(/*! ./pbkdf2 */ 436), __webpack_require__(/*! ./evpkdf */ 437), __webpack_require__(/*! ./cipher-core */ 438), __webpack_require__(/*! ./mode-cfb */ 439), __webpack_require__(/*! ./mode-ctr */ 440), __webpack_require__(/*! ./mode-ctr-gladman */ 441), __webpack_require__(/*! ./mode-ofb */ 442), __webpack_require__(/*! ./mode-ecb */ 443), __webpack_require__(/*! ./pad-ansix923 */ 444), __webpack_require__(/*! ./pad-iso10126 */ 445), __webpack_require__(/*! ./pad-iso97971 */ 446), __webpack_require__(/*! ./pad-zeropadding */ 447), __webpack_require__(/*! ./pad-nopadding */ 448), __webpack_require__(/*! ./format-hex */ 449), __webpack_require__(/*! ./aes */ 450), __webpack_require__(/*! ./tripledes */ 451), __webpack_require__(/*! ./rc4 */ 452), __webpack_require__(/*! ./rabbit */ 453), __webpack_require__(/*! ./rabbit-legacy */ 454));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  return CryptoJS;
+
+});
+
+/***/ }),
+/* 420 */
+/*!********************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/core.js ***!
+  \********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(global) {;(function (root, factory) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory();
+  } else
+  {}
+})(this, function () {
+
+  /*globals window, global, require*/
+
+  /**
+                                       * CryptoJS core components.
+                                       */
+  var CryptoJS = CryptoJS || function (Math, undefined) {
+
+    var crypto;
+
+    // Native crypto from window (Browser)
+    if (typeof window !== 'undefined' && window.crypto) {
+      crypto = window.crypto;
+    }
+
+    // Native crypto in web worker (Browser)
+    if (typeof self !== 'undefined' && self.crypto) {
+      crypto = self.crypto;
+    }
+
+    // Native crypto from worker
+    if (typeof globalThis !== 'undefined' && globalThis.crypto) {
+      crypto = globalThis.crypto;
+    }
+
+    // Native (experimental IE 11) crypto from window (Browser)
+    if (!crypto && typeof window !== 'undefined' && window.msCrypto) {
+      crypto = window.msCrypto;
+    }
+
+    // Native crypto from global (NodeJS)
+    if (!crypto && typeof global !== 'undefined' && global.crypto) {
+      crypto = global.crypto;
+    }
+
+    // Native crypto import via require (NodeJS)
+    if (!crypto && "function" === 'function') {
+      try {
+        crypto = __webpack_require__(/*! crypto */ 421);
+      } catch (err) {}
+    }
+
+    /*
+       * Cryptographically secure pseudorandom number generator
+       *
+       * As Math.random() is cryptographically not safe to use
+       */
+    var cryptoSecureRandomInt = function cryptoSecureRandomInt() {
+      if (crypto) {
+        // Use getRandomValues method (Browser)
+        if (typeof crypto.getRandomValues === 'function') {
+          try {
+            return crypto.getRandomValues(new Uint32Array(1))[0];
+          } catch (err) {}
+        }
+
+        // Use randomBytes method (NodeJS)
+        if (typeof crypto.randomBytes === 'function') {
+          try {
+            return crypto.randomBytes(4).readInt32LE();
+          } catch (err) {}
+        }
+      }
+
+      throw new Error('Native crypto module could not be used to get secure random number.');
+    };
+
+    /*
+        * Local polyfill of Object.create
+         */
+
+    var create = Object.create || function () {
+      function F() {}
+
+      return function (obj) {
+        var subtype;
+
+        F.prototype = obj;
+
+        subtype = new F();
+
+        F.prototype = null;
+
+        return subtype;
+      };
+    }();
+
+    /**
+          * CryptoJS namespace.
+          */
+    var C = {};
+
+    /**
+                 * Library namespace.
+                 */
+    var C_lib = C.lib = {};
+
+    /**
+                             * Base object for prototypal inheritance.
+                             */
+    var Base = C_lib.Base = function () {
+
+
+      return {
+        /**
+                * Creates a new object that inherits from this object.
+                *
+                * @param {Object} overrides Properties to copy into the new object.
+                *
+                * @return {Object} The new object.
+                *
+                * @static
+                *
+                * @example
+                *
+                *     var MyType = CryptoJS.lib.Base.extend({
+                *         field: 'value',
+                *
+                *         method: function () {
+                *         }
+                *     });
+                */
+        extend: function extend(overrides) {
+          // Spawn
+          var subtype = create(this);
+
+          // Augment
+          if (overrides) {
+            subtype.mixIn(overrides);
+          }
+
+          // Create default initializer
+          if (!subtype.hasOwnProperty('init') || this.init === subtype.init) {
+            subtype.init = function () {
+              subtype.$super.init.apply(this, arguments);
+            };
+          }
+
+          // Initializer's prototype is the subtype object
+          subtype.init.prototype = subtype;
+
+          // Reference supertype
+          subtype.$super = this;
+
+          return subtype;
+        },
+
+        /**
+            * Extends this object and runs the init method.
+            * Arguments to create() will be passed to init().
+            *
+            * @return {Object} The new object.
+            *
+            * @static
+            *
+            * @example
+            *
+            *     var instance = MyType.create();
+            */
+        create: function create() {
+          var instance = this.extend();
+          instance.init.apply(instance, arguments);
+
+          return instance;
+        },
+
+        /**
+            * Initializes a newly created object.
+            * Override this method to add some logic when your objects are created.
+            *
+            * @example
+            *
+            *     var MyType = CryptoJS.lib.Base.extend({
+            *         init: function () {
+            *             // ...
+            *         }
+            *     });
+            */
+        init: function init() {
+        },
+
+        /**
+            * Copies properties into this object.
+            *
+            * @param {Object} properties The properties to mix in.
+            *
+            * @example
+            *
+            *     MyType.mixIn({
+            *         field: 'value'
+            *     });
+            */
+        mixIn: function mixIn(properties) {
+          for (var propertyName in properties) {
+            if (properties.hasOwnProperty(propertyName)) {
+              this[propertyName] = properties[propertyName];
+            }
+          }
+
+          // IE won't copy toString using the loop above
+          if (properties.hasOwnProperty('toString')) {
+            this.toString = properties.toString;
+          }
+        },
+
+        /**
+            * Creates a copy of this object.
+            *
+            * @return {Object} The clone.
+            *
+            * @example
+            *
+            *     var clone = instance.clone();
+            */
+        clone: function clone() {
+          return this.init.prototype.extend(this);
+        } };
+
+    }();
+
+    /**
+          * An array of 32-bit words.
+          *
+          * @property {Array} words The array of 32-bit words.
+          * @property {number} sigBytes The number of significant bytes in this word array.
+          */
+    var WordArray = C_lib.WordArray = Base.extend({
+      /**
+                                                     * Initializes a newly created word array.
+                                                     *
+                                                     * @param {Array} words (Optional) An array of 32-bit words.
+                                                     * @param {number} sigBytes (Optional) The number of significant bytes in the words.
+                                                     *
+                                                     * @example
+                                                     *
+                                                     *     var wordArray = CryptoJS.lib.WordArray.create();
+                                                     *     var wordArray = CryptoJS.lib.WordArray.create([0x00010203, 0x04050607]);
+                                                     *     var wordArray = CryptoJS.lib.WordArray.create([0x00010203, 0x04050607], 6);
+                                                     */
+      init: function init(words, sigBytes) {
+        words = this.words = words || [];
+
+        if (sigBytes != undefined) {
+          this.sigBytes = sigBytes;
+        } else {
+          this.sigBytes = words.length * 4;
+        }
+      },
+
+      /**
+          * Converts this word array to a string.
+          *
+          * @param {Encoder} encoder (Optional) The encoding strategy to use. Default: CryptoJS.enc.Hex
+          *
+          * @return {string} The stringified word array.
+          *
+          * @example
+          *
+          *     var string = wordArray + '';
+          *     var string = wordArray.toString();
+          *     var string = wordArray.toString(CryptoJS.enc.Utf8);
+          */
+      toString: function toString(encoder) {
+        return (encoder || Hex).stringify(this);
+      },
+
+      /**
+          * Concatenates a word array to this word array.
+          *
+          * @param {WordArray} wordArray The word array to append.
+          *
+          * @return {WordArray} This word array.
+          *
+          * @example
+          *
+          *     wordArray1.concat(wordArray2);
+          */
+      concat: function concat(wordArray) {
+        // Shortcuts
+        var thisWords = this.words;
+        var thatWords = wordArray.words;
+        var thisSigBytes = this.sigBytes;
+        var thatSigBytes = wordArray.sigBytes;
+
+        // Clamp excess bits
+        this.clamp();
+
+        // Concat
+        if (thisSigBytes % 4) {
+          // Copy one byte at a time
+          for (var i = 0; i < thatSigBytes; i++) {
+            var thatByte = thatWords[i >>> 2] >>> 24 - i % 4 * 8 & 0xff;
+            thisWords[thisSigBytes + i >>> 2] |= thatByte << 24 - (thisSigBytes + i) % 4 * 8;
+          }
+        } else {
+          // Copy one word at a time
+          for (var j = 0; j < thatSigBytes; j += 4) {
+            thisWords[thisSigBytes + j >>> 2] = thatWords[j >>> 2];
+          }
+        }
+        this.sigBytes += thatSigBytes;
+
+        // Chainable
+        return this;
+      },
+
+      /**
+          * Removes insignificant bits.
+          *
+          * @example
+          *
+          *     wordArray.clamp();
+          */
+      clamp: function clamp() {
+        // Shortcuts
+        var words = this.words;
+        var sigBytes = this.sigBytes;
+
+        // Clamp
+        words[sigBytes >>> 2] &= 0xffffffff << 32 - sigBytes % 4 * 8;
+        words.length = Math.ceil(sigBytes / 4);
+      },
+
+      /**
+          * Creates a copy of this word array.
+          *
+          * @return {WordArray} The clone.
+          *
+          * @example
+          *
+          *     var clone = wordArray.clone();
+          */
+      clone: function clone() {
+        var clone = Base.clone.call(this);
+        clone.words = this.words.slice(0);
+
+        return clone;
+      },
+
+      /**
+          * Creates a word array filled with random bytes.
+          *
+          * @param {number} nBytes The number of random bytes to generate.
+          *
+          * @return {WordArray} The random word array.
+          *
+          * @static
+          *
+          * @example
+          *
+          *     var wordArray = CryptoJS.lib.WordArray.random(16);
+          */
+      random: function random(nBytes) {
+        var words = [];
+
+        for (var i = 0; i < nBytes; i += 4) {
+          words.push(cryptoSecureRandomInt());
+        }
+
+        return new WordArray.init(words, nBytes);
+      } });
+
+
+    /**
+             * Encoder namespace.
+             */
+    var C_enc = C.enc = {};
+
+    /**
+                             * Hex encoding strategy.
+                             */
+    var Hex = C_enc.Hex = {
+      /**
+                             * Converts a word array to a hex string.
+                             *
+                             * @param {WordArray} wordArray The word array.
+                             *
+                             * @return {string} The hex string.
+                             *
+                             * @static
+                             *
+                             * @example
+                             *
+                             *     var hexString = CryptoJS.enc.Hex.stringify(wordArray);
+                             */
+      stringify: function stringify(wordArray) {
+        // Shortcuts
+        var words = wordArray.words;
+        var sigBytes = wordArray.sigBytes;
+
+        // Convert
+        var hexChars = [];
+        for (var i = 0; i < sigBytes; i++) {
+          var bite = words[i >>> 2] >>> 24 - i % 4 * 8 & 0xff;
+          hexChars.push((bite >>> 4).toString(16));
+          hexChars.push((bite & 0x0f).toString(16));
+        }
+
+        return hexChars.join('');
+      },
+
+      /**
+          * Converts a hex string to a word array.
+          *
+          * @param {string} hexStr The hex string.
+          *
+          * @return {WordArray} The word array.
+          *
+          * @static
+          *
+          * @example
+          *
+          *     var wordArray = CryptoJS.enc.Hex.parse(hexString);
+          */
+      parse: function parse(hexStr) {
+        // Shortcut
+        var hexStrLength = hexStr.length;
+
+        // Convert
+        var words = [];
+        for (var i = 0; i < hexStrLength; i += 2) {
+          words[i >>> 3] |= parseInt(hexStr.substr(i, 2), 16) << 24 - i % 8 * 4;
+        }
+
+        return new WordArray.init(words, hexStrLength / 2);
+      } };
+
+
+    /**
+            * Latin1 encoding strategy.
+            */
+    var Latin1 = C_enc.Latin1 = {
+      /**
+                                   * Converts a word array to a Latin1 string.
+                                   *
+                                   * @param {WordArray} wordArray The word array.
+                                   *
+                                   * @return {string} The Latin1 string.
+                                   *
+                                   * @static
+                                   *
+                                   * @example
+                                   *
+                                   *     var latin1String = CryptoJS.enc.Latin1.stringify(wordArray);
+                                   */
+      stringify: function stringify(wordArray) {
+        // Shortcuts
+        var words = wordArray.words;
+        var sigBytes = wordArray.sigBytes;
+
+        // Convert
+        var latin1Chars = [];
+        for (var i = 0; i < sigBytes; i++) {
+          var bite = words[i >>> 2] >>> 24 - i % 4 * 8 & 0xff;
+          latin1Chars.push(String.fromCharCode(bite));
+        }
+
+        return latin1Chars.join('');
+      },
+
+      /**
+          * Converts a Latin1 string to a word array.
+          *
+          * @param {string} latin1Str The Latin1 string.
+          *
+          * @return {WordArray} The word array.
+          *
+          * @static
+          *
+          * @example
+          *
+          *     var wordArray = CryptoJS.enc.Latin1.parse(latin1String);
+          */
+      parse: function parse(latin1Str) {
+        // Shortcut
+        var latin1StrLength = latin1Str.length;
+
+        // Convert
+        var words = [];
+        for (var i = 0; i < latin1StrLength; i++) {
+          words[i >>> 2] |= (latin1Str.charCodeAt(i) & 0xff) << 24 - i % 4 * 8;
+        }
+
+        return new WordArray.init(words, latin1StrLength);
+      } };
+
+
+    /**
+            * UTF-8 encoding strategy.
+            */
+    var Utf8 = C_enc.Utf8 = {
+      /**
+                               * Converts a word array to a UTF-8 string.
+                               *
+                               * @param {WordArray} wordArray The word array.
+                               *
+                               * @return {string} The UTF-8 string.
+                               *
+                               * @static
+                               *
+                               * @example
+                               *
+                               *     var utf8String = CryptoJS.enc.Utf8.stringify(wordArray);
+                               */
+      stringify: function stringify(wordArray) {
+        try {
+          return decodeURIComponent(escape(Latin1.stringify(wordArray)));
+        } catch (e) {
+          throw new Error('Malformed UTF-8 data');
+        }
+      },
+
+      /**
+          * Converts a UTF-8 string to a word array.
+          *
+          * @param {string} utf8Str The UTF-8 string.
+          *
+          * @return {WordArray} The word array.
+          *
+          * @static
+          *
+          * @example
+          *
+          *     var wordArray = CryptoJS.enc.Utf8.parse(utf8String);
+          */
+      parse: function parse(utf8Str) {
+        return Latin1.parse(unescape(encodeURIComponent(utf8Str)));
+      } };
+
+
+    /**
+            * Abstract buffered block algorithm template.
+            *
+            * The property blockSize must be implemented in a concrete subtype.
+            *
+            * @property {number} _minBufferSize The number of blocks that should be kept unprocessed in the buffer. Default: 0
+            */
+    var BufferedBlockAlgorithm = C_lib.BufferedBlockAlgorithm = Base.extend({
+      /**
+                                                                               * Resets this block algorithm's data buffer to its initial state.
+                                                                               *
+                                                                               * @example
+                                                                               *
+                                                                               *     bufferedBlockAlgorithm.reset();
+                                                                               */
+      reset: function reset() {
+        // Initial values
+        this._data = new WordArray.init();
+        this._nDataBytes = 0;
+      },
+
+      /**
+          * Adds new data to this block algorithm's buffer.
+          *
+          * @param {WordArray|string} data The data to append. Strings are converted to a WordArray using UTF-8.
+          *
+          * @example
+          *
+          *     bufferedBlockAlgorithm._append('data');
+          *     bufferedBlockAlgorithm._append(wordArray);
+          */
+      _append: function _append(data) {
+        // Convert string to WordArray, else assume WordArray already
+        if (typeof data == 'string') {
+          data = Utf8.parse(data);
+        }
+
+        // Append
+        this._data.concat(data);
+        this._nDataBytes += data.sigBytes;
+      },
+
+      /**
+          * Processes available data blocks.
+          *
+          * This method invokes _doProcessBlock(offset), which must be implemented by a concrete subtype.
+          *
+          * @param {boolean} doFlush Whether all blocks and partial blocks should be processed.
+          *
+          * @return {WordArray} The processed data.
+          *
+          * @example
+          *
+          *     var processedData = bufferedBlockAlgorithm._process();
+          *     var processedData = bufferedBlockAlgorithm._process(!!'flush');
+          */
+      _process: function _process(doFlush) {
+        var processedWords;
+
+        // Shortcuts
+        var data = this._data;
+        var dataWords = data.words;
+        var dataSigBytes = data.sigBytes;
+        var blockSize = this.blockSize;
+        var blockSizeBytes = blockSize * 4;
+
+        // Count blocks ready
+        var nBlocksReady = dataSigBytes / blockSizeBytes;
+        if (doFlush) {
+          // Round up to include partial blocks
+          nBlocksReady = Math.ceil(nBlocksReady);
+        } else {
+          // Round down to include only full blocks,
+          // less the number of blocks that must remain in the buffer
+          nBlocksReady = Math.max((nBlocksReady | 0) - this._minBufferSize, 0);
+        }
+
+        // Count words ready
+        var nWordsReady = nBlocksReady * blockSize;
+
+        // Count bytes ready
+        var nBytesReady = Math.min(nWordsReady * 4, dataSigBytes);
+
+        // Process blocks
+        if (nWordsReady) {
+          for (var offset = 0; offset < nWordsReady; offset += blockSize) {
+            // Perform concrete-algorithm logic
+            this._doProcessBlock(dataWords, offset);
+          }
+
+          // Remove processed words
+          processedWords = dataWords.splice(0, nWordsReady);
+          data.sigBytes -= nBytesReady;
+        }
+
+        // Return processed words
+        return new WordArray.init(processedWords, nBytesReady);
+      },
+
+      /**
+          * Creates a copy of this object.
+          *
+          * @return {Object} The clone.
+          *
+          * @example
+          *
+          *     var clone = bufferedBlockAlgorithm.clone();
+          */
+      clone: function clone() {
+        var clone = Base.clone.call(this);
+        clone._data = this._data.clone();
+
+        return clone;
+      },
+
+      _minBufferSize: 0 });
+
+
+    /**
+                             * Abstract hasher template.
+                             *
+                             * @property {number} blockSize The number of 32-bit words this hasher operates on. Default: 16 (512 bits)
+                             */
+    var Hasher = C_lib.Hasher = BufferedBlockAlgorithm.extend({
+      /**
+                                                                 * Configuration options.
+                                                                 */
+      cfg: Base.extend(),
+
+      /**
+                           * Initializes a newly created hasher.
+                           *
+                           * @param {Object} cfg (Optional) The configuration options to use for this hash computation.
+                           *
+                           * @example
+                           *
+                           *     var hasher = CryptoJS.algo.SHA256.create();
+                           */
+      init: function init(cfg) {
+        // Apply config defaults
+        this.cfg = this.cfg.extend(cfg);
+
+        // Set initial values
+        this.reset();
+      },
+
+      /**
+          * Resets this hasher to its initial state.
+          *
+          * @example
+          *
+          *     hasher.reset();
+          */
+      reset: function reset() {
+        // Reset data buffer
+        BufferedBlockAlgorithm.reset.call(this);
+
+        // Perform concrete-hasher logic
+        this._doReset();
+      },
+
+      /**
+          * Updates this hasher with a message.
+          *
+          * @param {WordArray|string} messageUpdate The message to append.
+          *
+          * @return {Hasher} This hasher.
+          *
+          * @example
+          *
+          *     hasher.update('message');
+          *     hasher.update(wordArray);
+          */
+      update: function update(messageUpdate) {
+        // Append
+        this._append(messageUpdate);
+
+        // Update the hash
+        this._process();
+
+        // Chainable
+        return this;
+      },
+
+      /**
+          * Finalizes the hash computation.
+          * Note that the finalize operation is effectively a destructive, read-once operation.
+          *
+          * @param {WordArray|string} messageUpdate (Optional) A final message update.
+          *
+          * @return {WordArray} The hash.
+          *
+          * @example
+          *
+          *     var hash = hasher.finalize();
+          *     var hash = hasher.finalize('message');
+          *     var hash = hasher.finalize(wordArray);
+          */
+      finalize: function finalize(messageUpdate) {
+        // Final message update
+        if (messageUpdate) {
+          this._append(messageUpdate);
+        }
+
+        // Perform concrete-hasher logic
+        var hash = this._doFinalize();
+
+        return hash;
+      },
+
+      blockSize: 512 / 32,
+
+      /**
+                            * Creates a shortcut function to a hasher's object interface.
+                            *
+                            * @param {Hasher} hasher The hasher to create a helper for.
+                            *
+                            * @return {Function} The shortcut function.
+                            *
+                            * @static
+                            *
+                            * @example
+                            *
+                            *     var SHA256 = CryptoJS.lib.Hasher._createHelper(CryptoJS.algo.SHA256);
+                            */
+      _createHelper: function _createHelper(hasher) {
+        return function (message, cfg) {
+          return new hasher.init(cfg).finalize(message);
+        };
+      },
+
+      /**
+          * Creates a shortcut function to the HMAC's object interface.
+          *
+          * @param {Hasher} hasher The hasher to use in this HMAC helper.
+          *
+          * @return {Function} The shortcut function.
+          *
+          * @static
+          *
+          * @example
+          *
+          *     var HmacSHA256 = CryptoJS.lib.Hasher._createHmacHelper(CryptoJS.algo.SHA256);
+          */
+      _createHmacHelper: function _createHmacHelper(hasher) {
+        return function (message, key) {
+          return new C_algo.HMAC.init(hasher, key).finalize(message);
+        };
+      } });
+
+
+    /**
+             * Algorithm namespace.
+             */
+    var C_algo = C.algo = {};
+
+    return C;
+  }(Math);
+
+
+  return CryptoJS;
+
+});
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../../../HBuilderX/plugins/uniapp-cli/node_modules/webpack/buildin/global.js */ 2)))
+
+/***/ }),
+/* 421 */
+/*!************************!*\
+  !*** crypto (ignored) ***!
+  \************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+/* (ignored) */
+
+/***/ }),
+/* 422 */
+/*!************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/x64-core.js ***!
+  \************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  (function (undefined) {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var Base = C_lib.Base;
+    var X32WordArray = C_lib.WordArray;
+
+    /**
+                                         * x64 namespace.
+                                         */
+    var C_x64 = C.x64 = {};
+
+    /**
+                             * A 64-bit word.
+                             */
+    var X64Word = C_x64.Word = Base.extend({
+      /**
+                                              * Initializes a newly created 64-bit word.
+                                              *
+                                              * @param {number} high The high 32 bits.
+                                              * @param {number} low The low 32 bits.
+                                              *
+                                              * @example
+                                              *
+                                              *     var x64Word = CryptoJS.x64.Word.create(0x00010203, 0x04050607);
+                                              */
+      init: function init(high, low) {
+        this.high = high;
+        this.low = low;
+      }
+
+      /**
+         * Bitwise NOTs this word.
+         *
+         * @return {X64Word} A new x64-Word object after negating.
+         *
+         * @example
+         *
+         *     var negated = x64Word.not();
+         */
+      // not: function () {
+      // var high = ~this.high;
+      // var low = ~this.low;
+
+      // return X64Word.create(high, low);
+      // },
+
+      /**
+       * Bitwise ANDs this word with the passed word.
+       *
+       * @param {X64Word} word The x64-Word to AND with this word.
+       *
+       * @return {X64Word} A new x64-Word object after ANDing.
+       *
+       * @example
+       *
+       *     var anded = x64Word.and(anotherX64Word);
+       */
+      // and: function (word) {
+      // var high = this.high & word.high;
+      // var low = this.low & word.low;
+
+      // return X64Word.create(high, low);
+      // },
+
+      /**
+       * Bitwise ORs this word with the passed word.
+       *
+       * @param {X64Word} word The x64-Word to OR with this word.
+       *
+       * @return {X64Word} A new x64-Word object after ORing.
+       *
+       * @example
+       *
+       *     var ored = x64Word.or(anotherX64Word);
+       */
+      // or: function (word) {
+      // var high = this.high | word.high;
+      // var low = this.low | word.low;
+
+      // return X64Word.create(high, low);
+      // },
+
+      /**
+       * Bitwise XORs this word with the passed word.
+       *
+       * @param {X64Word} word The x64-Word to XOR with this word.
+       *
+       * @return {X64Word} A new x64-Word object after XORing.
+       *
+       * @example
+       *
+       *     var xored = x64Word.xor(anotherX64Word);
+       */
+      // xor: function (word) {
+      // var high = this.high ^ word.high;
+      // var low = this.low ^ word.low;
+
+      // return X64Word.create(high, low);
+      // },
+
+      /**
+       * Shifts this word n bits to the left.
+       *
+       * @param {number} n The number of bits to shift.
+       *
+       * @return {X64Word} A new x64-Word object after shifting.
+       *
+       * @example
+       *
+       *     var shifted = x64Word.shiftL(25);
+       */
+      // shiftL: function (n) {
+      // if (n < 32) {
+      // var high = (this.high << n) | (this.low >>> (32 - n));
+      // var low = this.low << n;
+      // } else {
+      // var high = this.low << (n - 32);
+      // var low = 0;
+      // }
+
+      // return X64Word.create(high, low);
+      // },
+
+      /**
+       * Shifts this word n bits to the right.
+       *
+       * @param {number} n The number of bits to shift.
+       *
+       * @return {X64Word} A new x64-Word object after shifting.
+       *
+       * @example
+       *
+       *     var shifted = x64Word.shiftR(7);
+       */
+      // shiftR: function (n) {
+      // if (n < 32) {
+      // var low = (this.low >>> n) | (this.high << (32 - n));
+      // var high = this.high >>> n;
+      // } else {
+      // var low = this.high >>> (n - 32);
+      // var high = 0;
+      // }
+
+      // return X64Word.create(high, low);
+      // },
+
+      /**
+       * Rotates this word n bits to the left.
+       *
+       * @param {number} n The number of bits to rotate.
+       *
+       * @return {X64Word} A new x64-Word object after rotating.
+       *
+       * @example
+       *
+       *     var rotated = x64Word.rotL(25);
+       */
+      // rotL: function (n) {
+      // return this.shiftL(n).or(this.shiftR(64 - n));
+      // },
+
+      /**
+       * Rotates this word n bits to the right.
+       *
+       * @param {number} n The number of bits to rotate.
+       *
+       * @return {X64Word} A new x64-Word object after rotating.
+       *
+       * @example
+       *
+       *     var rotated = x64Word.rotR(7);
+       */
+      // rotR: function (n) {
+      // return this.shiftR(n).or(this.shiftL(64 - n));
+      // },
+
+      /**
+       * Adds this word with the passed word.
+       *
+       * @param {X64Word} word The x64-Word to add with this word.
+       *
+       * @return {X64Word} A new x64-Word object after adding.
+       *
+       * @example
+       *
+       *     var added = x64Word.add(anotherX64Word);
+       */
+      // add: function (word) {
+      // var low = (this.low + word.low) | 0;
+      // var carry = (low >>> 0) < (this.low >>> 0) ? 1 : 0;
+      // var high = (this.high + word.high + carry) | 0;
+
+      // return X64Word.create(high, low);
+      // }
+    });
+
+    /**
+         * An array of 64-bit words.
+         *
+         * @property {Array} words The array of CryptoJS.x64.Word objects.
+         * @property {number} sigBytes The number of significant bytes in this word array.
+         */
+    var X64WordArray = C_x64.WordArray = Base.extend({
+      /**
+                                                        * Initializes a newly created word array.
+                                                        *
+                                                        * @param {Array} words (Optional) An array of CryptoJS.x64.Word objects.
+                                                        * @param {number} sigBytes (Optional) The number of significant bytes in the words.
+                                                        *
+                                                        * @example
+                                                        *
+                                                        *     var wordArray = CryptoJS.x64.WordArray.create();
+                                                        *
+                                                        *     var wordArray = CryptoJS.x64.WordArray.create([
+                                                        *         CryptoJS.x64.Word.create(0x00010203, 0x04050607),
+                                                        *         CryptoJS.x64.Word.create(0x18191a1b, 0x1c1d1e1f)
+                                                        *     ]);
+                                                        *
+                                                        *     var wordArray = CryptoJS.x64.WordArray.create([
+                                                        *         CryptoJS.x64.Word.create(0x00010203, 0x04050607),
+                                                        *         CryptoJS.x64.Word.create(0x18191a1b, 0x1c1d1e1f)
+                                                        *     ], 10);
+                                                        */
+      init: function init(words, sigBytes) {
+        words = this.words = words || [];
+
+        if (sigBytes != undefined) {
+          this.sigBytes = sigBytes;
+        } else {
+          this.sigBytes = words.length * 8;
+        }
+      },
+
+      /**
+          * Converts this 64-bit word array to a 32-bit word array.
+          *
+          * @return {CryptoJS.lib.WordArray} This word array's data as a 32-bit word array.
+          *
+          * @example
+          *
+          *     var x32WordArray = x64WordArray.toX32();
+          */
+      toX32: function toX32() {
+        // Shortcuts
+        var x64Words = this.words;
+        var x64WordsLength = x64Words.length;
+
+        // Convert
+        var x32Words = [];
+        for (var i = 0; i < x64WordsLength; i++) {
+          var x64Word = x64Words[i];
+          x32Words.push(x64Word.high);
+          x32Words.push(x64Word.low);
+        }
+
+        return X32WordArray.create(x32Words, this.sigBytes);
+      },
+
+      /**
+          * Creates a copy of this word array.
+          *
+          * @return {X64WordArray} The clone.
+          *
+          * @example
+          *
+          *     var clone = x64WordArray.clone();
+          */
+      clone: function clone() {
+        var clone = Base.clone.call(this);
+
+        // Clone "words" array
+        var words = clone.words = this.words.slice(0);
+
+        // Clone each X64Word object
+        var wordsLength = words.length;
+        for (var i = 0; i < wordsLength; i++) {
+          words[i] = words[i].clone();
+        }
+
+        return clone;
+      } });
+
+  })();
+
+
+  return CryptoJS;
+
+});
+
+/***/ }),
+/* 423 */
+/*!*******************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/lib-typedarrays.js ***!
+  \*******************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  (function () {
+    // Check if typed arrays are supported
+    if (typeof ArrayBuffer != 'function') {
+      return;
+    }
+
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var WordArray = C_lib.WordArray;
+
+    // Reference original init
+    var superInit = WordArray.init;
+
+    // Augment WordArray.init to handle typed arrays
+    var subInit = WordArray.init = function (typedArray) {
+      // Convert buffers to uint8
+      if (typedArray instanceof ArrayBuffer) {
+        typedArray = new Uint8Array(typedArray);
+      }
+
+      // Convert other array views to uint8
+      if (
+      typedArray instanceof Int8Array ||
+      typeof Uint8ClampedArray !== "undefined" && typedArray instanceof Uint8ClampedArray ||
+      typedArray instanceof Int16Array ||
+      typedArray instanceof Uint16Array ||
+      typedArray instanceof Int32Array ||
+      typedArray instanceof Uint32Array ||
+      typedArray instanceof Float32Array ||
+      typedArray instanceof Float64Array)
+      {
+        typedArray = new Uint8Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength);
+      }
+
+      // Handle Uint8Array
+      if (typedArray instanceof Uint8Array) {
+        // Shortcut
+        var typedArrayByteLength = typedArray.byteLength;
+
+        // Extract bytes
+        var words = [];
+        for (var i = 0; i < typedArrayByteLength; i++) {
+          words[i >>> 2] |= typedArray[i] << 24 - i % 4 * 8;
+        }
+
+        // Initialize this word array
+        superInit.call(this, words, typedArrayByteLength);
+      } else {
+        // Else call normal init
+        superInit.apply(this, arguments);
+      }
+    };
+
+    subInit.prototype = WordArray;
+  })();
+
+
+  return CryptoJS.lib.WordArray;
+
+});
+
+/***/ }),
+/* 424 */
+/*!*************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/enc-utf16.js ***!
+  \*************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  (function () {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var WordArray = C_lib.WordArray;
+    var C_enc = C.enc;
+
+    /**
+                        * UTF-16 BE encoding strategy.
+                        */
+    var Utf16BE = C_enc.Utf16 = C_enc.Utf16BE = {
+      /**
+                                                   * Converts a word array to a UTF-16 BE string.
+                                                   *
+                                                   * @param {WordArray} wordArray The word array.
+                                                   *
+                                                   * @return {string} The UTF-16 BE string.
+                                                   *
+                                                   * @static
+                                                   *
+                                                   * @example
+                                                   *
+                                                   *     var utf16String = CryptoJS.enc.Utf16.stringify(wordArray);
+                                                   */
+      stringify: function stringify(wordArray) {
+        // Shortcuts
+        var words = wordArray.words;
+        var sigBytes = wordArray.sigBytes;
+
+        // Convert
+        var utf16Chars = [];
+        for (var i = 0; i < sigBytes; i += 2) {
+          var codePoint = words[i >>> 2] >>> 16 - i % 4 * 8 & 0xffff;
+          utf16Chars.push(String.fromCharCode(codePoint));
+        }
+
+        return utf16Chars.join('');
+      },
+
+      /**
+          * Converts a UTF-16 BE string to a word array.
+          *
+          * @param {string} utf16Str The UTF-16 BE string.
+          *
+          * @return {WordArray} The word array.
+          *
+          * @static
+          *
+          * @example
+          *
+          *     var wordArray = CryptoJS.enc.Utf16.parse(utf16String);
+          */
+      parse: function parse(utf16Str) {
+        // Shortcut
+        var utf16StrLength = utf16Str.length;
+
+        // Convert
+        var words = [];
+        for (var i = 0; i < utf16StrLength; i++) {
+          words[i >>> 1] |= utf16Str.charCodeAt(i) << 16 - i % 2 * 16;
+        }
+
+        return WordArray.create(words, utf16StrLength * 2);
+      } };
+
+
+    /**
+            * UTF-16 LE encoding strategy.
+            */
+    C_enc.Utf16LE = {
+      /**
+                       * Converts a word array to a UTF-16 LE string.
+                       *
+                       * @param {WordArray} wordArray The word array.
+                       *
+                       * @return {string} The UTF-16 LE string.
+                       *
+                       * @static
+                       *
+                       * @example
+                       *
+                       *     var utf16Str = CryptoJS.enc.Utf16LE.stringify(wordArray);
+                       */
+      stringify: function stringify(wordArray) {
+        // Shortcuts
+        var words = wordArray.words;
+        var sigBytes = wordArray.sigBytes;
+
+        // Convert
+        var utf16Chars = [];
+        for (var i = 0; i < sigBytes; i += 2) {
+          var codePoint = swapEndian(words[i >>> 2] >>> 16 - i % 4 * 8 & 0xffff);
+          utf16Chars.push(String.fromCharCode(codePoint));
+        }
+
+        return utf16Chars.join('');
+      },
+
+      /**
+          * Converts a UTF-16 LE string to a word array.
+          *
+          * @param {string} utf16Str The UTF-16 LE string.
+          *
+          * @return {WordArray} The word array.
+          *
+          * @static
+          *
+          * @example
+          *
+          *     var wordArray = CryptoJS.enc.Utf16LE.parse(utf16Str);
+          */
+      parse: function parse(utf16Str) {
+        // Shortcut
+        var utf16StrLength = utf16Str.length;
+
+        // Convert
+        var words = [];
+        for (var i = 0; i < utf16StrLength; i++) {
+          words[i >>> 1] |= swapEndian(utf16Str.charCodeAt(i) << 16 - i % 2 * 16);
+        }
+
+        return WordArray.create(words, utf16StrLength * 2);
+      } };
+
+
+    function swapEndian(word) {
+      return word << 8 & 0xff00ff00 | word >>> 8 & 0x00ff00ff;
+    }
+  })();
+
+
+  return CryptoJS.enc.Utf16;
+
+});
+
+/***/ }),
+/* 425 */
+/*!**************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/enc-base64.js ***!
+  \**************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  (function () {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var WordArray = C_lib.WordArray;
+    var C_enc = C.enc;
+
+    /**
+                        * Base64 encoding strategy.
+                        */
+    var Base64 = C_enc.Base64 = {
+      /**
+                                   * Converts a word array to a Base64 string.
+                                   *
+                                   * @param {WordArray} wordArray The word array.
+                                   *
+                                   * @return {string} The Base64 string.
+                                   *
+                                   * @static
+                                   *
+                                   * @example
+                                   *
+                                   *     var base64String = CryptoJS.enc.Base64.stringify(wordArray);
+                                   */
+      stringify: function stringify(wordArray) {
+        // Shortcuts
+        var words = wordArray.words;
+        var sigBytes = wordArray.sigBytes;
+        var map = this._map;
+
+        // Clamp excess bits
+        wordArray.clamp();
+
+        // Convert
+        var base64Chars = [];
+        for (var i = 0; i < sigBytes; i += 3) {
+          var byte1 = words[i >>> 2] >>> 24 - i % 4 * 8 & 0xff;
+          var byte2 = words[i + 1 >>> 2] >>> 24 - (i + 1) % 4 * 8 & 0xff;
+          var byte3 = words[i + 2 >>> 2] >>> 24 - (i + 2) % 4 * 8 & 0xff;
+
+          var triplet = byte1 << 16 | byte2 << 8 | byte3;
+
+          for (var j = 0; j < 4 && i + j * 0.75 < sigBytes; j++) {
+            base64Chars.push(map.charAt(triplet >>> 6 * (3 - j) & 0x3f));
+          }
+        }
+
+        // Add padding
+        var paddingChar = map.charAt(64);
+        if (paddingChar) {
+          while (base64Chars.length % 4) {
+            base64Chars.push(paddingChar);
+          }
+        }
+
+        return base64Chars.join('');
+      },
+
+      /**
+          * Converts a Base64 string to a word array.
+          *
+          * @param {string} base64Str The Base64 string.
+          *
+          * @return {WordArray} The word array.
+          *
+          * @static
+          *
+          * @example
+          *
+          *     var wordArray = CryptoJS.enc.Base64.parse(base64String);
+          */
+      parse: function parse(base64Str) {
+        // Shortcuts
+        var base64StrLength = base64Str.length;
+        var map = this._map;
+        var reverseMap = this._reverseMap;
+
+        if (!reverseMap) {
+          reverseMap = this._reverseMap = [];
+          for (var j = 0; j < map.length; j++) {
+            reverseMap[map.charCodeAt(j)] = j;
+          }
+        }
+
+        // Ignore padding
+        var paddingChar = map.charAt(64);
+        if (paddingChar) {
+          var paddingIndex = base64Str.indexOf(paddingChar);
+          if (paddingIndex !== -1) {
+            base64StrLength = paddingIndex;
+          }
+        }
+
+        // Convert
+        return parseLoop(base64Str, base64StrLength, reverseMap);
+
+      },
+
+      _map: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=' };
+
+
+    function parseLoop(base64Str, base64StrLength, reverseMap) {
+      var words = [];
+      var nBytes = 0;
+      for (var i = 0; i < base64StrLength; i++) {
+        if (i % 4) {
+          var bits1 = reverseMap[base64Str.charCodeAt(i - 1)] << i % 4 * 2;
+          var bits2 = reverseMap[base64Str.charCodeAt(i)] >>> 6 - i % 4 * 2;
+          var bitsCombined = bits1 | bits2;
+          words[nBytes >>> 2] |= bitsCombined << 24 - nBytes % 4 * 8;
+          nBytes++;
+        }
+      }
+      return WordArray.create(words, nBytes);
+    }
+  })();
+
+
+  return CryptoJS.enc.Base64;
+
+});
+
+/***/ }),
+/* 426 */
+/*!*****************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/enc-base64url.js ***!
+  \*****************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  (function () {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var WordArray = C_lib.WordArray;
+    var C_enc = C.enc;
+
+    /**
+                        * Base64url encoding strategy.
+                        */
+    var Base64url = C_enc.Base64url = {
+      /**
+                                         * Converts a word array to a Base64url string.
+                                         *
+                                         * @param {WordArray} wordArray The word array.
+                                         *
+                                         * @param {boolean} urlSafe Whether to use url safe
+                                         *
+                                         * @return {string} The Base64url string.
+                                         *
+                                         * @static
+                                         *
+                                         * @example
+                                         *
+                                         *     var base64String = CryptoJS.enc.Base64url.stringify(wordArray);
+                                         */
+      stringify: function stringify(wordArray) {var urlSafe = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+        // Shortcuts
+        var words = wordArray.words;
+        var sigBytes = wordArray.sigBytes;
+        var map = urlSafe ? this._safe_map : this._map;
+
+        // Clamp excess bits
+        wordArray.clamp();
+
+        // Convert
+        var base64Chars = [];
+        for (var i = 0; i < sigBytes; i += 3) {
+          var byte1 = words[i >>> 2] >>> 24 - i % 4 * 8 & 0xff;
+          var byte2 = words[i + 1 >>> 2] >>> 24 - (i + 1) % 4 * 8 & 0xff;
+          var byte3 = words[i + 2 >>> 2] >>> 24 - (i + 2) % 4 * 8 & 0xff;
+
+          var triplet = byte1 << 16 | byte2 << 8 | byte3;
+
+          for (var j = 0; j < 4 && i + j * 0.75 < sigBytes; j++) {
+            base64Chars.push(map.charAt(triplet >>> 6 * (3 - j) & 0x3f));
+          }
+        }
+
+        // Add padding
+        var paddingChar = map.charAt(64);
+        if (paddingChar) {
+          while (base64Chars.length % 4) {
+            base64Chars.push(paddingChar);
+          }
+        }
+
+        return base64Chars.join('');
+      },
+
+      /**
+          * Converts a Base64url string to a word array.
+          *
+          * @param {string} base64Str The Base64url string.
+          *
+          * @param {boolean} urlSafe Whether to use url safe
+          *
+          * @return {WordArray} The word array.
+          *
+          * @static
+          *
+          * @example
+          *
+          *     var wordArray = CryptoJS.enc.Base64url.parse(base64String);
+          */
+      parse: function parse(base64Str) {var urlSafe = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+        // Shortcuts
+        var base64StrLength = base64Str.length;
+        var map = urlSafe ? this._safe_map : this._map;
+        var reverseMap = this._reverseMap;
+
+        if (!reverseMap) {
+          reverseMap = this._reverseMap = [];
+          for (var j = 0; j < map.length; j++) {
+            reverseMap[map.charCodeAt(j)] = j;
+          }
+        }
+
+        // Ignore padding
+        var paddingChar = map.charAt(64);
+        if (paddingChar) {
+          var paddingIndex = base64Str.indexOf(paddingChar);
+          if (paddingIndex !== -1) {
+            base64StrLength = paddingIndex;
+          }
+        }
+
+        // Convert
+        return parseLoop(base64Str, base64StrLength, reverseMap);
+
+      },
+
+      _map: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=',
+      _safe_map: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_' };
+
+
+    function parseLoop(base64Str, base64StrLength, reverseMap) {
+      var words = [];
+      var nBytes = 0;
+      for (var i = 0; i < base64StrLength; i++) {
+        if (i % 4) {
+          var bits1 = reverseMap[base64Str.charCodeAt(i - 1)] << i % 4 * 2;
+          var bits2 = reverseMap[base64Str.charCodeAt(i)] >>> 6 - i % 4 * 2;
+          var bitsCombined = bits1 | bits2;
+          words[nBytes >>> 2] |= bitsCombined << 24 - nBytes % 4 * 8;
+          nBytes++;
+        }
+      }
+      return WordArray.create(words, nBytes);
+    }
+  })();
+
+  return CryptoJS.enc.Base64url;
+
+});
+
+/***/ }),
+/* 427 */
+/*!*******************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/md5.js ***!
+  \*******************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  (function (Math) {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var WordArray = C_lib.WordArray;
+    var Hasher = C_lib.Hasher;
+    var C_algo = C.algo;
+
+    // Constants table
+    var T = [];
+
+    // Compute constants
+    (function () {
+      for (var i = 0; i < 64; i++) {
+        T[i] = Math.abs(Math.sin(i + 1)) * 0x100000000 | 0;
+      }
+    })();
+
+    /**
+           * MD5 hash algorithm.
+           */
+    var MD5 = C_algo.MD5 = Hasher.extend({
+      _doReset: function _doReset() {
+        this._hash = new WordArray.init([
+        0x67452301, 0xefcdab89,
+        0x98badcfe, 0x10325476]);
+
+      },
+
+      _doProcessBlock: function _doProcessBlock(M, offset) {
+        // Swap endian
+        for (var i = 0; i < 16; i++) {
+          // Shortcuts
+          var offset_i = offset + i;
+          var M_offset_i = M[offset_i];
+
+          M[offset_i] =
+          (M_offset_i << 8 | M_offset_i >>> 24) & 0x00ff00ff |
+          (M_offset_i << 24 | M_offset_i >>> 8) & 0xff00ff00;
+
+        }
+
+        // Shortcuts
+        var H = this._hash.words;
+
+        var M_offset_0 = M[offset + 0];
+        var M_offset_1 = M[offset + 1];
+        var M_offset_2 = M[offset + 2];
+        var M_offset_3 = M[offset + 3];
+        var M_offset_4 = M[offset + 4];
+        var M_offset_5 = M[offset + 5];
+        var M_offset_6 = M[offset + 6];
+        var M_offset_7 = M[offset + 7];
+        var M_offset_8 = M[offset + 8];
+        var M_offset_9 = M[offset + 9];
+        var M_offset_10 = M[offset + 10];
+        var M_offset_11 = M[offset + 11];
+        var M_offset_12 = M[offset + 12];
+        var M_offset_13 = M[offset + 13];
+        var M_offset_14 = M[offset + 14];
+        var M_offset_15 = M[offset + 15];
+
+        // Working varialbes
+        var a = H[0];
+        var b = H[1];
+        var c = H[2];
+        var d = H[3];
+
+        // Computation
+        a = FF(a, b, c, d, M_offset_0, 7, T[0]);
+        d = FF(d, a, b, c, M_offset_1, 12, T[1]);
+        c = FF(c, d, a, b, M_offset_2, 17, T[2]);
+        b = FF(b, c, d, a, M_offset_3, 22, T[3]);
+        a = FF(a, b, c, d, M_offset_4, 7, T[4]);
+        d = FF(d, a, b, c, M_offset_5, 12, T[5]);
+        c = FF(c, d, a, b, M_offset_6, 17, T[6]);
+        b = FF(b, c, d, a, M_offset_7, 22, T[7]);
+        a = FF(a, b, c, d, M_offset_8, 7, T[8]);
+        d = FF(d, a, b, c, M_offset_9, 12, T[9]);
+        c = FF(c, d, a, b, M_offset_10, 17, T[10]);
+        b = FF(b, c, d, a, M_offset_11, 22, T[11]);
+        a = FF(a, b, c, d, M_offset_12, 7, T[12]);
+        d = FF(d, a, b, c, M_offset_13, 12, T[13]);
+        c = FF(c, d, a, b, M_offset_14, 17, T[14]);
+        b = FF(b, c, d, a, M_offset_15, 22, T[15]);
+
+        a = GG(a, b, c, d, M_offset_1, 5, T[16]);
+        d = GG(d, a, b, c, M_offset_6, 9, T[17]);
+        c = GG(c, d, a, b, M_offset_11, 14, T[18]);
+        b = GG(b, c, d, a, M_offset_0, 20, T[19]);
+        a = GG(a, b, c, d, M_offset_5, 5, T[20]);
+        d = GG(d, a, b, c, M_offset_10, 9, T[21]);
+        c = GG(c, d, a, b, M_offset_15, 14, T[22]);
+        b = GG(b, c, d, a, M_offset_4, 20, T[23]);
+        a = GG(a, b, c, d, M_offset_9, 5, T[24]);
+        d = GG(d, a, b, c, M_offset_14, 9, T[25]);
+        c = GG(c, d, a, b, M_offset_3, 14, T[26]);
+        b = GG(b, c, d, a, M_offset_8, 20, T[27]);
+        a = GG(a, b, c, d, M_offset_13, 5, T[28]);
+        d = GG(d, a, b, c, M_offset_2, 9, T[29]);
+        c = GG(c, d, a, b, M_offset_7, 14, T[30]);
+        b = GG(b, c, d, a, M_offset_12, 20, T[31]);
+
+        a = HH(a, b, c, d, M_offset_5, 4, T[32]);
+        d = HH(d, a, b, c, M_offset_8, 11, T[33]);
+        c = HH(c, d, a, b, M_offset_11, 16, T[34]);
+        b = HH(b, c, d, a, M_offset_14, 23, T[35]);
+        a = HH(a, b, c, d, M_offset_1, 4, T[36]);
+        d = HH(d, a, b, c, M_offset_4, 11, T[37]);
+        c = HH(c, d, a, b, M_offset_7, 16, T[38]);
+        b = HH(b, c, d, a, M_offset_10, 23, T[39]);
+        a = HH(a, b, c, d, M_offset_13, 4, T[40]);
+        d = HH(d, a, b, c, M_offset_0, 11, T[41]);
+        c = HH(c, d, a, b, M_offset_3, 16, T[42]);
+        b = HH(b, c, d, a, M_offset_6, 23, T[43]);
+        a = HH(a, b, c, d, M_offset_9, 4, T[44]);
+        d = HH(d, a, b, c, M_offset_12, 11, T[45]);
+        c = HH(c, d, a, b, M_offset_15, 16, T[46]);
+        b = HH(b, c, d, a, M_offset_2, 23, T[47]);
+
+        a = II(a, b, c, d, M_offset_0, 6, T[48]);
+        d = II(d, a, b, c, M_offset_7, 10, T[49]);
+        c = II(c, d, a, b, M_offset_14, 15, T[50]);
+        b = II(b, c, d, a, M_offset_5, 21, T[51]);
+        a = II(a, b, c, d, M_offset_12, 6, T[52]);
+        d = II(d, a, b, c, M_offset_3, 10, T[53]);
+        c = II(c, d, a, b, M_offset_10, 15, T[54]);
+        b = II(b, c, d, a, M_offset_1, 21, T[55]);
+        a = II(a, b, c, d, M_offset_8, 6, T[56]);
+        d = II(d, a, b, c, M_offset_15, 10, T[57]);
+        c = II(c, d, a, b, M_offset_6, 15, T[58]);
+        b = II(b, c, d, a, M_offset_13, 21, T[59]);
+        a = II(a, b, c, d, M_offset_4, 6, T[60]);
+        d = II(d, a, b, c, M_offset_11, 10, T[61]);
+        c = II(c, d, a, b, M_offset_2, 15, T[62]);
+        b = II(b, c, d, a, M_offset_9, 21, T[63]);
+
+        // Intermediate hash value
+        H[0] = H[0] + a | 0;
+        H[1] = H[1] + b | 0;
+        H[2] = H[2] + c | 0;
+        H[3] = H[3] + d | 0;
+      },
+
+      _doFinalize: function _doFinalize() {
+        // Shortcuts
+        var data = this._data;
+        var dataWords = data.words;
+
+        var nBitsTotal = this._nDataBytes * 8;
+        var nBitsLeft = data.sigBytes * 8;
+
+        // Add padding
+        dataWords[nBitsLeft >>> 5] |= 0x80 << 24 - nBitsLeft % 32;
+
+        var nBitsTotalH = Math.floor(nBitsTotal / 0x100000000);
+        var nBitsTotalL = nBitsTotal;
+        dataWords[(nBitsLeft + 64 >>> 9 << 4) + 15] =
+        (nBitsTotalH << 8 | nBitsTotalH >>> 24) & 0x00ff00ff |
+        (nBitsTotalH << 24 | nBitsTotalH >>> 8) & 0xff00ff00;
+
+        dataWords[(nBitsLeft + 64 >>> 9 << 4) + 14] =
+        (nBitsTotalL << 8 | nBitsTotalL >>> 24) & 0x00ff00ff |
+        (nBitsTotalL << 24 | nBitsTotalL >>> 8) & 0xff00ff00;
+
+
+        data.sigBytes = (dataWords.length + 1) * 4;
+
+        // Hash final blocks
+        this._process();
+
+        // Shortcuts
+        var hash = this._hash;
+        var H = hash.words;
+
+        // Swap endian
+        for (var i = 0; i < 4; i++) {
+          // Shortcut
+          var H_i = H[i];
+
+          H[i] = (H_i << 8 | H_i >>> 24) & 0x00ff00ff |
+          (H_i << 24 | H_i >>> 8) & 0xff00ff00;
+        }
+
+        // Return final computed hash
+        return hash;
+      },
+
+      clone: function clone() {
+        var clone = Hasher.clone.call(this);
+        clone._hash = this._hash.clone();
+
+        return clone;
+      } });
+
+
+    function FF(a, b, c, d, x, s, t) {
+      var n = a + (b & c | ~b & d) + x + t;
+      return (n << s | n >>> 32 - s) + b;
+    }
+
+    function GG(a, b, c, d, x, s, t) {
+      var n = a + (b & d | c & ~d) + x + t;
+      return (n << s | n >>> 32 - s) + b;
+    }
+
+    function HH(a, b, c, d, x, s, t) {
+      var n = a + (b ^ c ^ d) + x + t;
+      return (n << s | n >>> 32 - s) + b;
+    }
+
+    function II(a, b, c, d, x, s, t) {
+      var n = a + (c ^ (b | ~d)) + x + t;
+      return (n << s | n >>> 32 - s) + b;
+    }
+
+    /**
+       * Shortcut function to the hasher's object interface.
+       *
+       * @param {WordArray|string} message The message to hash.
+       *
+       * @return {WordArray} The hash.
+       *
+       * @static
+       *
+       * @example
+       *
+       *     var hash = CryptoJS.MD5('message');
+       *     var hash = CryptoJS.MD5(wordArray);
+       */
+    C.MD5 = Hasher._createHelper(MD5);
+
+    /**
+                                        * Shortcut function to the HMAC's object interface.
+                                        *
+                                        * @param {WordArray|string} message The message to hash.
+                                        * @param {WordArray|string} key The secret key.
+                                        *
+                                        * @return {WordArray} The HMAC.
+                                        *
+                                        * @static
+                                        *
+                                        * @example
+                                        *
+                                        *     var hmac = CryptoJS.HmacMD5(message, key);
+                                        */
+    C.HmacMD5 = Hasher._createHmacHelper(MD5);
+  })(Math);
+
+
+  return CryptoJS.MD5;
+
+});
+
+/***/ }),
+/* 428 */
+/*!********************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/sha1.js ***!
+  \********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  (function () {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var WordArray = C_lib.WordArray;
+    var Hasher = C_lib.Hasher;
+    var C_algo = C.algo;
+
+    // Reusable object
+    var W = [];
+
+    /**
+                 * SHA-1 hash algorithm.
+                 */
+    var SHA1 = C_algo.SHA1 = Hasher.extend({
+      _doReset: function _doReset() {
+        this._hash = new WordArray.init([
+        0x67452301, 0xefcdab89,
+        0x98badcfe, 0x10325476,
+        0xc3d2e1f0]);
+
+      },
+
+      _doProcessBlock: function _doProcessBlock(M, offset) {
+        // Shortcut
+        var H = this._hash.words;
+
+        // Working variables
+        var a = H[0];
+        var b = H[1];
+        var c = H[2];
+        var d = H[3];
+        var e = H[4];
+
+        // Computation
+        for (var i = 0; i < 80; i++) {
+          if (i < 16) {
+            W[i] = M[offset + i] | 0;
+          } else {
+            var n = W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16];
+            W[i] = n << 1 | n >>> 31;
+          }
+
+          var t = (a << 5 | a >>> 27) + e + W[i];
+          if (i < 20) {
+            t += (b & c | ~b & d) + 0x5a827999;
+          } else if (i < 40) {
+            t += (b ^ c ^ d) + 0x6ed9eba1;
+          } else if (i < 60) {
+            t += (b & c | b & d | c & d) - 0x70e44324;
+          } else /* if (i < 80) */{
+              t += (b ^ c ^ d) - 0x359d3e2a;
+            }
+
+          e = d;
+          d = c;
+          c = b << 30 | b >>> 2;
+          b = a;
+          a = t;
+        }
+
+        // Intermediate hash value
+        H[0] = H[0] + a | 0;
+        H[1] = H[1] + b | 0;
+        H[2] = H[2] + c | 0;
+        H[3] = H[3] + d | 0;
+        H[4] = H[4] + e | 0;
+      },
+
+      _doFinalize: function _doFinalize() {
+        // Shortcuts
+        var data = this._data;
+        var dataWords = data.words;
+
+        var nBitsTotal = this._nDataBytes * 8;
+        var nBitsLeft = data.sigBytes * 8;
+
+        // Add padding
+        dataWords[nBitsLeft >>> 5] |= 0x80 << 24 - nBitsLeft % 32;
+        dataWords[(nBitsLeft + 64 >>> 9 << 4) + 14] = Math.floor(nBitsTotal / 0x100000000);
+        dataWords[(nBitsLeft + 64 >>> 9 << 4) + 15] = nBitsTotal;
+        data.sigBytes = dataWords.length * 4;
+
+        // Hash final blocks
+        this._process();
+
+        // Return final computed hash
+        return this._hash;
+      },
+
+      clone: function clone() {
+        var clone = Hasher.clone.call(this);
+        clone._hash = this._hash.clone();
+
+        return clone;
+      } });
+
+
+    /**
+             * Shortcut function to the hasher's object interface.
+             *
+             * @param {WordArray|string} message The message to hash.
+             *
+             * @return {WordArray} The hash.
+             *
+             * @static
+             *
+             * @example
+             *
+             *     var hash = CryptoJS.SHA1('message');
+             *     var hash = CryptoJS.SHA1(wordArray);
+             */
+    C.SHA1 = Hasher._createHelper(SHA1);
+
+    /**
+                                          * Shortcut function to the HMAC's object interface.
+                                          *
+                                          * @param {WordArray|string} message The message to hash.
+                                          * @param {WordArray|string} key The secret key.
+                                          *
+                                          * @return {WordArray} The HMAC.
+                                          *
+                                          * @static
+                                          *
+                                          * @example
+                                          *
+                                          *     var hmac = CryptoJS.HmacSHA1(message, key);
+                                          */
+    C.HmacSHA1 = Hasher._createHmacHelper(SHA1);
+  })();
+
+
+  return CryptoJS.SHA1;
+
+});
+
+/***/ }),
+/* 429 */
+/*!**********************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/sha256.js ***!
+  \**********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  (function (Math) {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var WordArray = C_lib.WordArray;
+    var Hasher = C_lib.Hasher;
+    var C_algo = C.algo;
+
+    // Initialization and round constants tables
+    var H = [];
+    var K = [];
+
+    // Compute constants
+    (function () {
+      function isPrime(n) {
+        var sqrtN = Math.sqrt(n);
+        for (var factor = 2; factor <= sqrtN; factor++) {
+          if (!(n % factor)) {
+            return false;
+          }
+        }
+
+        return true;
+      }
+
+      function getFractionalBits(n) {
+        return (n - (n | 0)) * 0x100000000 | 0;
+      }
+
+      var n = 2;
+      var nPrime = 0;
+      while (nPrime < 64) {
+        if (isPrime(n)) {
+          if (nPrime < 8) {
+            H[nPrime] = getFractionalBits(Math.pow(n, 1 / 2));
+          }
+          K[nPrime] = getFractionalBits(Math.pow(n, 1 / 3));
+
+          nPrime++;
+        }
+
+        n++;
+      }
+    })();
+
+    // Reusable object
+    var W = [];
+
+    /**
+                 * SHA-256 hash algorithm.
+                 */
+    var SHA256 = C_algo.SHA256 = Hasher.extend({
+      _doReset: function _doReset() {
+        this._hash = new WordArray.init(H.slice(0));
+      },
+
+      _doProcessBlock: function _doProcessBlock(M, offset) {
+        // Shortcut
+        var H = this._hash.words;
+
+        // Working variables
+        var a = H[0];
+        var b = H[1];
+        var c = H[2];
+        var d = H[3];
+        var e = H[4];
+        var f = H[5];
+        var g = H[6];
+        var h = H[7];
+
+        // Computation
+        for (var i = 0; i < 64; i++) {
+          if (i < 16) {
+            W[i] = M[offset + i] | 0;
+          } else {
+            var gamma0x = W[i - 15];
+            var gamma0 = (gamma0x << 25 | gamma0x >>> 7) ^ (
+            gamma0x << 14 | gamma0x >>> 18) ^
+            gamma0x >>> 3;
+
+            var gamma1x = W[i - 2];
+            var gamma1 = (gamma1x << 15 | gamma1x >>> 17) ^ (
+            gamma1x << 13 | gamma1x >>> 19) ^
+            gamma1x >>> 10;
+
+            W[i] = gamma0 + W[i - 7] + gamma1 + W[i - 16];
+          }
+
+          var ch = e & f ^ ~e & g;
+          var maj = a & b ^ a & c ^ b & c;
+
+          var sigma0 = (a << 30 | a >>> 2) ^ (a << 19 | a >>> 13) ^ (a << 10 | a >>> 22);
+          var sigma1 = (e << 26 | e >>> 6) ^ (e << 21 | e >>> 11) ^ (e << 7 | e >>> 25);
+
+          var t1 = h + sigma1 + ch + K[i] + W[i];
+          var t2 = sigma0 + maj;
+
+          h = g;
+          g = f;
+          f = e;
+          e = d + t1 | 0;
+          d = c;
+          c = b;
+          b = a;
+          a = t1 + t2 | 0;
+        }
+
+        // Intermediate hash value
+        H[0] = H[0] + a | 0;
+        H[1] = H[1] + b | 0;
+        H[2] = H[2] + c | 0;
+        H[3] = H[3] + d | 0;
+        H[4] = H[4] + e | 0;
+        H[5] = H[5] + f | 0;
+        H[6] = H[6] + g | 0;
+        H[7] = H[7] + h | 0;
+      },
+
+      _doFinalize: function _doFinalize() {
+        // Shortcuts
+        var data = this._data;
+        var dataWords = data.words;
+
+        var nBitsTotal = this._nDataBytes * 8;
+        var nBitsLeft = data.sigBytes * 8;
+
+        // Add padding
+        dataWords[nBitsLeft >>> 5] |= 0x80 << 24 - nBitsLeft % 32;
+        dataWords[(nBitsLeft + 64 >>> 9 << 4) + 14] = Math.floor(nBitsTotal / 0x100000000);
+        dataWords[(nBitsLeft + 64 >>> 9 << 4) + 15] = nBitsTotal;
+        data.sigBytes = dataWords.length * 4;
+
+        // Hash final blocks
+        this._process();
+
+        // Return final computed hash
+        return this._hash;
+      },
+
+      clone: function clone() {
+        var clone = Hasher.clone.call(this);
+        clone._hash = this._hash.clone();
+
+        return clone;
+      } });
+
+
+    /**
+             * Shortcut function to the hasher's object interface.
+             *
+             * @param {WordArray|string} message The message to hash.
+             *
+             * @return {WordArray} The hash.
+             *
+             * @static
+             *
+             * @example
+             *
+             *     var hash = CryptoJS.SHA256('message');
+             *     var hash = CryptoJS.SHA256(wordArray);
+             */
+    C.SHA256 = Hasher._createHelper(SHA256);
+
+    /**
+                                              * Shortcut function to the HMAC's object interface.
+                                              *
+                                              * @param {WordArray|string} message The message to hash.
+                                              * @param {WordArray|string} key The secret key.
+                                              *
+                                              * @return {WordArray} The HMAC.
+                                              *
+                                              * @static
+                                              *
+                                              * @example
+                                              *
+                                              *     var hmac = CryptoJS.HmacSHA256(message, key);
+                                              */
+    C.HmacSHA256 = Hasher._createHmacHelper(SHA256);
+  })(Math);
+
+
+  return CryptoJS.SHA256;
+
+});
+
+/***/ }),
+/* 430 */
+/*!**********************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/sha224.js ***!
+  \**********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./sha256 */ 429));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  (function () {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var WordArray = C_lib.WordArray;
+    var C_algo = C.algo;
+    var SHA256 = C_algo.SHA256;
+
+    /**
+                                 * SHA-224 hash algorithm.
+                                 */
+    var SHA224 = C_algo.SHA224 = SHA256.extend({
+      _doReset: function _doReset() {
+        this._hash = new WordArray.init([
+        0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939,
+        0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4]);
+
+      },
+
+      _doFinalize: function _doFinalize() {
+        var hash = SHA256._doFinalize.call(this);
+
+        hash.sigBytes -= 4;
+
+        return hash;
+      } });
+
+
+    /**
+             * Shortcut function to the hasher's object interface.
+             *
+             * @param {WordArray|string} message The message to hash.
+             *
+             * @return {WordArray} The hash.
+             *
+             * @static
+             *
+             * @example
+             *
+             *     var hash = CryptoJS.SHA224('message');
+             *     var hash = CryptoJS.SHA224(wordArray);
+             */
+    C.SHA224 = SHA256._createHelper(SHA224);
+
+    /**
+                                              * Shortcut function to the HMAC's object interface.
+                                              *
+                                              * @param {WordArray|string} message The message to hash.
+                                              * @param {WordArray|string} key The secret key.
+                                              *
+                                              * @return {WordArray} The HMAC.
+                                              *
+                                              * @static
+                                              *
+                                              * @example
+                                              *
+                                              *     var hmac = CryptoJS.HmacSHA224(message, key);
+                                              */
+    C.HmacSHA224 = SHA256._createHmacHelper(SHA224);
+  })();
+
+
+  return CryptoJS.SHA224;
+
+});
+
+/***/ }),
+/* 431 */
+/*!**********************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/sha512.js ***!
+  \**********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./x64-core */ 422));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  (function () {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var Hasher = C_lib.Hasher;
+    var C_x64 = C.x64;
+    var X64Word = C_x64.Word;
+    var X64WordArray = C_x64.WordArray;
+    var C_algo = C.algo;
+
+    function X64Word_create() {
+      return X64Word.create.apply(X64Word, arguments);
+    }
+
+    // Constants
+    var K = [
+    X64Word_create(0x428a2f98, 0xd728ae22), X64Word_create(0x71374491, 0x23ef65cd),
+    X64Word_create(0xb5c0fbcf, 0xec4d3b2f), X64Word_create(0xe9b5dba5, 0x8189dbbc),
+    X64Word_create(0x3956c25b, 0xf348b538), X64Word_create(0x59f111f1, 0xb605d019),
+    X64Word_create(0x923f82a4, 0xaf194f9b), X64Word_create(0xab1c5ed5, 0xda6d8118),
+    X64Word_create(0xd807aa98, 0xa3030242), X64Word_create(0x12835b01, 0x45706fbe),
+    X64Word_create(0x243185be, 0x4ee4b28c), X64Word_create(0x550c7dc3, 0xd5ffb4e2),
+    X64Word_create(0x72be5d74, 0xf27b896f), X64Word_create(0x80deb1fe, 0x3b1696b1),
+    X64Word_create(0x9bdc06a7, 0x25c71235), X64Word_create(0xc19bf174, 0xcf692694),
+    X64Word_create(0xe49b69c1, 0x9ef14ad2), X64Word_create(0xefbe4786, 0x384f25e3),
+    X64Word_create(0x0fc19dc6, 0x8b8cd5b5), X64Word_create(0x240ca1cc, 0x77ac9c65),
+    X64Word_create(0x2de92c6f, 0x592b0275), X64Word_create(0x4a7484aa, 0x6ea6e483),
+    X64Word_create(0x5cb0a9dc, 0xbd41fbd4), X64Word_create(0x76f988da, 0x831153b5),
+    X64Word_create(0x983e5152, 0xee66dfab), X64Word_create(0xa831c66d, 0x2db43210),
+    X64Word_create(0xb00327c8, 0x98fb213f), X64Word_create(0xbf597fc7, 0xbeef0ee4),
+    X64Word_create(0xc6e00bf3, 0x3da88fc2), X64Word_create(0xd5a79147, 0x930aa725),
+    X64Word_create(0x06ca6351, 0xe003826f), X64Word_create(0x14292967, 0x0a0e6e70),
+    X64Word_create(0x27b70a85, 0x46d22ffc), X64Word_create(0x2e1b2138, 0x5c26c926),
+    X64Word_create(0x4d2c6dfc, 0x5ac42aed), X64Word_create(0x53380d13, 0x9d95b3df),
+    X64Word_create(0x650a7354, 0x8baf63de), X64Word_create(0x766a0abb, 0x3c77b2a8),
+    X64Word_create(0x81c2c92e, 0x47edaee6), X64Word_create(0x92722c85, 0x1482353b),
+    X64Word_create(0xa2bfe8a1, 0x4cf10364), X64Word_create(0xa81a664b, 0xbc423001),
+    X64Word_create(0xc24b8b70, 0xd0f89791), X64Word_create(0xc76c51a3, 0x0654be30),
+    X64Word_create(0xd192e819, 0xd6ef5218), X64Word_create(0xd6990624, 0x5565a910),
+    X64Word_create(0xf40e3585, 0x5771202a), X64Word_create(0x106aa070, 0x32bbd1b8),
+    X64Word_create(0x19a4c116, 0xb8d2d0c8), X64Word_create(0x1e376c08, 0x5141ab53),
+    X64Word_create(0x2748774c, 0xdf8eeb99), X64Word_create(0x34b0bcb5, 0xe19b48a8),
+    X64Word_create(0x391c0cb3, 0xc5c95a63), X64Word_create(0x4ed8aa4a, 0xe3418acb),
+    X64Word_create(0x5b9cca4f, 0x7763e373), X64Word_create(0x682e6ff3, 0xd6b2b8a3),
+    X64Word_create(0x748f82ee, 0x5defb2fc), X64Word_create(0x78a5636f, 0x43172f60),
+    X64Word_create(0x84c87814, 0xa1f0ab72), X64Word_create(0x8cc70208, 0x1a6439ec),
+    X64Word_create(0x90befffa, 0x23631e28), X64Word_create(0xa4506ceb, 0xde82bde9),
+    X64Word_create(0xbef9a3f7, 0xb2c67915), X64Word_create(0xc67178f2, 0xe372532b),
+    X64Word_create(0xca273ece, 0xea26619c), X64Word_create(0xd186b8c7, 0x21c0c207),
+    X64Word_create(0xeada7dd6, 0xcde0eb1e), X64Word_create(0xf57d4f7f, 0xee6ed178),
+    X64Word_create(0x06f067aa, 0x72176fba), X64Word_create(0x0a637dc5, 0xa2c898a6),
+    X64Word_create(0x113f9804, 0xbef90dae), X64Word_create(0x1b710b35, 0x131c471b),
+    X64Word_create(0x28db77f5, 0x23047d84), X64Word_create(0x32caab7b, 0x40c72493),
+    X64Word_create(0x3c9ebe0a, 0x15c9bebc), X64Word_create(0x431d67c4, 0x9c100d4c),
+    X64Word_create(0x4cc5d4be, 0xcb3e42b6), X64Word_create(0x597f299c, 0xfc657e2a),
+    X64Word_create(0x5fcb6fab, 0x3ad6faec), X64Word_create(0x6c44198c, 0x4a475817)];
+
+
+    // Reusable objects
+    var W = [];
+    (function () {
+      for (var i = 0; i < 80; i++) {
+        W[i] = X64Word_create();
+      }
+    })();
+
+    /**
+           * SHA-512 hash algorithm.
+           */
+    var SHA512 = C_algo.SHA512 = Hasher.extend({
+      _doReset: function _doReset() {
+        this._hash = new X64WordArray.init([
+        new X64Word.init(0x6a09e667, 0xf3bcc908), new X64Word.init(0xbb67ae85, 0x84caa73b),
+        new X64Word.init(0x3c6ef372, 0xfe94f82b), new X64Word.init(0xa54ff53a, 0x5f1d36f1),
+        new X64Word.init(0x510e527f, 0xade682d1), new X64Word.init(0x9b05688c, 0x2b3e6c1f),
+        new X64Word.init(0x1f83d9ab, 0xfb41bd6b), new X64Word.init(0x5be0cd19, 0x137e2179)]);
+
+      },
+
+      _doProcessBlock: function _doProcessBlock(M, offset) {
+        // Shortcuts
+        var H = this._hash.words;
+
+        var H0 = H[0];
+        var H1 = H[1];
+        var H2 = H[2];
+        var H3 = H[3];
+        var H4 = H[4];
+        var H5 = H[5];
+        var H6 = H[6];
+        var H7 = H[7];
+
+        var H0h = H0.high;
+        var H0l = H0.low;
+        var H1h = H1.high;
+        var H1l = H1.low;
+        var H2h = H2.high;
+        var H2l = H2.low;
+        var H3h = H3.high;
+        var H3l = H3.low;
+        var H4h = H4.high;
+        var H4l = H4.low;
+        var H5h = H5.high;
+        var H5l = H5.low;
+        var H6h = H6.high;
+        var H6l = H6.low;
+        var H7h = H7.high;
+        var H7l = H7.low;
+
+        // Working variables
+        var ah = H0h;
+        var al = H0l;
+        var bh = H1h;
+        var bl = H1l;
+        var ch = H2h;
+        var cl = H2l;
+        var dh = H3h;
+        var dl = H3l;
+        var eh = H4h;
+        var el = H4l;
+        var fh = H5h;
+        var fl = H5l;
+        var gh = H6h;
+        var gl = H6l;
+        var hh = H7h;
+        var hl = H7l;
+
+        // Rounds
+        for (var i = 0; i < 80; i++) {
+          var Wil;
+          var Wih;
+
+          // Shortcut
+          var Wi = W[i];
+
+          // Extend message
+          if (i < 16) {
+            Wih = Wi.high = M[offset + i * 2] | 0;
+            Wil = Wi.low = M[offset + i * 2 + 1] | 0;
+          } else {
+            // Gamma0
+            var gamma0x = W[i - 15];
+            var gamma0xh = gamma0x.high;
+            var gamma0xl = gamma0x.low;
+            var gamma0h = (gamma0xh >>> 1 | gamma0xl << 31) ^ (gamma0xh >>> 8 | gamma0xl << 24) ^ gamma0xh >>> 7;
+            var gamma0l = (gamma0xl >>> 1 | gamma0xh << 31) ^ (gamma0xl >>> 8 | gamma0xh << 24) ^ (gamma0xl >>> 7 | gamma0xh << 25);
+
+            // Gamma1
+            var gamma1x = W[i - 2];
+            var gamma1xh = gamma1x.high;
+            var gamma1xl = gamma1x.low;
+            var gamma1h = (gamma1xh >>> 19 | gamma1xl << 13) ^ (gamma1xh << 3 | gamma1xl >>> 29) ^ gamma1xh >>> 6;
+            var gamma1l = (gamma1xl >>> 19 | gamma1xh << 13) ^ (gamma1xl << 3 | gamma1xh >>> 29) ^ (gamma1xl >>> 6 | gamma1xh << 26);
+
+            // W[i] = gamma0 + W[i - 7] + gamma1 + W[i - 16]
+            var Wi7 = W[i - 7];
+            var Wi7h = Wi7.high;
+            var Wi7l = Wi7.low;
+
+            var Wi16 = W[i - 16];
+            var Wi16h = Wi16.high;
+            var Wi16l = Wi16.low;
+
+            Wil = gamma0l + Wi7l;
+            Wih = gamma0h + Wi7h + (Wil >>> 0 < gamma0l >>> 0 ? 1 : 0);
+            Wil = Wil + gamma1l;
+            Wih = Wih + gamma1h + (Wil >>> 0 < gamma1l >>> 0 ? 1 : 0);
+            Wil = Wil + Wi16l;
+            Wih = Wih + Wi16h + (Wil >>> 0 < Wi16l >>> 0 ? 1 : 0);
+
+            Wi.high = Wih;
+            Wi.low = Wil;
+          }
+
+          var chh = eh & fh ^ ~eh & gh;
+          var chl = el & fl ^ ~el & gl;
+          var majh = ah & bh ^ ah & ch ^ bh & ch;
+          var majl = al & bl ^ al & cl ^ bl & cl;
+
+          var sigma0h = (ah >>> 28 | al << 4) ^ (ah << 30 | al >>> 2) ^ (ah << 25 | al >>> 7);
+          var sigma0l = (al >>> 28 | ah << 4) ^ (al << 30 | ah >>> 2) ^ (al << 25 | ah >>> 7);
+          var sigma1h = (eh >>> 14 | el << 18) ^ (eh >>> 18 | el << 14) ^ (eh << 23 | el >>> 9);
+          var sigma1l = (el >>> 14 | eh << 18) ^ (el >>> 18 | eh << 14) ^ (el << 23 | eh >>> 9);
+
+          // t1 = h + sigma1 + ch + K[i] + W[i]
+          var Ki = K[i];
+          var Kih = Ki.high;
+          var Kil = Ki.low;
+
+          var t1l = hl + sigma1l;
+          var t1h = hh + sigma1h + (t1l >>> 0 < hl >>> 0 ? 1 : 0);
+          var t1l = t1l + chl;
+          var t1h = t1h + chh + (t1l >>> 0 < chl >>> 0 ? 1 : 0);
+          var t1l = t1l + Kil;
+          var t1h = t1h + Kih + (t1l >>> 0 < Kil >>> 0 ? 1 : 0);
+          var t1l = t1l + Wil;
+          var t1h = t1h + Wih + (t1l >>> 0 < Wil >>> 0 ? 1 : 0);
+
+          // t2 = sigma0 + maj
+          var t2l = sigma0l + majl;
+          var t2h = sigma0h + majh + (t2l >>> 0 < sigma0l >>> 0 ? 1 : 0);
+
+          // Update working variables
+          hh = gh;
+          hl = gl;
+          gh = fh;
+          gl = fl;
+          fh = eh;
+          fl = el;
+          el = dl + t1l | 0;
+          eh = dh + t1h + (el >>> 0 < dl >>> 0 ? 1 : 0) | 0;
+          dh = ch;
+          dl = cl;
+          ch = bh;
+          cl = bl;
+          bh = ah;
+          bl = al;
+          al = t1l + t2l | 0;
+          ah = t1h + t2h + (al >>> 0 < t1l >>> 0 ? 1 : 0) | 0;
+        }
+
+        // Intermediate hash value
+        H0l = H0.low = H0l + al;
+        H0.high = H0h + ah + (H0l >>> 0 < al >>> 0 ? 1 : 0);
+        H1l = H1.low = H1l + bl;
+        H1.high = H1h + bh + (H1l >>> 0 < bl >>> 0 ? 1 : 0);
+        H2l = H2.low = H2l + cl;
+        H2.high = H2h + ch + (H2l >>> 0 < cl >>> 0 ? 1 : 0);
+        H3l = H3.low = H3l + dl;
+        H3.high = H3h + dh + (H3l >>> 0 < dl >>> 0 ? 1 : 0);
+        H4l = H4.low = H4l + el;
+        H4.high = H4h + eh + (H4l >>> 0 < el >>> 0 ? 1 : 0);
+        H5l = H5.low = H5l + fl;
+        H5.high = H5h + fh + (H5l >>> 0 < fl >>> 0 ? 1 : 0);
+        H6l = H6.low = H6l + gl;
+        H6.high = H6h + gh + (H6l >>> 0 < gl >>> 0 ? 1 : 0);
+        H7l = H7.low = H7l + hl;
+        H7.high = H7h + hh + (H7l >>> 0 < hl >>> 0 ? 1 : 0);
+      },
+
+      _doFinalize: function _doFinalize() {
+        // Shortcuts
+        var data = this._data;
+        var dataWords = data.words;
+
+        var nBitsTotal = this._nDataBytes * 8;
+        var nBitsLeft = data.sigBytes * 8;
+
+        // Add padding
+        dataWords[nBitsLeft >>> 5] |= 0x80 << 24 - nBitsLeft % 32;
+        dataWords[(nBitsLeft + 128 >>> 10 << 5) + 30] = Math.floor(nBitsTotal / 0x100000000);
+        dataWords[(nBitsLeft + 128 >>> 10 << 5) + 31] = nBitsTotal;
+        data.sigBytes = dataWords.length * 4;
+
+        // Hash final blocks
+        this._process();
+
+        // Convert hash to 32-bit word array before returning
+        var hash = this._hash.toX32();
+
+        // Return final computed hash
+        return hash;
+      },
+
+      clone: function clone() {
+        var clone = Hasher.clone.call(this);
+        clone._hash = this._hash.clone();
+
+        return clone;
+      },
+
+      blockSize: 1024 / 32 });
+
+
+    /**
+                                * Shortcut function to the hasher's object interface.
+                                *
+                                * @param {WordArray|string} message The message to hash.
+                                *
+                                * @return {WordArray} The hash.
+                                *
+                                * @static
+                                *
+                                * @example
+                                *
+                                *     var hash = CryptoJS.SHA512('message');
+                                *     var hash = CryptoJS.SHA512(wordArray);
+                                */
+    C.SHA512 = Hasher._createHelper(SHA512);
+
+    /**
+                                              * Shortcut function to the HMAC's object interface.
+                                              *
+                                              * @param {WordArray|string} message The message to hash.
+                                              * @param {WordArray|string} key The secret key.
+                                              *
+                                              * @return {WordArray} The HMAC.
+                                              *
+                                              * @static
+                                              *
+                                              * @example
+                                              *
+                                              *     var hmac = CryptoJS.HmacSHA512(message, key);
+                                              */
+    C.HmacSHA512 = Hasher._createHmacHelper(SHA512);
+  })();
+
+
+  return CryptoJS.SHA512;
+
+});
+
+/***/ }),
+/* 432 */
+/*!**********************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/sha384.js ***!
+  \**********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./x64-core */ 422), __webpack_require__(/*! ./sha512 */ 431));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  (function () {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_x64 = C.x64;
+    var X64Word = C_x64.Word;
+    var X64WordArray = C_x64.WordArray;
+    var C_algo = C.algo;
+    var SHA512 = C_algo.SHA512;
+
+    /**
+                                 * SHA-384 hash algorithm.
+                                 */
+    var SHA384 = C_algo.SHA384 = SHA512.extend({
+      _doReset: function _doReset() {
+        this._hash = new X64WordArray.init([
+        new X64Word.init(0xcbbb9d5d, 0xc1059ed8), new X64Word.init(0x629a292a, 0x367cd507),
+        new X64Word.init(0x9159015a, 0x3070dd17), new X64Word.init(0x152fecd8, 0xf70e5939),
+        new X64Word.init(0x67332667, 0xffc00b31), new X64Word.init(0x8eb44a87, 0x68581511),
+        new X64Word.init(0xdb0c2e0d, 0x64f98fa7), new X64Word.init(0x47b5481d, 0xbefa4fa4)]);
+
+      },
+
+      _doFinalize: function _doFinalize() {
+        var hash = SHA512._doFinalize.call(this);
+
+        hash.sigBytes -= 16;
+
+        return hash;
+      } });
+
+
+    /**
+             * Shortcut function to the hasher's object interface.
+             *
+             * @param {WordArray|string} message The message to hash.
+             *
+             * @return {WordArray} The hash.
+             *
+             * @static
+             *
+             * @example
+             *
+             *     var hash = CryptoJS.SHA384('message');
+             *     var hash = CryptoJS.SHA384(wordArray);
+             */
+    C.SHA384 = SHA512._createHelper(SHA384);
+
+    /**
+                                              * Shortcut function to the HMAC's object interface.
+                                              *
+                                              * @param {WordArray|string} message The message to hash.
+                                              * @param {WordArray|string} key The secret key.
+                                              *
+                                              * @return {WordArray} The HMAC.
+                                              *
+                                              * @static
+                                              *
+                                              * @example
+                                              *
+                                              *     var hmac = CryptoJS.HmacSHA384(message, key);
+                                              */
+    C.HmacSHA384 = SHA512._createHmacHelper(SHA384);
+  })();
+
+
+  return CryptoJS.SHA384;
+
+});
+
+/***/ }),
+/* 433 */
+/*!********************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/sha3.js ***!
+  \********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./x64-core */ 422));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  (function (Math) {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var WordArray = C_lib.WordArray;
+    var Hasher = C_lib.Hasher;
+    var C_x64 = C.x64;
+    var X64Word = C_x64.Word;
+    var C_algo = C.algo;
+
+    // Constants tables
+    var RHO_OFFSETS = [];
+    var PI_INDEXES = [];
+    var ROUND_CONSTANTS = [];
+
+    // Compute Constants
+    (function () {
+      // Compute rho offset constants
+      var x = 1,y = 0;
+      for (var t = 0; t < 24; t++) {
+        RHO_OFFSETS[x + 5 * y] = (t + 1) * (t + 2) / 2 % 64;
+
+        var newX = y % 5;
+        var newY = (2 * x + 3 * y) % 5;
+        x = newX;
+        y = newY;
+      }
+
+      // Compute pi index constants
+      for (var x = 0; x < 5; x++) {
+        for (var y = 0; y < 5; y++) {
+          PI_INDEXES[x + 5 * y] = y + (2 * x + 3 * y) % 5 * 5;
+        }
+      }
+
+      // Compute round constants
+      var LFSR = 0x01;
+      for (var i = 0; i < 24; i++) {
+        var roundConstantMsw = 0;
+        var roundConstantLsw = 0;
+
+        for (var j = 0; j < 7; j++) {
+          if (LFSR & 0x01) {
+            var bitPosition = (1 << j) - 1;
+            if (bitPosition < 32) {
+              roundConstantLsw ^= 1 << bitPosition;
+            } else /* if (bitPosition >= 32) */{
+                roundConstantMsw ^= 1 << bitPosition - 32;
+              }
+          }
+
+          // Compute next LFSR
+          if (LFSR & 0x80) {
+            // Primitive polynomial over GF(2): x^8 + x^6 + x^5 + x^4 + 1
+            LFSR = LFSR << 1 ^ 0x71;
+          } else {
+            LFSR <<= 1;
+          }
+        }
+
+        ROUND_CONSTANTS[i] = X64Word.create(roundConstantMsw, roundConstantLsw);
+      }
+    })();
+
+    // Reusable objects for temporary values
+    var T = [];
+    (function () {
+      for (var i = 0; i < 25; i++) {
+        T[i] = X64Word.create();
+      }
+    })();
+
+    /**
+           * SHA-3 hash algorithm.
+           */
+    var SHA3 = C_algo.SHA3 = Hasher.extend({
+      /**
+                                              * Configuration options.
+                                              *
+                                              * @property {number} outputLength
+                                              *   The desired number of bits in the output hash.
+                                              *   Only values permitted are: 224, 256, 384, 512.
+                                              *   Default: 512
+                                              */
+      cfg: Hasher.cfg.extend({
+        outputLength: 512 }),
+
+
+      _doReset: function _doReset() {
+        var state = this._state = [];
+        for (var i = 0; i < 25; i++) {
+          state[i] = new X64Word.init();
+        }
+
+        this.blockSize = (1600 - 2 * this.cfg.outputLength) / 32;
+      },
+
+      _doProcessBlock: function _doProcessBlock(M, offset) {
+        // Shortcuts
+        var state = this._state;
+        var nBlockSizeLanes = this.blockSize / 2;
+
+        // Absorb
+        for (var i = 0; i < nBlockSizeLanes; i++) {
+          // Shortcuts
+          var M2i = M[offset + 2 * i];
+          var M2i1 = M[offset + 2 * i + 1];
+
+          // Swap endian
+          M2i =
+          (M2i << 8 | M2i >>> 24) & 0x00ff00ff |
+          (M2i << 24 | M2i >>> 8) & 0xff00ff00;
+
+          M2i1 =
+          (M2i1 << 8 | M2i1 >>> 24) & 0x00ff00ff |
+          (M2i1 << 24 | M2i1 >>> 8) & 0xff00ff00;
+
+
+          // Absorb message into state
+          var lane = state[i];
+          lane.high ^= M2i1;
+          lane.low ^= M2i;
+        }
+
+        // Rounds
+        for (var round = 0; round < 24; round++) {
+          // Theta
+          for (var x = 0; x < 5; x++) {
+            // Mix column lanes
+            var tMsw = 0,tLsw = 0;
+            for (var y = 0; y < 5; y++) {
+              var lane = state[x + 5 * y];
+              tMsw ^= lane.high;
+              tLsw ^= lane.low;
+            }
+
+            // Temporary values
+            var Tx = T[x];
+            Tx.high = tMsw;
+            Tx.low = tLsw;
+          }
+          for (var x = 0; x < 5; x++) {
+            // Shortcuts
+            var Tx4 = T[(x + 4) % 5];
+            var Tx1 = T[(x + 1) % 5];
+            var Tx1Msw = Tx1.high;
+            var Tx1Lsw = Tx1.low;
+
+            // Mix surrounding columns
+            var tMsw = Tx4.high ^ (Tx1Msw << 1 | Tx1Lsw >>> 31);
+            var tLsw = Tx4.low ^ (Tx1Lsw << 1 | Tx1Msw >>> 31);
+            for (var y = 0; y < 5; y++) {
+              var lane = state[x + 5 * y];
+              lane.high ^= tMsw;
+              lane.low ^= tLsw;
+            }
+          }
+
+          // Rho Pi
+          for (var laneIndex = 1; laneIndex < 25; laneIndex++) {
+            var tMsw;
+            var tLsw;
+
+            // Shortcuts
+            var lane = state[laneIndex];
+            var laneMsw = lane.high;
+            var laneLsw = lane.low;
+            var rhoOffset = RHO_OFFSETS[laneIndex];
+
+            // Rotate lanes
+            if (rhoOffset < 32) {
+              tMsw = laneMsw << rhoOffset | laneLsw >>> 32 - rhoOffset;
+              tLsw = laneLsw << rhoOffset | laneMsw >>> 32 - rhoOffset;
+            } else /* if (rhoOffset >= 32) */{
+                tMsw = laneLsw << rhoOffset - 32 | laneMsw >>> 64 - rhoOffset;
+                tLsw = laneMsw << rhoOffset - 32 | laneLsw >>> 64 - rhoOffset;
+              }
+
+            // Transpose lanes
+            var TPiLane = T[PI_INDEXES[laneIndex]];
+            TPiLane.high = tMsw;
+            TPiLane.low = tLsw;
+          }
+
+          // Rho pi at x = y = 0
+          var T0 = T[0];
+          var state0 = state[0];
+          T0.high = state0.high;
+          T0.low = state0.low;
+
+          // Chi
+          for (var x = 0; x < 5; x++) {
+            for (var y = 0; y < 5; y++) {
+              // Shortcuts
+              var laneIndex = x + 5 * y;
+              var lane = state[laneIndex];
+              var TLane = T[laneIndex];
+              var Tx1Lane = T[(x + 1) % 5 + 5 * y];
+              var Tx2Lane = T[(x + 2) % 5 + 5 * y];
+
+              // Mix rows
+              lane.high = TLane.high ^ ~Tx1Lane.high & Tx2Lane.high;
+              lane.low = TLane.low ^ ~Tx1Lane.low & Tx2Lane.low;
+            }
+          }
+
+          // Iota
+          var lane = state[0];
+          var roundConstant = ROUND_CONSTANTS[round];
+          lane.high ^= roundConstant.high;
+          lane.low ^= roundConstant.low;
+        }
+      },
+
+      _doFinalize: function _doFinalize() {
+        // Shortcuts
+        var data = this._data;
+        var dataWords = data.words;
+        var nBitsTotal = this._nDataBytes * 8;
+        var nBitsLeft = data.sigBytes * 8;
+        var blockSizeBits = this.blockSize * 32;
+
+        // Add padding
+        dataWords[nBitsLeft >>> 5] |= 0x1 << 24 - nBitsLeft % 32;
+        dataWords[(Math.ceil((nBitsLeft + 1) / blockSizeBits) * blockSizeBits >>> 5) - 1] |= 0x80;
+        data.sigBytes = dataWords.length * 4;
+
+        // Hash final blocks
+        this._process();
+
+        // Shortcuts
+        var state = this._state;
+        var outputLengthBytes = this.cfg.outputLength / 8;
+        var outputLengthLanes = outputLengthBytes / 8;
+
+        // Squeeze
+        var hashWords = [];
+        for (var i = 0; i < outputLengthLanes; i++) {
+          // Shortcuts
+          var lane = state[i];
+          var laneMsw = lane.high;
+          var laneLsw = lane.low;
+
+          // Swap endian
+          laneMsw =
+          (laneMsw << 8 | laneMsw >>> 24) & 0x00ff00ff |
+          (laneMsw << 24 | laneMsw >>> 8) & 0xff00ff00;
+
+          laneLsw =
+          (laneLsw << 8 | laneLsw >>> 24) & 0x00ff00ff |
+          (laneLsw << 24 | laneLsw >>> 8) & 0xff00ff00;
+
+
+          // Squeeze state to retrieve hash
+          hashWords.push(laneLsw);
+          hashWords.push(laneMsw);
+        }
+
+        // Return final computed hash
+        return new WordArray.init(hashWords, outputLengthBytes);
+      },
+
+      clone: function clone() {
+        var clone = Hasher.clone.call(this);
+
+        var state = clone._state = this._state.slice(0);
+        for (var i = 0; i < 25; i++) {
+          state[i] = state[i].clone();
+        }
+
+        return clone;
+      } });
+
+
+    /**
+             * Shortcut function to the hasher's object interface.
+             *
+             * @param {WordArray|string} message The message to hash.
+             *
+             * @return {WordArray} The hash.
+             *
+             * @static
+             *
+             * @example
+             *
+             *     var hash = CryptoJS.SHA3('message');
+             *     var hash = CryptoJS.SHA3(wordArray);
+             */
+    C.SHA3 = Hasher._createHelper(SHA3);
+
+    /**
+                                          * Shortcut function to the HMAC's object interface.
+                                          *
+                                          * @param {WordArray|string} message The message to hash.
+                                          * @param {WordArray|string} key The secret key.
+                                          *
+                                          * @return {WordArray} The HMAC.
+                                          *
+                                          * @static
+                                          *
+                                          * @example
+                                          *
+                                          *     var hmac = CryptoJS.HmacSHA3(message, key);
+                                          */
+    C.HmacSHA3 = Hasher._createHmacHelper(SHA3);
+  })(Math);
+
+
+  return CryptoJS.SHA3;
+
+});
+
+/***/ }),
+/* 434 */
+/*!*************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/ripemd160.js ***!
+  \*************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  /** @preserve
+                              (c) 2012 by Cédric Mesnil. All rights reserved.
+                              	Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+                              	    - Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+                                  - Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+                              	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+                              */
+
+
+
+
+  (function (Math) {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var WordArray = C_lib.WordArray;
+    var Hasher = C_lib.Hasher;
+    var C_algo = C.algo;
+
+    // Constants table
+    var _zl = WordArray.create([
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+    7, 4, 13, 1, 10, 6, 15, 3, 12, 0, 9, 5, 2, 14, 11, 8,
+    3, 10, 14, 4, 9, 15, 8, 1, 2, 7, 0, 6, 13, 11, 5, 12,
+    1, 9, 11, 10, 0, 8, 12, 4, 13, 3, 7, 15, 14, 5, 6, 2,
+    4, 0, 5, 9, 7, 12, 2, 10, 14, 1, 3, 8, 11, 6, 15, 13]);
+    var _zr = WordArray.create([
+    5, 14, 7, 0, 9, 2, 11, 4, 13, 6, 15, 8, 1, 10, 3, 12,
+    6, 11, 3, 7, 0, 13, 5, 10, 14, 15, 8, 12, 4, 9, 1, 2,
+    15, 5, 1, 3, 7, 14, 6, 9, 11, 8, 12, 2, 10, 0, 4, 13,
+    8, 6, 4, 1, 3, 11, 15, 0, 5, 12, 2, 13, 9, 7, 10, 14,
+    12, 15, 10, 4, 1, 5, 8, 7, 6, 2, 13, 14, 0, 3, 9, 11]);
+    var _sl = WordArray.create([
+    11, 14, 15, 12, 5, 8, 7, 9, 11, 13, 14, 15, 6, 7, 9, 8,
+    7, 6, 8, 13, 11, 9, 7, 15, 7, 12, 15, 9, 11, 7, 13, 12,
+    11, 13, 6, 7, 14, 9, 13, 15, 14, 8, 13, 6, 5, 12, 7, 5,
+    11, 12, 14, 15, 14, 15, 9, 8, 9, 14, 5, 6, 8, 6, 5, 12,
+    9, 15, 5, 11, 6, 8, 13, 12, 5, 12, 13, 14, 11, 8, 5, 6]);
+    var _sr = WordArray.create([
+    8, 9, 9, 11, 13, 15, 15, 5, 7, 7, 8, 11, 14, 14, 12, 6,
+    9, 13, 15, 7, 12, 8, 9, 11, 7, 7, 12, 7, 6, 15, 13, 11,
+    9, 7, 15, 11, 8, 6, 6, 14, 12, 13, 5, 14, 13, 13, 7, 5,
+    15, 5, 8, 11, 14, 14, 6, 14, 6, 9, 12, 9, 12, 5, 15, 8,
+    8, 5, 12, 9, 12, 5, 14, 6, 8, 13, 6, 5, 15, 13, 11, 11]);
+
+    var _hl = WordArray.create([0x00000000, 0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xA953FD4E]);
+    var _hr = WordArray.create([0x50A28BE6, 0x5C4DD124, 0x6D703EF3, 0x7A6D76E9, 0x00000000]);
+
+    /**
+                                                                                               * RIPEMD160 hash algorithm.
+                                                                                               */
+    var RIPEMD160 = C_algo.RIPEMD160 = Hasher.extend({
+      _doReset: function _doReset() {
+        this._hash = WordArray.create([0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0]);
+      },
+
+      _doProcessBlock: function _doProcessBlock(M, offset) {
+
+        // Swap endian
+        for (var i = 0; i < 16; i++) {
+          // Shortcuts
+          var offset_i = offset + i;
+          var M_offset_i = M[offset_i];
+
+          // Swap
+          M[offset_i] =
+          (M_offset_i << 8 | M_offset_i >>> 24) & 0x00ff00ff |
+          (M_offset_i << 24 | M_offset_i >>> 8) & 0xff00ff00;
+
+        }
+        // Shortcut
+        var H = this._hash.words;
+        var hl = _hl.words;
+        var hr = _hr.words;
+        var zl = _zl.words;
+        var zr = _zr.words;
+        var sl = _sl.words;
+        var sr = _sr.words;
+
+        // Working variables
+        var al, bl, cl, dl, el;
+        var ar, br, cr, dr, er;
+
+        ar = al = H[0];
+        br = bl = H[1];
+        cr = cl = H[2];
+        dr = dl = H[3];
+        er = el = H[4];
+        // Computation
+        var t;
+        for (var i = 0; i < 80; i += 1) {
+          t = al + M[offset + zl[i]] | 0;
+          if (i < 16) {
+            t += f1(bl, cl, dl) + hl[0];
+          } else if (i < 32) {
+            t += f2(bl, cl, dl) + hl[1];
+          } else if (i < 48) {
+            t += f3(bl, cl, dl) + hl[2];
+          } else if (i < 64) {
+            t += f4(bl, cl, dl) + hl[3];
+          } else {// if (i<80) {
+            t += f5(bl, cl, dl) + hl[4];
+          }
+          t = t | 0;
+          t = rotl(t, sl[i]);
+          t = t + el | 0;
+          al = el;
+          el = dl;
+          dl = rotl(cl, 10);
+          cl = bl;
+          bl = t;
+
+          t = ar + M[offset + zr[i]] | 0;
+          if (i < 16) {
+            t += f5(br, cr, dr) + hr[0];
+          } else if (i < 32) {
+            t += f4(br, cr, dr) + hr[1];
+          } else if (i < 48) {
+            t += f3(br, cr, dr) + hr[2];
+          } else if (i < 64) {
+            t += f2(br, cr, dr) + hr[3];
+          } else {// if (i<80) {
+            t += f1(br, cr, dr) + hr[4];
+          }
+          t = t | 0;
+          t = rotl(t, sr[i]);
+          t = t + er | 0;
+          ar = er;
+          er = dr;
+          dr = rotl(cr, 10);
+          cr = br;
+          br = t;
+        }
+        // Intermediate hash value
+        t = H[1] + cl + dr | 0;
+        H[1] = H[2] + dl + er | 0;
+        H[2] = H[3] + el + ar | 0;
+        H[3] = H[4] + al + br | 0;
+        H[4] = H[0] + bl + cr | 0;
+        H[0] = t;
+      },
+
+      _doFinalize: function _doFinalize() {
+        // Shortcuts
+        var data = this._data;
+        var dataWords = data.words;
+
+        var nBitsTotal = this._nDataBytes * 8;
+        var nBitsLeft = data.sigBytes * 8;
+
+        // Add padding
+        dataWords[nBitsLeft >>> 5] |= 0x80 << 24 - nBitsLeft % 32;
+        dataWords[(nBitsLeft + 64 >>> 9 << 4) + 14] =
+        (nBitsTotal << 8 | nBitsTotal >>> 24) & 0x00ff00ff |
+        (nBitsTotal << 24 | nBitsTotal >>> 8) & 0xff00ff00;
+
+        data.sigBytes = (dataWords.length + 1) * 4;
+
+        // Hash final blocks
+        this._process();
+
+        // Shortcuts
+        var hash = this._hash;
+        var H = hash.words;
+
+        // Swap endian
+        for (var i = 0; i < 5; i++) {
+          // Shortcut
+          var H_i = H[i];
+
+          // Swap
+          H[i] = (H_i << 8 | H_i >>> 24) & 0x00ff00ff |
+          (H_i << 24 | H_i >>> 8) & 0xff00ff00;
+        }
+
+        // Return final computed hash
+        return hash;
+      },
+
+      clone: function clone() {
+        var clone = Hasher.clone.call(this);
+        clone._hash = this._hash.clone();
+
+        return clone;
+      } });
+
+
+
+    function f1(x, y, z) {
+      return x ^ y ^ z;
+
+    }
+
+    function f2(x, y, z) {
+      return x & y | ~x & z;
+    }
+
+    function f3(x, y, z) {
+      return (x | ~y) ^ z;
+    }
+
+    function f4(x, y, z) {
+      return x & z | y & ~z;
+    }
+
+    function f5(x, y, z) {
+      return x ^ (y | ~z);
+
+    }
+
+    function rotl(x, n) {
+      return x << n | x >>> 32 - n;
+    }
+
+
+    /**
+       * Shortcut function to the hasher's object interface.
+       *
+       * @param {WordArray|string} message The message to hash.
+       *
+       * @return {WordArray} The hash.
+       *
+       * @static
+       *
+       * @example
+       *
+       *     var hash = CryptoJS.RIPEMD160('message');
+       *     var hash = CryptoJS.RIPEMD160(wordArray);
+       */
+    C.RIPEMD160 = Hasher._createHelper(RIPEMD160);
+
+    /**
+                                                    * Shortcut function to the HMAC's object interface.
+                                                    *
+                                                    * @param {WordArray|string} message The message to hash.
+                                                    * @param {WordArray|string} key The secret key.
+                                                    *
+                                                    * @return {WordArray} The HMAC.
+                                                    *
+                                                    * @static
+                                                    *
+                                                    * @example
+                                                    *
+                                                    *     var hmac = CryptoJS.HmacRIPEMD160(message, key);
+                                                    */
+    C.HmacRIPEMD160 = Hasher._createHmacHelper(RIPEMD160);
+  })(Math);
+
+
+  return CryptoJS.RIPEMD160;
+
+});
+
+/***/ }),
+/* 435 */
+/*!********************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/hmac.js ***!
+  \********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  (function () {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var Base = C_lib.Base;
+    var C_enc = C.enc;
+    var Utf8 = C_enc.Utf8;
+    var C_algo = C.algo;
+
+    /**
+                          * HMAC algorithm.
+                          */
+    var HMAC = C_algo.HMAC = Base.extend({
+      /**
+                                            * Initializes a newly created HMAC.
+                                            *
+                                            * @param {Hasher} hasher The hash algorithm to use.
+                                            * @param {WordArray|string} key The secret key.
+                                            *
+                                            * @example
+                                            *
+                                            *     var hmacHasher = CryptoJS.algo.HMAC.create(CryptoJS.algo.SHA256, key);
+                                            */
+      init: function init(hasher, key) {
+        // Init hasher
+        hasher = this._hasher = new hasher.init();
+
+        // Convert string to WordArray, else assume WordArray already
+        if (typeof key == 'string') {
+          key = Utf8.parse(key);
+        }
+
+        // Shortcuts
+        var hasherBlockSize = hasher.blockSize;
+        var hasherBlockSizeBytes = hasherBlockSize * 4;
+
+        // Allow arbitrary length keys
+        if (key.sigBytes > hasherBlockSizeBytes) {
+          key = hasher.finalize(key);
+        }
+
+        // Clamp excess bits
+        key.clamp();
+
+        // Clone key for inner and outer pads
+        var oKey = this._oKey = key.clone();
+        var iKey = this._iKey = key.clone();
+
+        // Shortcuts
+        var oKeyWords = oKey.words;
+        var iKeyWords = iKey.words;
+
+        // XOR keys with pad constants
+        for (var i = 0; i < hasherBlockSize; i++) {
+          oKeyWords[i] ^= 0x5c5c5c5c;
+          iKeyWords[i] ^= 0x36363636;
+        }
+        oKey.sigBytes = iKey.sigBytes = hasherBlockSizeBytes;
+
+        // Set initial values
+        this.reset();
+      },
+
+      /**
+          * Resets this HMAC to its initial state.
+          *
+          * @example
+          *
+          *     hmacHasher.reset();
+          */
+      reset: function reset() {
+        // Shortcut
+        var hasher = this._hasher;
+
+        // Reset
+        hasher.reset();
+        hasher.update(this._iKey);
+      },
+
+      /**
+          * Updates this HMAC with a message.
+          *
+          * @param {WordArray|string} messageUpdate The message to append.
+          *
+          * @return {HMAC} This HMAC instance.
+          *
+          * @example
+          *
+          *     hmacHasher.update('message');
+          *     hmacHasher.update(wordArray);
+          */
+      update: function update(messageUpdate) {
+        this._hasher.update(messageUpdate);
+
+        // Chainable
+        return this;
+      },
+
+      /**
+          * Finalizes the HMAC computation.
+          * Note that the finalize operation is effectively a destructive, read-once operation.
+          *
+          * @param {WordArray|string} messageUpdate (Optional) A final message update.
+          *
+          * @return {WordArray} The HMAC.
+          *
+          * @example
+          *
+          *     var hmac = hmacHasher.finalize();
+          *     var hmac = hmacHasher.finalize('message');
+          *     var hmac = hmacHasher.finalize(wordArray);
+          */
+      finalize: function finalize(messageUpdate) {
+        // Shortcut
+        var hasher = this._hasher;
+
+        // Compute HMAC
+        var innerHash = hasher.finalize(messageUpdate);
+        hasher.reset();
+        var hmac = hasher.finalize(this._oKey.clone().concat(innerHash));
+
+        return hmac;
+      } });
+
+  })();
+
+
+});
+
+/***/ }),
+/* 436 */
+/*!**********************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/pbkdf2.js ***!
+  \**********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./sha1 */ 428), __webpack_require__(/*! ./hmac */ 435));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  (function () {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var Base = C_lib.Base;
+    var WordArray = C_lib.WordArray;
+    var C_algo = C.algo;
+    var SHA1 = C_algo.SHA1;
+    var HMAC = C_algo.HMAC;
+
+    /**
+                             * Password-Based Key Derivation Function 2 algorithm.
+                             */
+    var PBKDF2 = C_algo.PBKDF2 = Base.extend({
+      /**
+                                                * Configuration options.
+                                                *
+                                                * @property {number} keySize The key size in words to generate. Default: 4 (128 bits)
+                                                * @property {Hasher} hasher The hasher to use. Default: SHA1
+                                                * @property {number} iterations The number of iterations to perform. Default: 1
+                                                */
+      cfg: Base.extend({
+        keySize: 128 / 32,
+        hasher: SHA1,
+        iterations: 1 }),
+
+
+      /**
+                           * Initializes a newly created key derivation function.
+                           *
+                           * @param {Object} cfg (Optional) The configuration options to use for the derivation.
+                           *
+                           * @example
+                           *
+                           *     var kdf = CryptoJS.algo.PBKDF2.create();
+                           *     var kdf = CryptoJS.algo.PBKDF2.create({ keySize: 8 });
+                           *     var kdf = CryptoJS.algo.PBKDF2.create({ keySize: 8, iterations: 1000 });
+                           */
+      init: function init(cfg) {
+        this.cfg = this.cfg.extend(cfg);
+      },
+
+      /**
+          * Computes the Password-Based Key Derivation Function 2.
+          *
+          * @param {WordArray|string} password The password.
+          * @param {WordArray|string} salt A salt.
+          *
+          * @return {WordArray} The derived key.
+          *
+          * @example
+          *
+          *     var key = kdf.compute(password, salt);
+          */
+      compute: function compute(password, salt) {
+        // Shortcut
+        var cfg = this.cfg;
+
+        // Init HMAC
+        var hmac = HMAC.create(cfg.hasher, password);
+
+        // Initial values
+        var derivedKey = WordArray.create();
+        var blockIndex = WordArray.create([0x00000001]);
+
+        // Shortcuts
+        var derivedKeyWords = derivedKey.words;
+        var blockIndexWords = blockIndex.words;
+        var keySize = cfg.keySize;
+        var iterations = cfg.iterations;
+
+        // Generate key
+        while (derivedKeyWords.length < keySize) {
+          var block = hmac.update(salt).finalize(blockIndex);
+          hmac.reset();
+
+          // Shortcuts
+          var blockWords = block.words;
+          var blockWordsLength = blockWords.length;
+
+          // Iterations
+          var intermediate = block;
+          for (var i = 1; i < iterations; i++) {
+            intermediate = hmac.finalize(intermediate);
+            hmac.reset();
+
+            // Shortcut
+            var intermediateWords = intermediate.words;
+
+            // XOR intermediate with block
+            for (var j = 0; j < blockWordsLength; j++) {
+              blockWords[j] ^= intermediateWords[j];
+            }
+          }
+
+          derivedKey.concat(block);
+          blockIndexWords[0]++;
+        }
+        derivedKey.sigBytes = keySize * 4;
+
+        return derivedKey;
+      } });
+
+
+    /**
+             * Computes the Password-Based Key Derivation Function 2.
+             *
+             * @param {WordArray|string} password The password.
+             * @param {WordArray|string} salt A salt.
+             * @param {Object} cfg (Optional) The configuration options to use for this computation.
+             *
+             * @return {WordArray} The derived key.
+             *
+             * @static
+             *
+             * @example
+             *
+             *     var key = CryptoJS.PBKDF2(password, salt);
+             *     var key = CryptoJS.PBKDF2(password, salt, { keySize: 8 });
+             *     var key = CryptoJS.PBKDF2(password, salt, { keySize: 8, iterations: 1000 });
+             */
+    C.PBKDF2 = function (password, salt, cfg) {
+      return PBKDF2.create(cfg).compute(password, salt);
+    };
+  })();
+
+
+  return CryptoJS.PBKDF2;
+
+});
+
+/***/ }),
+/* 437 */
+/*!**********************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/evpkdf.js ***!
+  \**********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./sha1 */ 428), __webpack_require__(/*! ./hmac */ 435));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  (function () {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var Base = C_lib.Base;
+    var WordArray = C_lib.WordArray;
+    var C_algo = C.algo;
+    var MD5 = C_algo.MD5;
+
+    /**
+                           * This key derivation function is meant to conform with EVP_BytesToKey.
+                           * www.openssl.org/docs/crypto/EVP_BytesToKey.html
+                           */
+    var EvpKDF = C_algo.EvpKDF = Base.extend({
+      /**
+                                                * Configuration options.
+                                                *
+                                                * @property {number} keySize The key size in words to generate. Default: 4 (128 bits)
+                                                * @property {Hasher} hasher The hash algorithm to use. Default: MD5
+                                                * @property {number} iterations The number of iterations to perform. Default: 1
+                                                */
+      cfg: Base.extend({
+        keySize: 128 / 32,
+        hasher: MD5,
+        iterations: 1 }),
+
+
+      /**
+                           * Initializes a newly created key derivation function.
+                           *
+                           * @param {Object} cfg (Optional) The configuration options to use for the derivation.
+                           *
+                           * @example
+                           *
+                           *     var kdf = CryptoJS.algo.EvpKDF.create();
+                           *     var kdf = CryptoJS.algo.EvpKDF.create({ keySize: 8 });
+                           *     var kdf = CryptoJS.algo.EvpKDF.create({ keySize: 8, iterations: 1000 });
+                           */
+      init: function init(cfg) {
+        this.cfg = this.cfg.extend(cfg);
+      },
+
+      /**
+          * Derives a key from a password.
+          *
+          * @param {WordArray|string} password The password.
+          * @param {WordArray|string} salt A salt.
+          *
+          * @return {WordArray} The derived key.
+          *
+          * @example
+          *
+          *     var key = kdf.compute(password, salt);
+          */
+      compute: function compute(password, salt) {
+        var block;
+
+        // Shortcut
+        var cfg = this.cfg;
+
+        // Init hasher
+        var hasher = cfg.hasher.create();
+
+        // Initial values
+        var derivedKey = WordArray.create();
+
+        // Shortcuts
+        var derivedKeyWords = derivedKey.words;
+        var keySize = cfg.keySize;
+        var iterations = cfg.iterations;
+
+        // Generate key
+        while (derivedKeyWords.length < keySize) {
+          if (block) {
+            hasher.update(block);
+          }
+          block = hasher.update(password).finalize(salt);
+          hasher.reset();
+
+          // Iterations
+          for (var i = 1; i < iterations; i++) {
+            block = hasher.finalize(block);
+            hasher.reset();
+          }
+
+          derivedKey.concat(block);
+        }
+        derivedKey.sigBytes = keySize * 4;
+
+        return derivedKey;
+      } });
+
+
+    /**
+             * Derives a key from a password.
+             *
+             * @param {WordArray|string} password The password.
+             * @param {WordArray|string} salt A salt.
+             * @param {Object} cfg (Optional) The configuration options to use for this computation.
+             *
+             * @return {WordArray} The derived key.
+             *
+             * @static
+             *
+             * @example
+             *
+             *     var key = CryptoJS.EvpKDF(password, salt);
+             *     var key = CryptoJS.EvpKDF(password, salt, { keySize: 8 });
+             *     var key = CryptoJS.EvpKDF(password, salt, { keySize: 8, iterations: 1000 });
+             */
+    C.EvpKDF = function (password, salt, cfg) {
+      return EvpKDF.create(cfg).compute(password, salt);
+    };
+  })();
+
+
+  return CryptoJS.EvpKDF;
+
+});
+
+/***/ }),
+/* 438 */
+/*!***************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/cipher-core.js ***!
+  \***************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./evpkdf */ 437));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  /**
+                               * Cipher core components.
+                               */
+  CryptoJS.lib.Cipher || function (undefined) {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var Base = C_lib.Base;
+    var WordArray = C_lib.WordArray;
+    var BufferedBlockAlgorithm = C_lib.BufferedBlockAlgorithm;
+    var C_enc = C.enc;
+    var Utf8 = C_enc.Utf8;
+    var Base64 = C_enc.Base64;
+    var C_algo = C.algo;
+    var EvpKDF = C_algo.EvpKDF;
+
+    /**
+                                 * Abstract base cipher template.
+                                 *
+                                 * @property {number} keySize This cipher's key size. Default: 4 (128 bits)
+                                 * @property {number} ivSize This cipher's IV size. Default: 4 (128 bits)
+                                 * @property {number} _ENC_XFORM_MODE A constant representing encryption mode.
+                                 * @property {number} _DEC_XFORM_MODE A constant representing decryption mode.
+                                 */
+    var Cipher = C_lib.Cipher = BufferedBlockAlgorithm.extend({
+      /**
+                                                                 * Configuration options.
+                                                                 *
+                                                                 * @property {WordArray} iv The IV to use for this operation.
+                                                                 */
+      cfg: Base.extend(),
+
+      /**
+                           * Creates this cipher in encryption mode.
+                           *
+                           * @param {WordArray} key The key.
+                           * @param {Object} cfg (Optional) The configuration options to use for this operation.
+                           *
+                           * @return {Cipher} A cipher instance.
+                           *
+                           * @static
+                           *
+                           * @example
+                           *
+                           *     var cipher = CryptoJS.algo.AES.createEncryptor(keyWordArray, { iv: ivWordArray });
+                           */
+      createEncryptor: function createEncryptor(key, cfg) {
+        return this.create(this._ENC_XFORM_MODE, key, cfg);
+      },
+
+      /**
+          * Creates this cipher in decryption mode.
+          *
+          * @param {WordArray} key The key.
+          * @param {Object} cfg (Optional) The configuration options to use for this operation.
+          *
+          * @return {Cipher} A cipher instance.
+          *
+          * @static
+          *
+          * @example
+          *
+          *     var cipher = CryptoJS.algo.AES.createDecryptor(keyWordArray, { iv: ivWordArray });
+          */
+      createDecryptor: function createDecryptor(key, cfg) {
+        return this.create(this._DEC_XFORM_MODE, key, cfg);
+      },
+
+      /**
+          * Initializes a newly created cipher.
+          *
+          * @param {number} xformMode Either the encryption or decryption transormation mode constant.
+          * @param {WordArray} key The key.
+          * @param {Object} cfg (Optional) The configuration options to use for this operation.
+          *
+          * @example
+          *
+          *     var cipher = CryptoJS.algo.AES.create(CryptoJS.algo.AES._ENC_XFORM_MODE, keyWordArray, { iv: ivWordArray });
+          */
+      init: function init(xformMode, key, cfg) {
+        // Apply config defaults
+        this.cfg = this.cfg.extend(cfg);
+
+        // Store transform mode and key
+        this._xformMode = xformMode;
+        this._key = key;
+
+        // Set initial values
+        this.reset();
+      },
+
+      /**
+          * Resets this cipher to its initial state.
+          *
+          * @example
+          *
+          *     cipher.reset();
+          */
+      reset: function reset() {
+        // Reset data buffer
+        BufferedBlockAlgorithm.reset.call(this);
+
+        // Perform concrete-cipher logic
+        this._doReset();
+      },
+
+      /**
+          * Adds data to be encrypted or decrypted.
+          *
+          * @param {WordArray|string} dataUpdate The data to encrypt or decrypt.
+          *
+          * @return {WordArray} The data after processing.
+          *
+          * @example
+          *
+          *     var encrypted = cipher.process('data');
+          *     var encrypted = cipher.process(wordArray);
+          */
+      process: function process(dataUpdate) {
+        // Append
+        this._append(dataUpdate);
+
+        // Process available blocks
+        return this._process();
+      },
+
+      /**
+          * Finalizes the encryption or decryption process.
+          * Note that the finalize operation is effectively a destructive, read-once operation.
+          *
+          * @param {WordArray|string} dataUpdate The final data to encrypt or decrypt.
+          *
+          * @return {WordArray} The data after final processing.
+          *
+          * @example
+          *
+          *     var encrypted = cipher.finalize();
+          *     var encrypted = cipher.finalize('data');
+          *     var encrypted = cipher.finalize(wordArray);
+          */
+      finalize: function finalize(dataUpdate) {
+        // Final data update
+        if (dataUpdate) {
+          this._append(dataUpdate);
+        }
+
+        // Perform concrete-cipher logic
+        var finalProcessedData = this._doFinalize();
+
+        return finalProcessedData;
+      },
+
+      keySize: 128 / 32,
+
+      ivSize: 128 / 32,
+
+      _ENC_XFORM_MODE: 1,
+
+      _DEC_XFORM_MODE: 2,
+
+      /**
+                           * Creates shortcut functions to a cipher's object interface.
+                           *
+                           * @param {Cipher} cipher The cipher to create a helper for.
+                           *
+                           * @return {Object} An object with encrypt and decrypt shortcut functions.
+                           *
+                           * @static
+                           *
+                           * @example
+                           *
+                           *     var AES = CryptoJS.lib.Cipher._createHelper(CryptoJS.algo.AES);
+                           */
+      _createHelper: function () {
+        function selectCipherStrategy(key) {
+          if (typeof key == 'string') {
+            return PasswordBasedCipher;
+          } else {
+            return SerializableCipher;
+          }
+        }
+
+        return function (cipher) {
+          return {
+            encrypt: function encrypt(message, key, cfg) {
+              return selectCipherStrategy(key).encrypt(cipher, message, key, cfg);
+            },
+
+            decrypt: function decrypt(ciphertext, key, cfg) {
+              return selectCipherStrategy(key).decrypt(cipher, ciphertext, key, cfg);
+            } };
+
+        };
+      }() });
+
+
+    /**
+               * Abstract base stream cipher template.
+               *
+               * @property {number} blockSize The number of 32-bit words this cipher operates on. Default: 1 (32 bits)
+               */
+    var StreamCipher = C_lib.StreamCipher = Cipher.extend({
+      _doFinalize: function _doFinalize() {
+        // Process partial blocks
+        var finalProcessedBlocks = this._process(!!'flush');
+
+        return finalProcessedBlocks;
+      },
+
+      blockSize: 1 });
+
+
+    /**
+                        * Mode namespace.
+                        */
+    var C_mode = C.mode = {};
+
+    /**
+                               * Abstract base block cipher mode template.
+                               */
+    var BlockCipherMode = C_lib.BlockCipherMode = Base.extend({
+      /**
+                                                                 * Creates this mode for encryption.
+                                                                 *
+                                                                 * @param {Cipher} cipher A block cipher instance.
+                                                                 * @param {Array} iv The IV words.
+                                                                 *
+                                                                 * @static
+                                                                 *
+                                                                 * @example
+                                                                 *
+                                                                 *     var mode = CryptoJS.mode.CBC.createEncryptor(cipher, iv.words);
+                                                                 */
+      createEncryptor: function createEncryptor(cipher, iv) {
+        return this.Encryptor.create(cipher, iv);
+      },
+
+      /**
+          * Creates this mode for decryption.
+          *
+          * @param {Cipher} cipher A block cipher instance.
+          * @param {Array} iv The IV words.
+          *
+          * @static
+          *
+          * @example
+          *
+          *     var mode = CryptoJS.mode.CBC.createDecryptor(cipher, iv.words);
+          */
+      createDecryptor: function createDecryptor(cipher, iv) {
+        return this.Decryptor.create(cipher, iv);
+      },
+
+      /**
+          * Initializes a newly created mode.
+          *
+          * @param {Cipher} cipher A block cipher instance.
+          * @param {Array} iv The IV words.
+          *
+          * @example
+          *
+          *     var mode = CryptoJS.mode.CBC.Encryptor.create(cipher, iv.words);
+          */
+      init: function init(cipher, iv) {
+        this._cipher = cipher;
+        this._iv = iv;
+      } });
+
+
+    /**
+             * Cipher Block Chaining mode.
+             */
+    var CBC = C_mode.CBC = function () {
+      /**
+                                         * Abstract base CBC mode.
+                                         */
+      var CBC = BlockCipherMode.extend();
+
+      /**
+                                           * CBC encryptor.
+                                           */
+      CBC.Encryptor = CBC.extend({
+        /**
+                                    * Processes the data block at offset.
+                                    *
+                                    * @param {Array} words The data words to operate on.
+                                    * @param {number} offset The offset where the block starts.
+                                    *
+                                    * @example
+                                    *
+                                    *     mode.processBlock(data.words, offset);
+                                    */
+        processBlock: function processBlock(words, offset) {
+          // Shortcuts
+          var cipher = this._cipher;
+          var blockSize = cipher.blockSize;
+
+          // XOR and encrypt
+          xorBlock.call(this, words, offset, blockSize);
+          cipher.encryptBlock(words, offset);
+
+          // Remember this block to use with next block
+          this._prevBlock = words.slice(offset, offset + blockSize);
+        } });
+
+
+      /**
+               * CBC decryptor.
+               */
+      CBC.Decryptor = CBC.extend({
+        /**
+                                    * Processes the data block at offset.
+                                    *
+                                    * @param {Array} words The data words to operate on.
+                                    * @param {number} offset The offset where the block starts.
+                                    *
+                                    * @example
+                                    *
+                                    *     mode.processBlock(data.words, offset);
+                                    */
+        processBlock: function processBlock(words, offset) {
+          // Shortcuts
+          var cipher = this._cipher;
+          var blockSize = cipher.blockSize;
+
+          // Remember this block to use with next block
+          var thisBlock = words.slice(offset, offset + blockSize);
+
+          // Decrypt and XOR
+          cipher.decryptBlock(words, offset);
+          xorBlock.call(this, words, offset, blockSize);
+
+          // This block becomes the previous block
+          this._prevBlock = thisBlock;
+        } });
+
+
+      function xorBlock(words, offset, blockSize) {
+        var block;
+
+        // Shortcut
+        var iv = this._iv;
+
+        // Choose mixing block
+        if (iv) {
+          block = iv;
+
+          // Remove IV for subsequent blocks
+          this._iv = undefined;
+        } else {
+          block = this._prevBlock;
+        }
+
+        // XOR blocks
+        for (var i = 0; i < blockSize; i++) {
+          words[offset + i] ^= block[i];
+        }
+      }
+
+      return CBC;
+    }();
+
+    /**
+          * Padding namespace.
+          */
+    var C_pad = C.pad = {};
+
+    /**
+                             * PKCS #5/7 padding strategy.
+                             */
+    var Pkcs7 = C_pad.Pkcs7 = {
+      /**
+                                 * Pads data using the algorithm defined in PKCS #5/7.
+                                 *
+                                 * @param {WordArray} data The data to pad.
+                                 * @param {number} blockSize The multiple that the data should be padded to.
+                                 *
+                                 * @static
+                                 *
+                                 * @example
+                                 *
+                                 *     CryptoJS.pad.Pkcs7.pad(wordArray, 4);
+                                 */
+      pad: function pad(data, blockSize) {
+        // Shortcut
+        var blockSizeBytes = blockSize * 4;
+
+        // Count padding bytes
+        var nPaddingBytes = blockSizeBytes - data.sigBytes % blockSizeBytes;
+
+        // Create padding word
+        var paddingWord = nPaddingBytes << 24 | nPaddingBytes << 16 | nPaddingBytes << 8 | nPaddingBytes;
+
+        // Create padding
+        var paddingWords = [];
+        for (var i = 0; i < nPaddingBytes; i += 4) {
+          paddingWords.push(paddingWord);
+        }
+        var padding = WordArray.create(paddingWords, nPaddingBytes);
+
+        // Add padding
+        data.concat(padding);
+      },
+
+      /**
+          * Unpads data that had been padded using the algorithm defined in PKCS #5/7.
+          *
+          * @param {WordArray} data The data to unpad.
+          *
+          * @static
+          *
+          * @example
+          *
+          *     CryptoJS.pad.Pkcs7.unpad(wordArray);
+          */
+      unpad: function unpad(data) {
+        // Get number of padding bytes from last byte
+        var nPaddingBytes = data.words[data.sigBytes - 1 >>> 2] & 0xff;
+
+        // Remove padding
+        data.sigBytes -= nPaddingBytes;
+      } };
+
+
+    /**
+            * Abstract base block cipher template.
+            *
+            * @property {number} blockSize The number of 32-bit words this cipher operates on. Default: 4 (128 bits)
+            */
+    var BlockCipher = C_lib.BlockCipher = Cipher.extend({
+      /**
+                                                           * Configuration options.
+                                                           *
+                                                           * @property {Mode} mode The block mode to use. Default: CBC
+                                                           * @property {Padding} padding The padding strategy to use. Default: Pkcs7
+                                                           */
+      cfg: Cipher.cfg.extend({
+        mode: CBC,
+        padding: Pkcs7 }),
+
+
+      reset: function reset() {
+        var modeCreator;
+
+        // Reset cipher
+        Cipher.reset.call(this);
+
+        // Shortcuts
+        var cfg = this.cfg;
+        var iv = cfg.iv;
+        var mode = cfg.mode;
+
+        // Reset block mode
+        if (this._xformMode == this._ENC_XFORM_MODE) {
+          modeCreator = mode.createEncryptor;
+        } else /* if (this._xformMode == this._DEC_XFORM_MODE) */{
+            modeCreator = mode.createDecryptor;
+            // Keep at least one block in the buffer for unpadding
+            this._minBufferSize = 1;
+          }
+
+        if (this._mode && this._mode.__creator == modeCreator) {
+          this._mode.init(this, iv && iv.words);
+        } else {
+          this._mode = modeCreator.call(mode, this, iv && iv.words);
+          this._mode.__creator = modeCreator;
+        }
+      },
+
+      _doProcessBlock: function _doProcessBlock(words, offset) {
+        this._mode.processBlock(words, offset);
+      },
+
+      _doFinalize: function _doFinalize() {
+        var finalProcessedBlocks;
+
+        // Shortcut
+        var padding = this.cfg.padding;
+
+        // Finalize
+        if (this._xformMode == this._ENC_XFORM_MODE) {
+          // Pad data
+          padding.pad(this._data, this.blockSize);
+
+          // Process final blocks
+          finalProcessedBlocks = this._process(!!'flush');
+        } else /* if (this._xformMode == this._DEC_XFORM_MODE) */{
+            // Process final blocks
+            finalProcessedBlocks = this._process(!!'flush');
+
+            // Unpad data
+            padding.unpad(finalProcessedBlocks);
+          }
+
+        return finalProcessedBlocks;
+      },
+
+      blockSize: 128 / 32 });
+
+
+    /**
+                               * A collection of cipher parameters.
+                               *
+                               * @property {WordArray} ciphertext The raw ciphertext.
+                               * @property {WordArray} key The key to this ciphertext.
+                               * @property {WordArray} iv The IV used in the ciphering operation.
+                               * @property {WordArray} salt The salt used with a key derivation function.
+                               * @property {Cipher} algorithm The cipher algorithm.
+                               * @property {Mode} mode The block mode used in the ciphering operation.
+                               * @property {Padding} padding The padding scheme used in the ciphering operation.
+                               * @property {number} blockSize The block size of the cipher.
+                               * @property {Format} formatter The default formatting strategy to convert this cipher params object to a string.
+                               */
+    var CipherParams = C_lib.CipherParams = Base.extend({
+      /**
+                                                           * Initializes a newly created cipher params object.
+                                                           *
+                                                           * @param {Object} cipherParams An object with any of the possible cipher parameters.
+                                                           *
+                                                           * @example
+                                                           *
+                                                           *     var cipherParams = CryptoJS.lib.CipherParams.create({
+                                                           *         ciphertext: ciphertextWordArray,
+                                                           *         key: keyWordArray,
+                                                           *         iv: ivWordArray,
+                                                           *         salt: saltWordArray,
+                                                           *         algorithm: CryptoJS.algo.AES,
+                                                           *         mode: CryptoJS.mode.CBC,
+                                                           *         padding: CryptoJS.pad.PKCS7,
+                                                           *         blockSize: 4,
+                                                           *         formatter: CryptoJS.format.OpenSSL
+                                                           *     });
+                                                           */
+      init: function init(cipherParams) {
+        this.mixIn(cipherParams);
+      },
+
+      /**
+          * Converts this cipher params object to a string.
+          *
+          * @param {Format} formatter (Optional) The formatting strategy to use.
+          *
+          * @return {string} The stringified cipher params.
+          *
+          * @throws Error If neither the formatter nor the default formatter is set.
+          *
+          * @example
+          *
+          *     var string = cipherParams + '';
+          *     var string = cipherParams.toString();
+          *     var string = cipherParams.toString(CryptoJS.format.OpenSSL);
+          */
+      toString: function toString(formatter) {
+        return (formatter || this.formatter).stringify(this);
+      } });
+
+
+    /**
+             * Format namespace.
+             */
+    var C_format = C.format = {};
+
+    /**
+                                   * OpenSSL formatting strategy.
+                                   */
+    var OpenSSLFormatter = C_format.OpenSSL = {
+      /**
+                                                 * Converts a cipher params object to an OpenSSL-compatible string.
+                                                 *
+                                                 * @param {CipherParams} cipherParams The cipher params object.
+                                                 *
+                                                 * @return {string} The OpenSSL-compatible string.
+                                                 *
+                                                 * @static
+                                                 *
+                                                 * @example
+                                                 *
+                                                 *     var openSSLString = CryptoJS.format.OpenSSL.stringify(cipherParams);
+                                                 */
+      stringify: function stringify(cipherParams) {
+        var wordArray;
+
+        // Shortcuts
+        var ciphertext = cipherParams.ciphertext;
+        var salt = cipherParams.salt;
+
+        // Format
+        if (salt) {
+          wordArray = WordArray.create([0x53616c74, 0x65645f5f]).concat(salt).concat(ciphertext);
+        } else {
+          wordArray = ciphertext;
+        }
+
+        return wordArray.toString(Base64);
+      },
+
+      /**
+          * Converts an OpenSSL-compatible string to a cipher params object.
+          *
+          * @param {string} openSSLStr The OpenSSL-compatible string.
+          *
+          * @return {CipherParams} The cipher params object.
+          *
+          * @static
+          *
+          * @example
+          *
+          *     var cipherParams = CryptoJS.format.OpenSSL.parse(openSSLString);
+          */
+      parse: function parse(openSSLStr) {
+        var salt;
+
+        // Parse base64
+        var ciphertext = Base64.parse(openSSLStr);
+
+        // Shortcut
+        var ciphertextWords = ciphertext.words;
+
+        // Test for salt
+        if (ciphertextWords[0] == 0x53616c74 && ciphertextWords[1] == 0x65645f5f) {
+          // Extract salt
+          salt = WordArray.create(ciphertextWords.slice(2, 4));
+
+          // Remove salt from ciphertext
+          ciphertextWords.splice(0, 4);
+          ciphertext.sigBytes -= 16;
+        }
+
+        return CipherParams.create({ ciphertext: ciphertext, salt: salt });
+      } };
+
+
+    /**
+            * A cipher wrapper that returns ciphertext as a serializable cipher params object.
+            */
+    var SerializableCipher = C_lib.SerializableCipher = Base.extend({
+      /**
+                                                                       * Configuration options.
+                                                                       *
+                                                                       * @property {Formatter} format The formatting strategy to convert cipher param objects to and from a string. Default: OpenSSL
+                                                                       */
+      cfg: Base.extend({
+        format: OpenSSLFormatter }),
+
+
+      /**
+                                      * Encrypts a message.
+                                      *
+                                      * @param {Cipher} cipher The cipher algorithm to use.
+                                      * @param {WordArray|string} message The message to encrypt.
+                                      * @param {WordArray} key The key.
+                                      * @param {Object} cfg (Optional) The configuration options to use for this operation.
+                                      *
+                                      * @return {CipherParams} A cipher params object.
+                                      *
+                                      * @static
+                                      *
+                                      * @example
+                                      *
+                                      *     var ciphertextParams = CryptoJS.lib.SerializableCipher.encrypt(CryptoJS.algo.AES, message, key);
+                                      *     var ciphertextParams = CryptoJS.lib.SerializableCipher.encrypt(CryptoJS.algo.AES, message, key, { iv: iv });
+                                      *     var ciphertextParams = CryptoJS.lib.SerializableCipher.encrypt(CryptoJS.algo.AES, message, key, { iv: iv, format: CryptoJS.format.OpenSSL });
+                                      */
+      encrypt: function encrypt(cipher, message, key, cfg) {
+        // Apply config defaults
+        cfg = this.cfg.extend(cfg);
+
+        // Encrypt
+        var encryptor = cipher.createEncryptor(key, cfg);
+        var ciphertext = encryptor.finalize(message);
+
+        // Shortcut
+        var cipherCfg = encryptor.cfg;
+
+        // Create and return serializable cipher params
+        return CipherParams.create({
+          ciphertext: ciphertext,
+          key: key,
+          iv: cipherCfg.iv,
+          algorithm: cipher,
+          mode: cipherCfg.mode,
+          padding: cipherCfg.padding,
+          blockSize: cipher.blockSize,
+          formatter: cfg.format });
+
+      },
+
+      /**
+          * Decrypts serialized ciphertext.
+          *
+          * @param {Cipher} cipher The cipher algorithm to use.
+          * @param {CipherParams|string} ciphertext The ciphertext to decrypt.
+          * @param {WordArray} key The key.
+          * @param {Object} cfg (Optional) The configuration options to use for this operation.
+          *
+          * @return {WordArray} The plaintext.
+          *
+          * @static
+          *
+          * @example
+          *
+          *     var plaintext = CryptoJS.lib.SerializableCipher.decrypt(CryptoJS.algo.AES, formattedCiphertext, key, { iv: iv, format: CryptoJS.format.OpenSSL });
+          *     var plaintext = CryptoJS.lib.SerializableCipher.decrypt(CryptoJS.algo.AES, ciphertextParams, key, { iv: iv, format: CryptoJS.format.OpenSSL });
+          */
+      decrypt: function decrypt(cipher, ciphertext, key, cfg) {
+        // Apply config defaults
+        cfg = this.cfg.extend(cfg);
+
+        // Convert string to CipherParams
+        ciphertext = this._parse(ciphertext, cfg.format);
+
+        // Decrypt
+        var plaintext = cipher.createDecryptor(key, cfg).finalize(ciphertext.ciphertext);
+
+        return plaintext;
+      },
+
+      /**
+          * Converts serialized ciphertext to CipherParams,
+          * else assumed CipherParams already and returns ciphertext unchanged.
+          *
+          * @param {CipherParams|string} ciphertext The ciphertext.
+          * @param {Formatter} format The formatting strategy to use to parse serialized ciphertext.
+          *
+          * @return {CipherParams} The unserialized ciphertext.
+          *
+          * @static
+          *
+          * @example
+          *
+          *     var ciphertextParams = CryptoJS.lib.SerializableCipher._parse(ciphertextStringOrParams, format);
+          */
+      _parse: function _parse(ciphertext, format) {
+        if (typeof ciphertext == 'string') {
+          return format.parse(ciphertext, this);
+        } else {
+          return ciphertext;
+        }
+      } });
+
+
+    /**
+             * Key derivation function namespace.
+             */
+    var C_kdf = C.kdf = {};
+
+    /**
+                             * OpenSSL key derivation function.
+                             */
+    var OpenSSLKdf = C_kdf.OpenSSL = {
+      /**
+                                        * Derives a key and IV from a password.
+                                        *
+                                        * @param {string} password The password to derive from.
+                                        * @param {number} keySize The size in words of the key to generate.
+                                        * @param {number} ivSize The size in words of the IV to generate.
+                                        * @param {WordArray|string} salt (Optional) A 64-bit salt to use. If omitted, a salt will be generated randomly.
+                                        *
+                                        * @return {CipherParams} A cipher params object with the key, IV, and salt.
+                                        *
+                                        * @static
+                                        *
+                                        * @example
+                                        *
+                                        *     var derivedParams = CryptoJS.kdf.OpenSSL.execute('Password', 256/32, 128/32);
+                                        *     var derivedParams = CryptoJS.kdf.OpenSSL.execute('Password', 256/32, 128/32, 'saltsalt');
+                                        */
+      execute: function execute(password, keySize, ivSize, salt) {
+        // Generate random salt
+        if (!salt) {
+          salt = WordArray.random(64 / 8);
+        }
+
+        // Derive key and IV
+        var key = EvpKDF.create({ keySize: keySize + ivSize }).compute(password, salt);
+
+        // Separate key and IV
+        var iv = WordArray.create(key.words.slice(keySize), ivSize * 4);
+        key.sigBytes = keySize * 4;
+
+        // Return params
+        return CipherParams.create({ key: key, iv: iv, salt: salt });
+      } };
+
+
+    /**
+            * A serializable cipher wrapper that derives the key from a password,
+            * and returns ciphertext as a serializable cipher params object.
+            */
+    var PasswordBasedCipher = C_lib.PasswordBasedCipher = SerializableCipher.extend({
+      /**
+                                                                                       * Configuration options.
+                                                                                       *
+                                                                                       * @property {KDF} kdf The key derivation function to use to generate a key and IV from a password. Default: OpenSSL
+                                                                                       */
+      cfg: SerializableCipher.cfg.extend({
+        kdf: OpenSSLKdf }),
+
+
+      /**
+                             * Encrypts a message using a password.
+                             *
+                             * @param {Cipher} cipher The cipher algorithm to use.
+                             * @param {WordArray|string} message The message to encrypt.
+                             * @param {string} password The password.
+                             * @param {Object} cfg (Optional) The configuration options to use for this operation.
+                             *
+                             * @return {CipherParams} A cipher params object.
+                             *
+                             * @static
+                             *
+                             * @example
+                             *
+                             *     var ciphertextParams = CryptoJS.lib.PasswordBasedCipher.encrypt(CryptoJS.algo.AES, message, 'password');
+                             *     var ciphertextParams = CryptoJS.lib.PasswordBasedCipher.encrypt(CryptoJS.algo.AES, message, 'password', { format: CryptoJS.format.OpenSSL });
+                             */
+      encrypt: function encrypt(cipher, message, password, cfg) {
+        // Apply config defaults
+        cfg = this.cfg.extend(cfg);
+
+        // Derive key and other params
+        var derivedParams = cfg.kdf.execute(password, cipher.keySize, cipher.ivSize);
+
+        // Add IV to config
+        cfg.iv = derivedParams.iv;
+
+        // Encrypt
+        var ciphertext = SerializableCipher.encrypt.call(this, cipher, message, derivedParams.key, cfg);
+
+        // Mix in derived params
+        ciphertext.mixIn(derivedParams);
+
+        return ciphertext;
+      },
+
+      /**
+          * Decrypts serialized ciphertext using a password.
+          *
+          * @param {Cipher} cipher The cipher algorithm to use.
+          * @param {CipherParams|string} ciphertext The ciphertext to decrypt.
+          * @param {string} password The password.
+          * @param {Object} cfg (Optional) The configuration options to use for this operation.
+          *
+          * @return {WordArray} The plaintext.
+          *
+          * @static
+          *
+          * @example
+          *
+          *     var plaintext = CryptoJS.lib.PasswordBasedCipher.decrypt(CryptoJS.algo.AES, formattedCiphertext, 'password', { format: CryptoJS.format.OpenSSL });
+          *     var plaintext = CryptoJS.lib.PasswordBasedCipher.decrypt(CryptoJS.algo.AES, ciphertextParams, 'password', { format: CryptoJS.format.OpenSSL });
+          */
+      decrypt: function decrypt(cipher, ciphertext, password, cfg) {
+        // Apply config defaults
+        cfg = this.cfg.extend(cfg);
+
+        // Convert string to CipherParams
+        ciphertext = this._parse(ciphertext, cfg.format);
+
+        // Derive key and other params
+        var derivedParams = cfg.kdf.execute(password, cipher.keySize, cipher.ivSize, ciphertext.salt);
+
+        // Add IV to config
+        cfg.iv = derivedParams.iv;
+
+        // Decrypt
+        var plaintext = SerializableCipher.decrypt.call(this, cipher, ciphertext, derivedParams.key, cfg);
+
+        return plaintext;
+      } });
+
+  }();
+
+
+});
+
+/***/ }),
+/* 439 */
+/*!************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/mode-cfb.js ***!
+  \************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./cipher-core */ 438));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  /**
+                               * Cipher Feedback block mode.
+                               */
+  CryptoJS.mode.CFB = function () {
+    var CFB = CryptoJS.lib.BlockCipherMode.extend();
+
+    CFB.Encryptor = CFB.extend({
+      processBlock: function processBlock(words, offset) {
+        // Shortcuts
+        var cipher = this._cipher;
+        var blockSize = cipher.blockSize;
+
+        generateKeystreamAndEncrypt.call(this, words, offset, blockSize, cipher);
+
+        // Remember this block to use with next block
+        this._prevBlock = words.slice(offset, offset + blockSize);
+      } });
+
+
+    CFB.Decryptor = CFB.extend({
+      processBlock: function processBlock(words, offset) {
+        // Shortcuts
+        var cipher = this._cipher;
+        var blockSize = cipher.blockSize;
+
+        // Remember this block to use with next block
+        var thisBlock = words.slice(offset, offset + blockSize);
+
+        generateKeystreamAndEncrypt.call(this, words, offset, blockSize, cipher);
+
+        // This block becomes the previous block
+        this._prevBlock = thisBlock;
+      } });
+
+
+    function generateKeystreamAndEncrypt(words, offset, blockSize, cipher) {
+      var keystream;
+
+      // Shortcut
+      var iv = this._iv;
+
+      // Generate keystream
+      if (iv) {
+        keystream = iv.slice(0);
+
+        // Remove IV for subsequent blocks
+        this._iv = undefined;
+      } else {
+        keystream = this._prevBlock;
+      }
+      cipher.encryptBlock(keystream, 0);
+
+      // Encrypt
+      for (var i = 0; i < blockSize; i++) {
+        words[offset + i] ^= keystream[i];
+      }
+    }
+
+    return CFB;
+  }();
+
+
+  return CryptoJS.mode.CFB;
+
+});
+
+/***/ }),
+/* 440 */
+/*!************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/mode-ctr.js ***!
+  \************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./cipher-core */ 438));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  /**
+                               * Counter block mode.
+                               */
+  CryptoJS.mode.CTR = function () {
+    var CTR = CryptoJS.lib.BlockCipherMode.extend();
+
+    var Encryptor = CTR.Encryptor = CTR.extend({
+      processBlock: function processBlock(words, offset) {
+        // Shortcuts
+        var cipher = this._cipher;
+        var blockSize = cipher.blockSize;
+        var iv = this._iv;
+        var counter = this._counter;
+
+        // Generate keystream
+        if (iv) {
+          counter = this._counter = iv.slice(0);
+
+          // Remove IV for subsequent blocks
+          this._iv = undefined;
+        }
+        var keystream = counter.slice(0);
+        cipher.encryptBlock(keystream, 0);
+
+        // Increment counter
+        counter[blockSize - 1] = counter[blockSize - 1] + 1 | 0;
+
+        // Encrypt
+        for (var i = 0; i < blockSize; i++) {
+          words[offset + i] ^= keystream[i];
+        }
+      } });
+
+
+    CTR.Decryptor = Encryptor;
+
+    return CTR;
+  }();
+
+
+  return CryptoJS.mode.CTR;
+
+});
+
+/***/ }),
+/* 441 */
+/*!********************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/mode-ctr-gladman.js ***!
+  \********************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./cipher-core */ 438));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  /** @preserve
+                               * Counter block mode compatible with  Dr Brian Gladman fileenc.c
+                               * derived from CryptoJS.mode.CTR
+                               * Jan Hruby jhruby.web@gmail.com
+                               */
+  CryptoJS.mode.CTRGladman = function () {
+    var CTRGladman = CryptoJS.lib.BlockCipherMode.extend();
+
+    function incWord(word)
+    {
+      if ((word >> 24 & 0xff) === 0xff) {//overflow
+        var b1 = word >> 16 & 0xff;
+        var b2 = word >> 8 & 0xff;
+        var b3 = word & 0xff;
+
+        if (b1 === 0xff) // overflow b1
+          {
+            b1 = 0;
+            if (b2 === 0xff)
+            {
+              b2 = 0;
+              if (b3 === 0xff)
+              {
+                b3 = 0;
+              } else
+
+              {
+                ++b3;
+              }
+            } else
+
+            {
+              ++b2;
+            }
+          } else
+
+        {
+          ++b1;
+        }
+
+        word = 0;
+        word += b1 << 16;
+        word += b2 << 8;
+        word += b3;
+      } else
+
+      {
+        word += 0x01 << 24;
+      }
+      return word;
+    }
+
+    function incCounter(counter)
+    {
+      if ((counter[0] = incWord(counter[0])) === 0)
+      {
+        // encr_data in fileenc.c from  Dr Brian Gladman's counts only with DWORD j < 8
+        counter[1] = incWord(counter[1]);
+      }
+      return counter;
+    }
+
+    var Encryptor = CTRGladman.Encryptor = CTRGladman.extend({
+      processBlock: function processBlock(words, offset) {
+        // Shortcuts
+        var cipher = this._cipher;
+        var blockSize = cipher.blockSize;
+        var iv = this._iv;
+        var counter = this._counter;
+
+        // Generate keystream
+        if (iv) {
+          counter = this._counter = iv.slice(0);
+
+          // Remove IV for subsequent blocks
+          this._iv = undefined;
+        }
+
+        incCounter(counter);
+
+        var keystream = counter.slice(0);
+        cipher.encryptBlock(keystream, 0);
+
+        // Encrypt
+        for (var i = 0; i < blockSize; i++) {
+          words[offset + i] ^= keystream[i];
+        }
+      } });
+
+
+    CTRGladman.Decryptor = Encryptor;
+
+    return CTRGladman;
+  }();
+
+
+
+
+  return CryptoJS.mode.CTRGladman;
+
+});
+
+/***/ }),
+/* 442 */
+/*!************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/mode-ofb.js ***!
+  \************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./cipher-core */ 438));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  /**
+                               * Output Feedback block mode.
+                               */
+  CryptoJS.mode.OFB = function () {
+    var OFB = CryptoJS.lib.BlockCipherMode.extend();
+
+    var Encryptor = OFB.Encryptor = OFB.extend({
+      processBlock: function processBlock(words, offset) {
+        // Shortcuts
+        var cipher = this._cipher;
+        var blockSize = cipher.blockSize;
+        var iv = this._iv;
+        var keystream = this._keystream;
+
+        // Generate keystream
+        if (iv) {
+          keystream = this._keystream = iv.slice(0);
+
+          // Remove IV for subsequent blocks
+          this._iv = undefined;
+        }
+        cipher.encryptBlock(keystream, 0);
+
+        // Encrypt
+        for (var i = 0; i < blockSize; i++) {
+          words[offset + i] ^= keystream[i];
+        }
+      } });
+
+
+    OFB.Decryptor = Encryptor;
+
+    return OFB;
+  }();
+
+
+  return CryptoJS.mode.OFB;
+
+});
+
+/***/ }),
+/* 443 */
+/*!************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/mode-ecb.js ***!
+  \************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./cipher-core */ 438));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  /**
+                               * Electronic Codebook block mode.
+                               */
+  CryptoJS.mode.ECB = function () {
+    var ECB = CryptoJS.lib.BlockCipherMode.extend();
+
+    ECB.Encryptor = ECB.extend({
+      processBlock: function processBlock(words, offset) {
+        this._cipher.encryptBlock(words, offset);
+      } });
+
+
+    ECB.Decryptor = ECB.extend({
+      processBlock: function processBlock(words, offset) {
+        this._cipher.decryptBlock(words, offset);
+      } });
+
+
+    return ECB;
+  }();
+
+
+  return CryptoJS.mode.ECB;
+
+});
+
+/***/ }),
+/* 444 */
+/*!****************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/pad-ansix923.js ***!
+  \****************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./cipher-core */ 438));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  /**
+                               * ANSI X.923 padding strategy.
+                               */
+  CryptoJS.pad.AnsiX923 = {
+    pad: function pad(data, blockSize) {
+      // Shortcuts
+      var dataSigBytes = data.sigBytes;
+      var blockSizeBytes = blockSize * 4;
+
+      // Count padding bytes
+      var nPaddingBytes = blockSizeBytes - dataSigBytes % blockSizeBytes;
+
+      // Compute last byte position
+      var lastBytePos = dataSigBytes + nPaddingBytes - 1;
+
+      // Pad
+      data.clamp();
+      data.words[lastBytePos >>> 2] |= nPaddingBytes << 24 - lastBytePos % 4 * 8;
+      data.sigBytes += nPaddingBytes;
+    },
+
+    unpad: function unpad(data) {
+      // Get number of padding bytes from last byte
+      var nPaddingBytes = data.words[data.sigBytes - 1 >>> 2] & 0xff;
+
+      // Remove padding
+      data.sigBytes -= nPaddingBytes;
+    } };
+
+
+
+  return CryptoJS.pad.Ansix923;
+
+});
+
+/***/ }),
+/* 445 */
+/*!****************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/pad-iso10126.js ***!
+  \****************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./cipher-core */ 438));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  /**
+                               * ISO 10126 padding strategy.
+                               */
+  CryptoJS.pad.Iso10126 = {
+    pad: function pad(data, blockSize) {
+      // Shortcut
+      var blockSizeBytes = blockSize * 4;
+
+      // Count padding bytes
+      var nPaddingBytes = blockSizeBytes - data.sigBytes % blockSizeBytes;
+
+      // Pad
+      data.concat(CryptoJS.lib.WordArray.random(nPaddingBytes - 1)).
+      concat(CryptoJS.lib.WordArray.create([nPaddingBytes << 24], 1));
+    },
+
+    unpad: function unpad(data) {
+      // Get number of padding bytes from last byte
+      var nPaddingBytes = data.words[data.sigBytes - 1 >>> 2] & 0xff;
+
+      // Remove padding
+      data.sigBytes -= nPaddingBytes;
+    } };
+
+
+
+  return CryptoJS.pad.Iso10126;
+
+});
+
+/***/ }),
+/* 446 */
+/*!****************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/pad-iso97971.js ***!
+  \****************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./cipher-core */ 438));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  /**
+                               * ISO/IEC 9797-1 Padding Method 2.
+                               */
+  CryptoJS.pad.Iso97971 = {
+    pad: function pad(data, blockSize) {
+      // Add 0x80 byte
+      data.concat(CryptoJS.lib.WordArray.create([0x80000000], 1));
+
+      // Zero pad the rest
+      CryptoJS.pad.ZeroPadding.pad(data, blockSize);
+    },
+
+    unpad: function unpad(data) {
+      // Remove zero padding
+      CryptoJS.pad.ZeroPadding.unpad(data);
+
+      // Remove one more byte -- the 0x80 byte
+      data.sigBytes--;
+    } };
+
+
+
+  return CryptoJS.pad.Iso97971;
+
+});
+
+/***/ }),
+/* 447 */
+/*!*******************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/pad-zeropadding.js ***!
+  \*******************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./cipher-core */ 438));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  /**
+                               * Zero padding strategy.
+                               */
+  CryptoJS.pad.ZeroPadding = {
+    pad: function pad(data, blockSize) {
+      // Shortcut
+      var blockSizeBytes = blockSize * 4;
+
+      // Pad
+      data.clamp();
+      data.sigBytes += blockSizeBytes - (data.sigBytes % blockSizeBytes || blockSizeBytes);
+    },
+
+    unpad: function unpad(data) {
+      // Shortcut
+      var dataWords = data.words;
+
+      // Unpad
+      var i = data.sigBytes - 1;
+      for (var i = data.sigBytes - 1; i >= 0; i--) {
+        if (dataWords[i >>> 2] >>> 24 - i % 4 * 8 & 0xff) {
+          data.sigBytes = i + 1;
+          break;
+        }
+      }
+    } };
+
+
+
+  return CryptoJS.pad.ZeroPadding;
+
+});
+
+/***/ }),
+/* 448 */
+/*!*****************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/pad-nopadding.js ***!
+  \*****************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./cipher-core */ 438));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  /**
+                               * A noop padding strategy.
+                               */
+  CryptoJS.pad.NoPadding = {
+    pad: function pad() {
+    },
+
+    unpad: function unpad() {
+    } };
+
+
+
+  return CryptoJS.pad.NoPadding;
+
+});
+
+/***/ }),
+/* 449 */
+/*!**************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/format-hex.js ***!
+  \**************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./cipher-core */ 438));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  (function (undefined) {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var CipherParams = C_lib.CipherParams;
+    var C_enc = C.enc;
+    var Hex = C_enc.Hex;
+    var C_format = C.format;
+
+    var HexFormatter = C_format.Hex = {
+      /**
+                                         * Converts the ciphertext of a cipher params object to a hexadecimally encoded string.
+                                         *
+                                         * @param {CipherParams} cipherParams The cipher params object.
+                                         *
+                                         * @return {string} The hexadecimally encoded string.
+                                         *
+                                         * @static
+                                         *
+                                         * @example
+                                         *
+                                         *     var hexString = CryptoJS.format.Hex.stringify(cipherParams);
+                                         */
+      stringify: function stringify(cipherParams) {
+        return cipherParams.ciphertext.toString(Hex);
+      },
+
+      /**
+          * Converts a hexadecimally encoded ciphertext string to a cipher params object.
+          *
+          * @param {string} input The hexadecimally encoded string.
+          *
+          * @return {CipherParams} The cipher params object.
+          *
+          * @static
+          *
+          * @example
+          *
+          *     var cipherParams = CryptoJS.format.Hex.parse(hexString);
+          */
+      parse: function parse(input) {
+        var ciphertext = Hex.parse(input);
+        return CipherParams.create({ ciphertext: ciphertext });
+      } };
+
+  })();
+
+
+  return CryptoJS.format.Hex;
+
+});
+
+/***/ }),
+/* 450 */
+/*!*******************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/aes.js ***!
+  \*******************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./enc-base64 */ 425), __webpack_require__(/*! ./md5 */ 427), __webpack_require__(/*! ./evpkdf */ 437), __webpack_require__(/*! ./cipher-core */ 438));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  (function () {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var BlockCipher = C_lib.BlockCipher;
+    var C_algo = C.algo;
+
+    // Lookup tables
+    var SBOX = [];
+    var INV_SBOX = [];
+    var SUB_MIX_0 = [];
+    var SUB_MIX_1 = [];
+    var SUB_MIX_2 = [];
+    var SUB_MIX_3 = [];
+    var INV_SUB_MIX_0 = [];
+    var INV_SUB_MIX_1 = [];
+    var INV_SUB_MIX_2 = [];
+    var INV_SUB_MIX_3 = [];
+
+    // Compute lookup tables
+    (function () {
+      // Compute double table
+      var d = [];
+      for (var i = 0; i < 256; i++) {
+        if (i < 128) {
+          d[i] = i << 1;
+        } else {
+          d[i] = i << 1 ^ 0x11b;
+        }
+      }
+
+      // Walk GF(2^8)
+      var x = 0;
+      var xi = 0;
+      for (var i = 0; i < 256; i++) {
+        // Compute sbox
+        var sx = xi ^ xi << 1 ^ xi << 2 ^ xi << 3 ^ xi << 4;
+        sx = sx >>> 8 ^ sx & 0xff ^ 0x63;
+        SBOX[x] = sx;
+        INV_SBOX[sx] = x;
+
+        // Compute multiplication
+        var x2 = d[x];
+        var x4 = d[x2];
+        var x8 = d[x4];
+
+        // Compute sub bytes, mix columns tables
+        var t = d[sx] * 0x101 ^ sx * 0x1010100;
+        SUB_MIX_0[x] = t << 24 | t >>> 8;
+        SUB_MIX_1[x] = t << 16 | t >>> 16;
+        SUB_MIX_2[x] = t << 8 | t >>> 24;
+        SUB_MIX_3[x] = t;
+
+        // Compute inv sub bytes, inv mix columns tables
+        var t = x8 * 0x1010101 ^ x4 * 0x10001 ^ x2 * 0x101 ^ x * 0x1010100;
+        INV_SUB_MIX_0[sx] = t << 24 | t >>> 8;
+        INV_SUB_MIX_1[sx] = t << 16 | t >>> 16;
+        INV_SUB_MIX_2[sx] = t << 8 | t >>> 24;
+        INV_SUB_MIX_3[sx] = t;
+
+        // Compute next counter
+        if (!x) {
+          x = xi = 1;
+        } else {
+          x = x2 ^ d[d[d[x8 ^ x2]]];
+          xi ^= d[d[xi]];
+        }
+      }
+    })();
+
+    // Precomputed Rcon lookup
+    var RCON = [0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36];
+
+    /**
+                                                                                    * AES block cipher algorithm.
+                                                                                    */
+    var AES = C_algo.AES = BlockCipher.extend({
+      _doReset: function _doReset() {
+        var t;
+
+        // Skip reset of nRounds has been set before and key did not change
+        if (this._nRounds && this._keyPriorReset === this._key) {
+          return;
+        }
+
+        // Shortcuts
+        var key = this._keyPriorReset = this._key;
+        var keyWords = key.words;
+        var keySize = key.sigBytes / 4;
+
+        // Compute number of rounds
+        var nRounds = this._nRounds = keySize + 6;
+
+        // Compute number of key schedule rows
+        var ksRows = (nRounds + 1) * 4;
+
+        // Compute key schedule
+        var keySchedule = this._keySchedule = [];
+        for (var ksRow = 0; ksRow < ksRows; ksRow++) {
+          if (ksRow < keySize) {
+            keySchedule[ksRow] = keyWords[ksRow];
+          } else {
+            t = keySchedule[ksRow - 1];
+
+            if (!(ksRow % keySize)) {
+              // Rot word
+              t = t << 8 | t >>> 24;
+
+              // Sub word
+              t = SBOX[t >>> 24] << 24 | SBOX[t >>> 16 & 0xff] << 16 | SBOX[t >>> 8 & 0xff] << 8 | SBOX[t & 0xff];
+
+              // Mix Rcon
+              t ^= RCON[ksRow / keySize | 0] << 24;
+            } else if (keySize > 6 && ksRow % keySize == 4) {
+              // Sub word
+              t = SBOX[t >>> 24] << 24 | SBOX[t >>> 16 & 0xff] << 16 | SBOX[t >>> 8 & 0xff] << 8 | SBOX[t & 0xff];
+            }
+
+            keySchedule[ksRow] = keySchedule[ksRow - keySize] ^ t;
+          }
+        }
+
+        // Compute inv key schedule
+        var invKeySchedule = this._invKeySchedule = [];
+        for (var invKsRow = 0; invKsRow < ksRows; invKsRow++) {
+          var ksRow = ksRows - invKsRow;
+
+          if (invKsRow % 4) {
+            var t = keySchedule[ksRow];
+          } else {
+            var t = keySchedule[ksRow - 4];
+          }
+
+          if (invKsRow < 4 || ksRow <= 4) {
+            invKeySchedule[invKsRow] = t;
+          } else {
+            invKeySchedule[invKsRow] = INV_SUB_MIX_0[SBOX[t >>> 24]] ^ INV_SUB_MIX_1[SBOX[t >>> 16 & 0xff]] ^
+            INV_SUB_MIX_2[SBOX[t >>> 8 & 0xff]] ^ INV_SUB_MIX_3[SBOX[t & 0xff]];
+          }
+        }
+      },
+
+      encryptBlock: function encryptBlock(M, offset) {
+        this._doCryptBlock(M, offset, this._keySchedule, SUB_MIX_0, SUB_MIX_1, SUB_MIX_2, SUB_MIX_3, SBOX);
+      },
+
+      decryptBlock: function decryptBlock(M, offset) {
+        // Swap 2nd and 4th rows
+        var t = M[offset + 1];
+        M[offset + 1] = M[offset + 3];
+        M[offset + 3] = t;
+
+        this._doCryptBlock(M, offset, this._invKeySchedule, INV_SUB_MIX_0, INV_SUB_MIX_1, INV_SUB_MIX_2, INV_SUB_MIX_3, INV_SBOX);
+
+        // Inv swap 2nd and 4th rows
+        var t = M[offset + 1];
+        M[offset + 1] = M[offset + 3];
+        M[offset + 3] = t;
+      },
+
+      _doCryptBlock: function _doCryptBlock(M, offset, keySchedule, SUB_MIX_0, SUB_MIX_1, SUB_MIX_2, SUB_MIX_3, SBOX) {
+        // Shortcut
+        var nRounds = this._nRounds;
+
+        // Get input, add round key
+        var s0 = M[offset] ^ keySchedule[0];
+        var s1 = M[offset + 1] ^ keySchedule[1];
+        var s2 = M[offset + 2] ^ keySchedule[2];
+        var s3 = M[offset + 3] ^ keySchedule[3];
+
+        // Key schedule row counter
+        var ksRow = 4;
+
+        // Rounds
+        for (var round = 1; round < nRounds; round++) {
+          // Shift rows, sub bytes, mix columns, add round key
+          var t0 = SUB_MIX_0[s0 >>> 24] ^ SUB_MIX_1[s1 >>> 16 & 0xff] ^ SUB_MIX_2[s2 >>> 8 & 0xff] ^ SUB_MIX_3[s3 & 0xff] ^ keySchedule[ksRow++];
+          var t1 = SUB_MIX_0[s1 >>> 24] ^ SUB_MIX_1[s2 >>> 16 & 0xff] ^ SUB_MIX_2[s3 >>> 8 & 0xff] ^ SUB_MIX_3[s0 & 0xff] ^ keySchedule[ksRow++];
+          var t2 = SUB_MIX_0[s2 >>> 24] ^ SUB_MIX_1[s3 >>> 16 & 0xff] ^ SUB_MIX_2[s0 >>> 8 & 0xff] ^ SUB_MIX_3[s1 & 0xff] ^ keySchedule[ksRow++];
+          var t3 = SUB_MIX_0[s3 >>> 24] ^ SUB_MIX_1[s0 >>> 16 & 0xff] ^ SUB_MIX_2[s1 >>> 8 & 0xff] ^ SUB_MIX_3[s2 & 0xff] ^ keySchedule[ksRow++];
+
+          // Update state
+          s0 = t0;
+          s1 = t1;
+          s2 = t2;
+          s3 = t3;
+        }
+
+        // Shift rows, sub bytes, add round key
+        var t0 = (SBOX[s0 >>> 24] << 24 | SBOX[s1 >>> 16 & 0xff] << 16 | SBOX[s2 >>> 8 & 0xff] << 8 | SBOX[s3 & 0xff]) ^ keySchedule[ksRow++];
+        var t1 = (SBOX[s1 >>> 24] << 24 | SBOX[s2 >>> 16 & 0xff] << 16 | SBOX[s3 >>> 8 & 0xff] << 8 | SBOX[s0 & 0xff]) ^ keySchedule[ksRow++];
+        var t2 = (SBOX[s2 >>> 24] << 24 | SBOX[s3 >>> 16 & 0xff] << 16 | SBOX[s0 >>> 8 & 0xff] << 8 | SBOX[s1 & 0xff]) ^ keySchedule[ksRow++];
+        var t3 = (SBOX[s3 >>> 24] << 24 | SBOX[s0 >>> 16 & 0xff] << 16 | SBOX[s1 >>> 8 & 0xff] << 8 | SBOX[s2 & 0xff]) ^ keySchedule[ksRow++];
+
+        // Set output
+        M[offset] = t0;
+        M[offset + 1] = t1;
+        M[offset + 2] = t2;
+        M[offset + 3] = t3;
+      },
+
+      keySize: 256 / 32 });
+
+
+    /**
+                             * Shortcut functions to the cipher's object interface.
+                             *
+                             * @example
+                             *
+                             *     var ciphertext = CryptoJS.AES.encrypt(message, key, cfg);
+                             *     var plaintext  = CryptoJS.AES.decrypt(ciphertext, key, cfg);
+                             */
+    C.AES = BlockCipher._createHelper(AES);
+  })();
+
+
+  return CryptoJS.AES;
+
+});
+
+/***/ }),
+/* 451 */
+/*!*************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/tripledes.js ***!
+  \*************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./enc-base64 */ 425), __webpack_require__(/*! ./md5 */ 427), __webpack_require__(/*! ./evpkdf */ 437), __webpack_require__(/*! ./cipher-core */ 438));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  (function () {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var WordArray = C_lib.WordArray;
+    var BlockCipher = C_lib.BlockCipher;
+    var C_algo = C.algo;
+
+    // Permuted Choice 1 constants
+    var PC1 = [
+    57, 49, 41, 33, 25, 17, 9, 1,
+    58, 50, 42, 34, 26, 18, 10, 2,
+    59, 51, 43, 35, 27, 19, 11, 3,
+    60, 52, 44, 36, 63, 55, 47, 39,
+    31, 23, 15, 7, 62, 54, 46, 38,
+    30, 22, 14, 6, 61, 53, 45, 37,
+    29, 21, 13, 5, 28, 20, 12, 4];
+
+
+    // Permuted Choice 2 constants
+    var PC2 = [
+    14, 17, 11, 24, 1, 5,
+    3, 28, 15, 6, 21, 10,
+    23, 19, 12, 4, 26, 8,
+    16, 7, 27, 20, 13, 2,
+    41, 52, 31, 37, 47, 55,
+    30, 40, 51, 45, 33, 48,
+    44, 49, 39, 56, 34, 53,
+    46, 42, 50, 36, 29, 32];
+
+
+    // Cumulative bit shift constants
+    var BIT_SHIFTS = [1, 2, 4, 6, 8, 10, 12, 14, 15, 17, 19, 21, 23, 25, 27, 28];
+
+    // SBOXes and round permutation constants
+    var SBOX_P = [
+    {
+      0x0: 0x808200,
+      0x10000000: 0x8000,
+      0x20000000: 0x808002,
+      0x30000000: 0x2,
+      0x40000000: 0x200,
+      0x50000000: 0x808202,
+      0x60000000: 0x800202,
+      0x70000000: 0x800000,
+      0x80000000: 0x202,
+      0x90000000: 0x800200,
+      0xa0000000: 0x8200,
+      0xb0000000: 0x808000,
+      0xc0000000: 0x8002,
+      0xd0000000: 0x800002,
+      0xe0000000: 0x0,
+      0xf0000000: 0x8202,
+      0x8000000: 0x0,
+      0x18000000: 0x808202,
+      0x28000000: 0x8202,
+      0x38000000: 0x8000,
+      0x48000000: 0x808200,
+      0x58000000: 0x200,
+      0x68000000: 0x808002,
+      0x78000000: 0x2,
+      0x88000000: 0x800200,
+      0x98000000: 0x8200,
+      0xa8000000: 0x808000,
+      0xb8000000: 0x800202,
+      0xc8000000: 0x800002,
+      0xd8000000: 0x8002,
+      0xe8000000: 0x202,
+      0xf8000000: 0x800000,
+      0x1: 0x8000,
+      0x10000001: 0x2,
+      0x20000001: 0x808200,
+      0x30000001: 0x800000,
+      0x40000001: 0x808002,
+      0x50000001: 0x8200,
+      0x60000001: 0x200,
+      0x70000001: 0x800202,
+      0x80000001: 0x808202,
+      0x90000001: 0x808000,
+      0xa0000001: 0x800002,
+      0xb0000001: 0x8202,
+      0xc0000001: 0x202,
+      0xd0000001: 0x800200,
+      0xe0000001: 0x8002,
+      0xf0000001: 0x0,
+      0x8000001: 0x808202,
+      0x18000001: 0x808000,
+      0x28000001: 0x800000,
+      0x38000001: 0x200,
+      0x48000001: 0x8000,
+      0x58000001: 0x800002,
+      0x68000001: 0x2,
+      0x78000001: 0x8202,
+      0x88000001: 0x8002,
+      0x98000001: 0x800202,
+      0xa8000001: 0x202,
+      0xb8000001: 0x808200,
+      0xc8000001: 0x800200,
+      0xd8000001: 0x0,
+      0xe8000001: 0x8200,
+      0xf8000001: 0x808002 },
+
+    {
+      0x0: 0x40084010,
+      0x1000000: 0x4000,
+      0x2000000: 0x80000,
+      0x3000000: 0x40080010,
+      0x4000000: 0x40000010,
+      0x5000000: 0x40084000,
+      0x6000000: 0x40004000,
+      0x7000000: 0x10,
+      0x8000000: 0x84000,
+      0x9000000: 0x40004010,
+      0xa000000: 0x40000000,
+      0xb000000: 0x84010,
+      0xc000000: 0x80010,
+      0xd000000: 0x0,
+      0xe000000: 0x4010,
+      0xf000000: 0x40080000,
+      0x800000: 0x40004000,
+      0x1800000: 0x84010,
+      0x2800000: 0x10,
+      0x3800000: 0x40004010,
+      0x4800000: 0x40084010,
+      0x5800000: 0x40000000,
+      0x6800000: 0x80000,
+      0x7800000: 0x40080010,
+      0x8800000: 0x80010,
+      0x9800000: 0x0,
+      0xa800000: 0x4000,
+      0xb800000: 0x40080000,
+      0xc800000: 0x40000010,
+      0xd800000: 0x84000,
+      0xe800000: 0x40084000,
+      0xf800000: 0x4010,
+      0x10000000: 0x0,
+      0x11000000: 0x40080010,
+      0x12000000: 0x40004010,
+      0x13000000: 0x40084000,
+      0x14000000: 0x40080000,
+      0x15000000: 0x10,
+      0x16000000: 0x84010,
+      0x17000000: 0x4000,
+      0x18000000: 0x4010,
+      0x19000000: 0x80000,
+      0x1a000000: 0x80010,
+      0x1b000000: 0x40000010,
+      0x1c000000: 0x84000,
+      0x1d000000: 0x40004000,
+      0x1e000000: 0x40000000,
+      0x1f000000: 0x40084010,
+      0x10800000: 0x84010,
+      0x11800000: 0x80000,
+      0x12800000: 0x40080000,
+      0x13800000: 0x4000,
+      0x14800000: 0x40004000,
+      0x15800000: 0x40084010,
+      0x16800000: 0x10,
+      0x17800000: 0x40000000,
+      0x18800000: 0x40084000,
+      0x19800000: 0x40000010,
+      0x1a800000: 0x40004010,
+      0x1b800000: 0x80010,
+      0x1c800000: 0x0,
+      0x1d800000: 0x4010,
+      0x1e800000: 0x40080010,
+      0x1f800000: 0x84000 },
+
+    {
+      0x0: 0x104,
+      0x100000: 0x0,
+      0x200000: 0x4000100,
+      0x300000: 0x10104,
+      0x400000: 0x10004,
+      0x500000: 0x4000004,
+      0x600000: 0x4010104,
+      0x700000: 0x4010000,
+      0x800000: 0x4000000,
+      0x900000: 0x4010100,
+      0xa00000: 0x10100,
+      0xb00000: 0x4010004,
+      0xc00000: 0x4000104,
+      0xd00000: 0x10000,
+      0xe00000: 0x4,
+      0xf00000: 0x100,
+      0x80000: 0x4010100,
+      0x180000: 0x4010004,
+      0x280000: 0x0,
+      0x380000: 0x4000100,
+      0x480000: 0x4000004,
+      0x580000: 0x10000,
+      0x680000: 0x10004,
+      0x780000: 0x104,
+      0x880000: 0x4,
+      0x980000: 0x100,
+      0xa80000: 0x4010000,
+      0xb80000: 0x10104,
+      0xc80000: 0x10100,
+      0xd80000: 0x4000104,
+      0xe80000: 0x4010104,
+      0xf80000: 0x4000000,
+      0x1000000: 0x4010100,
+      0x1100000: 0x10004,
+      0x1200000: 0x10000,
+      0x1300000: 0x4000100,
+      0x1400000: 0x100,
+      0x1500000: 0x4010104,
+      0x1600000: 0x4000004,
+      0x1700000: 0x0,
+      0x1800000: 0x4000104,
+      0x1900000: 0x4000000,
+      0x1a00000: 0x4,
+      0x1b00000: 0x10100,
+      0x1c00000: 0x4010000,
+      0x1d00000: 0x104,
+      0x1e00000: 0x10104,
+      0x1f00000: 0x4010004,
+      0x1080000: 0x4000000,
+      0x1180000: 0x104,
+      0x1280000: 0x4010100,
+      0x1380000: 0x0,
+      0x1480000: 0x10004,
+      0x1580000: 0x4000100,
+      0x1680000: 0x100,
+      0x1780000: 0x4010004,
+      0x1880000: 0x10000,
+      0x1980000: 0x4010104,
+      0x1a80000: 0x10104,
+      0x1b80000: 0x4000004,
+      0x1c80000: 0x4000104,
+      0x1d80000: 0x4010000,
+      0x1e80000: 0x4,
+      0x1f80000: 0x10100 },
+
+    {
+      0x0: 0x80401000,
+      0x10000: 0x80001040,
+      0x20000: 0x401040,
+      0x30000: 0x80400000,
+      0x40000: 0x0,
+      0x50000: 0x401000,
+      0x60000: 0x80000040,
+      0x70000: 0x400040,
+      0x80000: 0x80000000,
+      0x90000: 0x400000,
+      0xa0000: 0x40,
+      0xb0000: 0x80001000,
+      0xc0000: 0x80400040,
+      0xd0000: 0x1040,
+      0xe0000: 0x1000,
+      0xf0000: 0x80401040,
+      0x8000: 0x80001040,
+      0x18000: 0x40,
+      0x28000: 0x80400040,
+      0x38000: 0x80001000,
+      0x48000: 0x401000,
+      0x58000: 0x80401040,
+      0x68000: 0x0,
+      0x78000: 0x80400000,
+      0x88000: 0x1000,
+      0x98000: 0x80401000,
+      0xa8000: 0x400000,
+      0xb8000: 0x1040,
+      0xc8000: 0x80000000,
+      0xd8000: 0x400040,
+      0xe8000: 0x401040,
+      0xf8000: 0x80000040,
+      0x100000: 0x400040,
+      0x110000: 0x401000,
+      0x120000: 0x80000040,
+      0x130000: 0x0,
+      0x140000: 0x1040,
+      0x150000: 0x80400040,
+      0x160000: 0x80401000,
+      0x170000: 0x80001040,
+      0x180000: 0x80401040,
+      0x190000: 0x80000000,
+      0x1a0000: 0x80400000,
+      0x1b0000: 0x401040,
+      0x1c0000: 0x80001000,
+      0x1d0000: 0x400000,
+      0x1e0000: 0x40,
+      0x1f0000: 0x1000,
+      0x108000: 0x80400000,
+      0x118000: 0x80401040,
+      0x128000: 0x0,
+      0x138000: 0x401000,
+      0x148000: 0x400040,
+      0x158000: 0x80000000,
+      0x168000: 0x80001040,
+      0x178000: 0x40,
+      0x188000: 0x80000040,
+      0x198000: 0x1000,
+      0x1a8000: 0x80001000,
+      0x1b8000: 0x80400040,
+      0x1c8000: 0x1040,
+      0x1d8000: 0x80401000,
+      0x1e8000: 0x400000,
+      0x1f8000: 0x401040 },
+
+    {
+      0x0: 0x80,
+      0x1000: 0x1040000,
+      0x2000: 0x40000,
+      0x3000: 0x20000000,
+      0x4000: 0x20040080,
+      0x5000: 0x1000080,
+      0x6000: 0x21000080,
+      0x7000: 0x40080,
+      0x8000: 0x1000000,
+      0x9000: 0x20040000,
+      0xa000: 0x20000080,
+      0xb000: 0x21040080,
+      0xc000: 0x21040000,
+      0xd000: 0x0,
+      0xe000: 0x1040080,
+      0xf000: 0x21000000,
+      0x800: 0x1040080,
+      0x1800: 0x21000080,
+      0x2800: 0x80,
+      0x3800: 0x1040000,
+      0x4800: 0x40000,
+      0x5800: 0x20040080,
+      0x6800: 0x21040000,
+      0x7800: 0x20000000,
+      0x8800: 0x20040000,
+      0x9800: 0x0,
+      0xa800: 0x21040080,
+      0xb800: 0x1000080,
+      0xc800: 0x20000080,
+      0xd800: 0x21000000,
+      0xe800: 0x1000000,
+      0xf800: 0x40080,
+      0x10000: 0x40000,
+      0x11000: 0x80,
+      0x12000: 0x20000000,
+      0x13000: 0x21000080,
+      0x14000: 0x1000080,
+      0x15000: 0x21040000,
+      0x16000: 0x20040080,
+      0x17000: 0x1000000,
+      0x18000: 0x21040080,
+      0x19000: 0x21000000,
+      0x1a000: 0x1040000,
+      0x1b000: 0x20040000,
+      0x1c000: 0x40080,
+      0x1d000: 0x20000080,
+      0x1e000: 0x0,
+      0x1f000: 0x1040080,
+      0x10800: 0x21000080,
+      0x11800: 0x1000000,
+      0x12800: 0x1040000,
+      0x13800: 0x20040080,
+      0x14800: 0x20000000,
+      0x15800: 0x1040080,
+      0x16800: 0x80,
+      0x17800: 0x21040000,
+      0x18800: 0x40080,
+      0x19800: 0x21040080,
+      0x1a800: 0x0,
+      0x1b800: 0x21000000,
+      0x1c800: 0x1000080,
+      0x1d800: 0x40000,
+      0x1e800: 0x20040000,
+      0x1f800: 0x20000080 },
+
+    {
+      0x0: 0x10000008,
+      0x100: 0x2000,
+      0x200: 0x10200000,
+      0x300: 0x10202008,
+      0x400: 0x10002000,
+      0x500: 0x200000,
+      0x600: 0x200008,
+      0x700: 0x10000000,
+      0x800: 0x0,
+      0x900: 0x10002008,
+      0xa00: 0x202000,
+      0xb00: 0x8,
+      0xc00: 0x10200008,
+      0xd00: 0x202008,
+      0xe00: 0x2008,
+      0xf00: 0x10202000,
+      0x80: 0x10200000,
+      0x180: 0x10202008,
+      0x280: 0x8,
+      0x380: 0x200000,
+      0x480: 0x202008,
+      0x580: 0x10000008,
+      0x680: 0x10002000,
+      0x780: 0x2008,
+      0x880: 0x200008,
+      0x980: 0x2000,
+      0xa80: 0x10002008,
+      0xb80: 0x10200008,
+      0xc80: 0x0,
+      0xd80: 0x10202000,
+      0xe80: 0x202000,
+      0xf80: 0x10000000,
+      0x1000: 0x10002000,
+      0x1100: 0x10200008,
+      0x1200: 0x10202008,
+      0x1300: 0x2008,
+      0x1400: 0x200000,
+      0x1500: 0x10000000,
+      0x1600: 0x10000008,
+      0x1700: 0x202000,
+      0x1800: 0x202008,
+      0x1900: 0x0,
+      0x1a00: 0x8,
+      0x1b00: 0x10200000,
+      0x1c00: 0x2000,
+      0x1d00: 0x10002008,
+      0x1e00: 0x10202000,
+      0x1f00: 0x200008,
+      0x1080: 0x8,
+      0x1180: 0x202000,
+      0x1280: 0x200000,
+      0x1380: 0x10000008,
+      0x1480: 0x10002000,
+      0x1580: 0x2008,
+      0x1680: 0x10202008,
+      0x1780: 0x10200000,
+      0x1880: 0x10202000,
+      0x1980: 0x10200008,
+      0x1a80: 0x2000,
+      0x1b80: 0x202008,
+      0x1c80: 0x200008,
+      0x1d80: 0x0,
+      0x1e80: 0x10000000,
+      0x1f80: 0x10002008 },
+
+    {
+      0x0: 0x100000,
+      0x10: 0x2000401,
+      0x20: 0x400,
+      0x30: 0x100401,
+      0x40: 0x2100401,
+      0x50: 0x0,
+      0x60: 0x1,
+      0x70: 0x2100001,
+      0x80: 0x2000400,
+      0x90: 0x100001,
+      0xa0: 0x2000001,
+      0xb0: 0x2100400,
+      0xc0: 0x2100000,
+      0xd0: 0x401,
+      0xe0: 0x100400,
+      0xf0: 0x2000000,
+      0x8: 0x2100001,
+      0x18: 0x0,
+      0x28: 0x2000401,
+      0x38: 0x2100400,
+      0x48: 0x100000,
+      0x58: 0x2000001,
+      0x68: 0x2000000,
+      0x78: 0x401,
+      0x88: 0x100401,
+      0x98: 0x2000400,
+      0xa8: 0x2100000,
+      0xb8: 0x100001,
+      0xc8: 0x400,
+      0xd8: 0x2100401,
+      0xe8: 0x1,
+      0xf8: 0x100400,
+      0x100: 0x2000000,
+      0x110: 0x100000,
+      0x120: 0x2000401,
+      0x130: 0x2100001,
+      0x140: 0x100001,
+      0x150: 0x2000400,
+      0x160: 0x2100400,
+      0x170: 0x100401,
+      0x180: 0x401,
+      0x190: 0x2100401,
+      0x1a0: 0x100400,
+      0x1b0: 0x1,
+      0x1c0: 0x0,
+      0x1d0: 0x2100000,
+      0x1e0: 0x2000001,
+      0x1f0: 0x400,
+      0x108: 0x100400,
+      0x118: 0x2000401,
+      0x128: 0x2100001,
+      0x138: 0x1,
+      0x148: 0x2000000,
+      0x158: 0x100000,
+      0x168: 0x401,
+      0x178: 0x2100400,
+      0x188: 0x2000001,
+      0x198: 0x2100000,
+      0x1a8: 0x0,
+      0x1b8: 0x2100401,
+      0x1c8: 0x100401,
+      0x1d8: 0x400,
+      0x1e8: 0x2000400,
+      0x1f8: 0x100001 },
+
+    {
+      0x0: 0x8000820,
+      0x1: 0x20000,
+      0x2: 0x8000000,
+      0x3: 0x20,
+      0x4: 0x20020,
+      0x5: 0x8020820,
+      0x6: 0x8020800,
+      0x7: 0x800,
+      0x8: 0x8020000,
+      0x9: 0x8000800,
+      0xa: 0x20800,
+      0xb: 0x8020020,
+      0xc: 0x820,
+      0xd: 0x0,
+      0xe: 0x8000020,
+      0xf: 0x20820,
+      0x80000000: 0x800,
+      0x80000001: 0x8020820,
+      0x80000002: 0x8000820,
+      0x80000003: 0x8000000,
+      0x80000004: 0x8020000,
+      0x80000005: 0x20800,
+      0x80000006: 0x20820,
+      0x80000007: 0x20,
+      0x80000008: 0x8000020,
+      0x80000009: 0x820,
+      0x8000000a: 0x20020,
+      0x8000000b: 0x8020800,
+      0x8000000c: 0x0,
+      0x8000000d: 0x8020020,
+      0x8000000e: 0x8000800,
+      0x8000000f: 0x20000,
+      0x10: 0x20820,
+      0x11: 0x8020800,
+      0x12: 0x20,
+      0x13: 0x800,
+      0x14: 0x8000800,
+      0x15: 0x8000020,
+      0x16: 0x8020020,
+      0x17: 0x20000,
+      0x18: 0x0,
+      0x19: 0x20020,
+      0x1a: 0x8020000,
+      0x1b: 0x8000820,
+      0x1c: 0x8020820,
+      0x1d: 0x20800,
+      0x1e: 0x820,
+      0x1f: 0x8000000,
+      0x80000010: 0x20000,
+      0x80000011: 0x800,
+      0x80000012: 0x8020020,
+      0x80000013: 0x20820,
+      0x80000014: 0x20,
+      0x80000015: 0x8020000,
+      0x80000016: 0x8000000,
+      0x80000017: 0x8000820,
+      0x80000018: 0x8020820,
+      0x80000019: 0x8000020,
+      0x8000001a: 0x8000800,
+      0x8000001b: 0x0,
+      0x8000001c: 0x20800,
+      0x8000001d: 0x820,
+      0x8000001e: 0x20020,
+      0x8000001f: 0x8020800 }];
+
+
+
+    // Masks that select the SBOX input
+    var SBOX_MASK = [
+    0xf8000001, 0x1f800000, 0x01f80000, 0x001f8000,
+    0x0001f800, 0x00001f80, 0x000001f8, 0x8000001f];
+
+
+    /**
+                                                      * DES block cipher algorithm.
+                                                      */
+    var DES = C_algo.DES = BlockCipher.extend({
+      _doReset: function _doReset() {
+        // Shortcuts
+        var key = this._key;
+        var keyWords = key.words;
+
+        // Select 56 bits according to PC1
+        var keyBits = [];
+        for (var i = 0; i < 56; i++) {
+          var keyBitPos = PC1[i] - 1;
+          keyBits[i] = keyWords[keyBitPos >>> 5] >>> 31 - keyBitPos % 32 & 1;
+        }
+
+        // Assemble 16 subkeys
+        var subKeys = this._subKeys = [];
+        for (var nSubKey = 0; nSubKey < 16; nSubKey++) {
+          // Create subkey
+          var subKey = subKeys[nSubKey] = [];
+
+          // Shortcut
+          var bitShift = BIT_SHIFTS[nSubKey];
+
+          // Select 48 bits according to PC2
+          for (var i = 0; i < 24; i++) {
+            // Select from the left 28 key bits
+            subKey[i / 6 | 0] |= keyBits[(PC2[i] - 1 + bitShift) % 28] << 31 - i % 6;
+
+            // Select from the right 28 key bits
+            subKey[4 + (i / 6 | 0)] |= keyBits[28 + (PC2[i + 24] - 1 + bitShift) % 28] << 31 - i % 6;
+          }
+
+          // Since each subkey is applied to an expanded 32-bit input,
+          // the subkey can be broken into 8 values scaled to 32-bits,
+          // which allows the key to be used without expansion
+          subKey[0] = subKey[0] << 1 | subKey[0] >>> 31;
+          for (var i = 1; i < 7; i++) {
+            subKey[i] = subKey[i] >>> (i - 1) * 4 + 3;
+          }
+          subKey[7] = subKey[7] << 5 | subKey[7] >>> 27;
+        }
+
+        // Compute inverse subkeys
+        var invSubKeys = this._invSubKeys = [];
+        for (var i = 0; i < 16; i++) {
+          invSubKeys[i] = subKeys[15 - i];
+        }
+      },
+
+      encryptBlock: function encryptBlock(M, offset) {
+        this._doCryptBlock(M, offset, this._subKeys);
+      },
+
+      decryptBlock: function decryptBlock(M, offset) {
+        this._doCryptBlock(M, offset, this._invSubKeys);
+      },
+
+      _doCryptBlock: function _doCryptBlock(M, offset, subKeys) {
+        // Get input
+        this._lBlock = M[offset];
+        this._rBlock = M[offset + 1];
+
+        // Initial permutation
+        exchangeLR.call(this, 4, 0x0f0f0f0f);
+        exchangeLR.call(this, 16, 0x0000ffff);
+        exchangeRL.call(this, 2, 0x33333333);
+        exchangeRL.call(this, 8, 0x00ff00ff);
+        exchangeLR.call(this, 1, 0x55555555);
+
+        // Rounds
+        for (var round = 0; round < 16; round++) {
+          // Shortcuts
+          var subKey = subKeys[round];
+          var lBlock = this._lBlock;
+          var rBlock = this._rBlock;
+
+          // Feistel function
+          var f = 0;
+          for (var i = 0; i < 8; i++) {
+            f |= SBOX_P[i][((rBlock ^ subKey[i]) & SBOX_MASK[i]) >>> 0];
+          }
+          this._lBlock = rBlock;
+          this._rBlock = lBlock ^ f;
+        }
+
+        // Undo swap from last round
+        var t = this._lBlock;
+        this._lBlock = this._rBlock;
+        this._rBlock = t;
+
+        // Final permutation
+        exchangeLR.call(this, 1, 0x55555555);
+        exchangeRL.call(this, 8, 0x00ff00ff);
+        exchangeRL.call(this, 2, 0x33333333);
+        exchangeLR.call(this, 16, 0x0000ffff);
+        exchangeLR.call(this, 4, 0x0f0f0f0f);
+
+        // Set output
+        M[offset] = this._lBlock;
+        M[offset + 1] = this._rBlock;
+      },
+
+      keySize: 64 / 32,
+
+      ivSize: 64 / 32,
+
+      blockSize: 64 / 32 });
+
+
+    // Swap bits across the left and right words
+    function exchangeLR(offset, mask) {
+      var t = (this._lBlock >>> offset ^ this._rBlock) & mask;
+      this._rBlock ^= t;
+      this._lBlock ^= t << offset;
+    }
+
+    function exchangeRL(offset, mask) {
+      var t = (this._rBlock >>> offset ^ this._lBlock) & mask;
+      this._lBlock ^= t;
+      this._rBlock ^= t << offset;
+    }
+
+    /**
+       * Shortcut functions to the cipher's object interface.
+       *
+       * @example
+       *
+       *     var ciphertext = CryptoJS.DES.encrypt(message, key, cfg);
+       *     var plaintext  = CryptoJS.DES.decrypt(ciphertext, key, cfg);
+       */
+    C.DES = BlockCipher._createHelper(DES);
+
+    /**
+                                             * Triple-DES block cipher algorithm.
+                                             */
+    var TripleDES = C_algo.TripleDES = BlockCipher.extend({
+      _doReset: function _doReset() {
+        // Shortcuts
+        var key = this._key;
+        var keyWords = key.words;
+        // Make sure the key length is valid (64, 128 or >= 192 bit)
+        if (keyWords.length !== 2 && keyWords.length !== 4 && keyWords.length < 6) {
+          throw new Error('Invalid key length - 3DES requires the key length to be 64, 128, 192 or >192.');
+        }
+
+        // Extend the key according to the keying options defined in 3DES standard
+        var key1 = keyWords.slice(0, 2);
+        var key2 = keyWords.length < 4 ? keyWords.slice(0, 2) : keyWords.slice(2, 4);
+        var key3 = keyWords.length < 6 ? keyWords.slice(0, 2) : keyWords.slice(4, 6);
+
+        // Create DES instances
+        this._des1 = DES.createEncryptor(WordArray.create(key1));
+        this._des2 = DES.createEncryptor(WordArray.create(key2));
+        this._des3 = DES.createEncryptor(WordArray.create(key3));
+      },
+
+      encryptBlock: function encryptBlock(M, offset) {
+        this._des1.encryptBlock(M, offset);
+        this._des2.decryptBlock(M, offset);
+        this._des3.encryptBlock(M, offset);
+      },
+
+      decryptBlock: function decryptBlock(M, offset) {
+        this._des3.decryptBlock(M, offset);
+        this._des2.encryptBlock(M, offset);
+        this._des1.decryptBlock(M, offset);
+      },
+
+      keySize: 192 / 32,
+
+      ivSize: 64 / 32,
+
+      blockSize: 64 / 32 });
+
+
+    /**
+                              * Shortcut functions to the cipher's object interface.
+                              *
+                              * @example
+                              *
+                              *     var ciphertext = CryptoJS.TripleDES.encrypt(message, key, cfg);
+                              *     var plaintext  = CryptoJS.TripleDES.decrypt(ciphertext, key, cfg);
+                              */
+    C.TripleDES = BlockCipher._createHelper(TripleDES);
+  })();
+
+
+  return CryptoJS.TripleDES;
+
+});
+
+/***/ }),
+/* 452 */
+/*!*******************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/rc4.js ***!
+  \*******************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./enc-base64 */ 425), __webpack_require__(/*! ./md5 */ 427), __webpack_require__(/*! ./evpkdf */ 437), __webpack_require__(/*! ./cipher-core */ 438));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  (function () {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var StreamCipher = C_lib.StreamCipher;
+    var C_algo = C.algo;
+
+    /**
+                          * RC4 stream cipher algorithm.
+                          */
+    var RC4 = C_algo.RC4 = StreamCipher.extend({
+      _doReset: function _doReset() {
+        // Shortcuts
+        var key = this._key;
+        var keyWords = key.words;
+        var keySigBytes = key.sigBytes;
+
+        // Init sbox
+        var S = this._S = [];
+        for (var i = 0; i < 256; i++) {
+          S[i] = i;
+        }
+
+        // Key setup
+        for (var i = 0, j = 0; i < 256; i++) {
+          var keyByteIndex = i % keySigBytes;
+          var keyByte = keyWords[keyByteIndex >>> 2] >>> 24 - keyByteIndex % 4 * 8 & 0xff;
+
+          j = (j + S[i] + keyByte) % 256;
+
+          // Swap
+          var t = S[i];
+          S[i] = S[j];
+          S[j] = t;
+        }
+
+        // Counters
+        this._i = this._j = 0;
+      },
+
+      _doProcessBlock: function _doProcessBlock(M, offset) {
+        M[offset] ^= generateKeystreamWord.call(this);
+      },
+
+      keySize: 256 / 32,
+
+      ivSize: 0 });
+
+
+    function generateKeystreamWord() {
+      // Shortcuts
+      var S = this._S;
+      var i = this._i;
+      var j = this._j;
+
+      // Generate keystream word
+      var keystreamWord = 0;
+      for (var n = 0; n < 4; n++) {
+        i = (i + 1) % 256;
+        j = (j + S[i]) % 256;
+
+        // Swap
+        var t = S[i];
+        S[i] = S[j];
+        S[j] = t;
+
+        keystreamWord |= S[(S[i] + S[j]) % 256] << 24 - n * 8;
+      }
+
+      // Update counters
+      this._i = i;
+      this._j = j;
+
+      return keystreamWord;
+    }
+
+    /**
+       * Shortcut functions to the cipher's object interface.
+       *
+       * @example
+       *
+       *     var ciphertext = CryptoJS.RC4.encrypt(message, key, cfg);
+       *     var plaintext  = CryptoJS.RC4.decrypt(ciphertext, key, cfg);
+       */
+    C.RC4 = StreamCipher._createHelper(RC4);
+
+    /**
+                                              * Modified RC4 stream cipher algorithm.
+                                              */
+    var RC4Drop = C_algo.RC4Drop = RC4.extend({
+      /**
+                                                 * Configuration options.
+                                                 *
+                                                 * @property {number} drop The number of keystream words to drop. Default 192
+                                                 */
+      cfg: RC4.cfg.extend({
+        drop: 192 }),
+
+
+      _doReset: function _doReset() {
+        RC4._doReset.call(this);
+
+        // Drop
+        for (var i = this.cfg.drop; i > 0; i--) {
+          generateKeystreamWord.call(this);
+        }
+      } });
+
+
+    /**
+             * Shortcut functions to the cipher's object interface.
+             *
+             * @example
+             *
+             *     var ciphertext = CryptoJS.RC4Drop.encrypt(message, key, cfg);
+             *     var plaintext  = CryptoJS.RC4Drop.decrypt(ciphertext, key, cfg);
+             */
+    C.RC4Drop = StreamCipher._createHelper(RC4Drop);
+  })();
+
+
+  return CryptoJS.RC4;
+
+});
+
+/***/ }),
+/* 453 */
+/*!**********************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/rabbit.js ***!
+  \**********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./enc-base64 */ 425), __webpack_require__(/*! ./md5 */ 427), __webpack_require__(/*! ./evpkdf */ 437), __webpack_require__(/*! ./cipher-core */ 438));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  (function () {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var StreamCipher = C_lib.StreamCipher;
+    var C_algo = C.algo;
+
+    // Reusable objects
+    var S = [];
+    var C_ = [];
+    var G = [];
+
+    /**
+                 * Rabbit stream cipher algorithm
+                 */
+    var Rabbit = C_algo.Rabbit = StreamCipher.extend({
+      _doReset: function _doReset() {
+        // Shortcuts
+        var K = this._key.words;
+        var iv = this.cfg.iv;
+
+        // Swap endian
+        for (var i = 0; i < 4; i++) {
+          K[i] = (K[i] << 8 | K[i] >>> 24) & 0x00ff00ff |
+          (K[i] << 24 | K[i] >>> 8) & 0xff00ff00;
+        }
+
+        // Generate initial state values
+        var X = this._X = [
+        K[0], K[3] << 16 | K[2] >>> 16,
+        K[1], K[0] << 16 | K[3] >>> 16,
+        K[2], K[1] << 16 | K[0] >>> 16,
+        K[3], K[2] << 16 | K[1] >>> 16];
+
+
+        // Generate initial counter values
+        var C = this._C = [
+        K[2] << 16 | K[2] >>> 16, K[0] & 0xffff0000 | K[1] & 0x0000ffff,
+        K[3] << 16 | K[3] >>> 16, K[1] & 0xffff0000 | K[2] & 0x0000ffff,
+        K[0] << 16 | K[0] >>> 16, K[2] & 0xffff0000 | K[3] & 0x0000ffff,
+        K[1] << 16 | K[1] >>> 16, K[3] & 0xffff0000 | K[0] & 0x0000ffff];
+
+
+        // Carry bit
+        this._b = 0;
+
+        // Iterate the system four times
+        for (var i = 0; i < 4; i++) {
+          nextState.call(this);
+        }
+
+        // Modify the counters
+        for (var i = 0; i < 8; i++) {
+          C[i] ^= X[i + 4 & 7];
+        }
+
+        // IV setup
+        if (iv) {
+          // Shortcuts
+          var IV = iv.words;
+          var IV_0 = IV[0];
+          var IV_1 = IV[1];
+
+          // Generate four subvectors
+          var i0 = (IV_0 << 8 | IV_0 >>> 24) & 0x00ff00ff | (IV_0 << 24 | IV_0 >>> 8) & 0xff00ff00;
+          var i2 = (IV_1 << 8 | IV_1 >>> 24) & 0x00ff00ff | (IV_1 << 24 | IV_1 >>> 8) & 0xff00ff00;
+          var i1 = i0 >>> 16 | i2 & 0xffff0000;
+          var i3 = i2 << 16 | i0 & 0x0000ffff;
+
+          // Modify counter values
+          C[0] ^= i0;
+          C[1] ^= i1;
+          C[2] ^= i2;
+          C[3] ^= i3;
+          C[4] ^= i0;
+          C[5] ^= i1;
+          C[6] ^= i2;
+          C[7] ^= i3;
+
+          // Iterate the system four times
+          for (var i = 0; i < 4; i++) {
+            nextState.call(this);
+          }
+        }
+      },
+
+      _doProcessBlock: function _doProcessBlock(M, offset) {
+        // Shortcut
+        var X = this._X;
+
+        // Iterate the system
+        nextState.call(this);
+
+        // Generate four keystream words
+        S[0] = X[0] ^ X[5] >>> 16 ^ X[3] << 16;
+        S[1] = X[2] ^ X[7] >>> 16 ^ X[5] << 16;
+        S[2] = X[4] ^ X[1] >>> 16 ^ X[7] << 16;
+        S[3] = X[6] ^ X[3] >>> 16 ^ X[1] << 16;
+
+        for (var i = 0; i < 4; i++) {
+          // Swap endian
+          S[i] = (S[i] << 8 | S[i] >>> 24) & 0x00ff00ff |
+          (S[i] << 24 | S[i] >>> 8) & 0xff00ff00;
+
+          // Encrypt
+          M[offset + i] ^= S[i];
+        }
+      },
+
+      blockSize: 128 / 32,
+
+      ivSize: 64 / 32 });
+
+
+    function nextState() {
+      // Shortcuts
+      var X = this._X;
+      var C = this._C;
+
+      // Save old counter values
+      for (var i = 0; i < 8; i++) {
+        C_[i] = C[i];
+      }
+
+      // Calculate new counter values
+      C[0] = C[0] + 0x4d34d34d + this._b | 0;
+      C[1] = C[1] + 0xd34d34d3 + (C[0] >>> 0 < C_[0] >>> 0 ? 1 : 0) | 0;
+      C[2] = C[2] + 0x34d34d34 + (C[1] >>> 0 < C_[1] >>> 0 ? 1 : 0) | 0;
+      C[3] = C[3] + 0x4d34d34d + (C[2] >>> 0 < C_[2] >>> 0 ? 1 : 0) | 0;
+      C[4] = C[4] + 0xd34d34d3 + (C[3] >>> 0 < C_[3] >>> 0 ? 1 : 0) | 0;
+      C[5] = C[5] + 0x34d34d34 + (C[4] >>> 0 < C_[4] >>> 0 ? 1 : 0) | 0;
+      C[6] = C[6] + 0x4d34d34d + (C[5] >>> 0 < C_[5] >>> 0 ? 1 : 0) | 0;
+      C[7] = C[7] + 0xd34d34d3 + (C[6] >>> 0 < C_[6] >>> 0 ? 1 : 0) | 0;
+      this._b = C[7] >>> 0 < C_[7] >>> 0 ? 1 : 0;
+
+      // Calculate the g-values
+      for (var i = 0; i < 8; i++) {
+        var gx = X[i] + C[i];
+
+        // Construct high and low argument for squaring
+        var ga = gx & 0xffff;
+        var gb = gx >>> 16;
+
+        // Calculate high and low result of squaring
+        var gh = ((ga * ga >>> 17) + ga * gb >>> 15) + gb * gb;
+        var gl = ((gx & 0xffff0000) * gx | 0) + ((gx & 0x0000ffff) * gx | 0);
+
+        // High XOR low
+        G[i] = gh ^ gl;
+      }
+
+      // Calculate new state values
+      X[0] = G[0] + (G[7] << 16 | G[7] >>> 16) + (G[6] << 16 | G[6] >>> 16) | 0;
+      X[1] = G[1] + (G[0] << 8 | G[0] >>> 24) + G[7] | 0;
+      X[2] = G[2] + (G[1] << 16 | G[1] >>> 16) + (G[0] << 16 | G[0] >>> 16) | 0;
+      X[3] = G[3] + (G[2] << 8 | G[2] >>> 24) + G[1] | 0;
+      X[4] = G[4] + (G[3] << 16 | G[3] >>> 16) + (G[2] << 16 | G[2] >>> 16) | 0;
+      X[5] = G[5] + (G[4] << 8 | G[4] >>> 24) + G[3] | 0;
+      X[6] = G[6] + (G[5] << 16 | G[5] >>> 16) + (G[4] << 16 | G[4] >>> 16) | 0;
+      X[7] = G[7] + (G[6] << 8 | G[6] >>> 24) + G[5] | 0;
+    }
+
+    /**
+       * Shortcut functions to the cipher's object interface.
+       *
+       * @example
+       *
+       *     var ciphertext = CryptoJS.Rabbit.encrypt(message, key, cfg);
+       *     var plaintext  = CryptoJS.Rabbit.decrypt(ciphertext, key, cfg);
+       */
+    C.Rabbit = StreamCipher._createHelper(Rabbit);
+  })();
+
+
+  return CryptoJS.Rabbit;
+
+});
+
+/***/ }),
+/* 454 */
+/*!*****************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/node_modules/crypto-js/rabbit-legacy.js ***!
+  \*****************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+;(function (root, factory, undef) {
+  if (true) {
+    // CommonJS
+    module.exports = exports = factory(__webpack_require__(/*! ./core */ 420), __webpack_require__(/*! ./enc-base64 */ 425), __webpack_require__(/*! ./md5 */ 427), __webpack_require__(/*! ./evpkdf */ 437), __webpack_require__(/*! ./cipher-core */ 438));
+  } else
+  {}
+})(this, function (CryptoJS) {
+
+  (function () {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var StreamCipher = C_lib.StreamCipher;
+    var C_algo = C.algo;
+
+    // Reusable objects
+    var S = [];
+    var C_ = [];
+    var G = [];
+
+    /**
+                 * Rabbit stream cipher algorithm.
+                 *
+                 * This is a legacy version that neglected to convert the key to little-endian.
+                 * This error doesn't affect the cipher's security,
+                 * but it does affect its compatibility with other implementations.
+                 */
+    var RabbitLegacy = C_algo.RabbitLegacy = StreamCipher.extend({
+      _doReset: function _doReset() {
+        // Shortcuts
+        var K = this._key.words;
+        var iv = this.cfg.iv;
+
+        // Generate initial state values
+        var X = this._X = [
+        K[0], K[3] << 16 | K[2] >>> 16,
+        K[1], K[0] << 16 | K[3] >>> 16,
+        K[2], K[1] << 16 | K[0] >>> 16,
+        K[3], K[2] << 16 | K[1] >>> 16];
+
+
+        // Generate initial counter values
+        var C = this._C = [
+        K[2] << 16 | K[2] >>> 16, K[0] & 0xffff0000 | K[1] & 0x0000ffff,
+        K[3] << 16 | K[3] >>> 16, K[1] & 0xffff0000 | K[2] & 0x0000ffff,
+        K[0] << 16 | K[0] >>> 16, K[2] & 0xffff0000 | K[3] & 0x0000ffff,
+        K[1] << 16 | K[1] >>> 16, K[3] & 0xffff0000 | K[0] & 0x0000ffff];
+
+
+        // Carry bit
+        this._b = 0;
+
+        // Iterate the system four times
+        for (var i = 0; i < 4; i++) {
+          nextState.call(this);
+        }
+
+        // Modify the counters
+        for (var i = 0; i < 8; i++) {
+          C[i] ^= X[i + 4 & 7];
+        }
+
+        // IV setup
+        if (iv) {
+          // Shortcuts
+          var IV = iv.words;
+          var IV_0 = IV[0];
+          var IV_1 = IV[1];
+
+          // Generate four subvectors
+          var i0 = (IV_0 << 8 | IV_0 >>> 24) & 0x00ff00ff | (IV_0 << 24 | IV_0 >>> 8) & 0xff00ff00;
+          var i2 = (IV_1 << 8 | IV_1 >>> 24) & 0x00ff00ff | (IV_1 << 24 | IV_1 >>> 8) & 0xff00ff00;
+          var i1 = i0 >>> 16 | i2 & 0xffff0000;
+          var i3 = i2 << 16 | i0 & 0x0000ffff;
+
+          // Modify counter values
+          C[0] ^= i0;
+          C[1] ^= i1;
+          C[2] ^= i2;
+          C[3] ^= i3;
+          C[4] ^= i0;
+          C[5] ^= i1;
+          C[6] ^= i2;
+          C[7] ^= i3;
+
+          // Iterate the system four times
+          for (var i = 0; i < 4; i++) {
+            nextState.call(this);
+          }
+        }
+      },
+
+      _doProcessBlock: function _doProcessBlock(M, offset) {
+        // Shortcut
+        var X = this._X;
+
+        // Iterate the system
+        nextState.call(this);
+
+        // Generate four keystream words
+        S[0] = X[0] ^ X[5] >>> 16 ^ X[3] << 16;
+        S[1] = X[2] ^ X[7] >>> 16 ^ X[5] << 16;
+        S[2] = X[4] ^ X[1] >>> 16 ^ X[7] << 16;
+        S[3] = X[6] ^ X[3] >>> 16 ^ X[1] << 16;
+
+        for (var i = 0; i < 4; i++) {
+          // Swap endian
+          S[i] = (S[i] << 8 | S[i] >>> 24) & 0x00ff00ff |
+          (S[i] << 24 | S[i] >>> 8) & 0xff00ff00;
+
+          // Encrypt
+          M[offset + i] ^= S[i];
+        }
+      },
+
+      blockSize: 128 / 32,
+
+      ivSize: 64 / 32 });
+
+
+    function nextState() {
+      // Shortcuts
+      var X = this._X;
+      var C = this._C;
+
+      // Save old counter values
+      for (var i = 0; i < 8; i++) {
+        C_[i] = C[i];
+      }
+
+      // Calculate new counter values
+      C[0] = C[0] + 0x4d34d34d + this._b | 0;
+      C[1] = C[1] + 0xd34d34d3 + (C[0] >>> 0 < C_[0] >>> 0 ? 1 : 0) | 0;
+      C[2] = C[2] + 0x34d34d34 + (C[1] >>> 0 < C_[1] >>> 0 ? 1 : 0) | 0;
+      C[3] = C[3] + 0x4d34d34d + (C[2] >>> 0 < C_[2] >>> 0 ? 1 : 0) | 0;
+      C[4] = C[4] + 0xd34d34d3 + (C[3] >>> 0 < C_[3] >>> 0 ? 1 : 0) | 0;
+      C[5] = C[5] + 0x34d34d34 + (C[4] >>> 0 < C_[4] >>> 0 ? 1 : 0) | 0;
+      C[6] = C[6] + 0x4d34d34d + (C[5] >>> 0 < C_[5] >>> 0 ? 1 : 0) | 0;
+      C[7] = C[7] + 0xd34d34d3 + (C[6] >>> 0 < C_[6] >>> 0 ? 1 : 0) | 0;
+      this._b = C[7] >>> 0 < C_[7] >>> 0 ? 1 : 0;
+
+      // Calculate the g-values
+      for (var i = 0; i < 8; i++) {
+        var gx = X[i] + C[i];
+
+        // Construct high and low argument for squaring
+        var ga = gx & 0xffff;
+        var gb = gx >>> 16;
+
+        // Calculate high and low result of squaring
+        var gh = ((ga * ga >>> 17) + ga * gb >>> 15) + gb * gb;
+        var gl = ((gx & 0xffff0000) * gx | 0) + ((gx & 0x0000ffff) * gx | 0);
+
+        // High XOR low
+        G[i] = gh ^ gl;
+      }
+
+      // Calculate new state values
+      X[0] = G[0] + (G[7] << 16 | G[7] >>> 16) + (G[6] << 16 | G[6] >>> 16) | 0;
+      X[1] = G[1] + (G[0] << 8 | G[0] >>> 24) + G[7] | 0;
+      X[2] = G[2] + (G[1] << 16 | G[1] >>> 16) + (G[0] << 16 | G[0] >>> 16) | 0;
+      X[3] = G[3] + (G[2] << 8 | G[2] >>> 24) + G[1] | 0;
+      X[4] = G[4] + (G[3] << 16 | G[3] >>> 16) + (G[2] << 16 | G[2] >>> 16) | 0;
+      X[5] = G[5] + (G[4] << 8 | G[4] >>> 24) + G[3] | 0;
+      X[6] = G[6] + (G[5] << 16 | G[5] >>> 16) + (G[4] << 16 | G[4] >>> 16) | 0;
+      X[7] = G[7] + (G[6] << 8 | G[6] >>> 24) + G[5] | 0;
+    }
+
+    /**
+       * Shortcut functions to the cipher's object interface.
+       *
+       * @example
+       *
+       *     var ciphertext = CryptoJS.RabbitLegacy.encrypt(message, key, cfg);
+       *     var plaintext  = CryptoJS.RabbitLegacy.decrypt(ciphertext, key, cfg);
+       */
+    C.RabbitLegacy = StreamCipher._createHelper(RabbitLegacy);
+  })();
+
+
+  return CryptoJS.RabbitLegacy;
+
+});
+
+/***/ }),
+/* 455 */
+/*!************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/components/verify/utils/request.js ***!
+  \************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.myRequest = void 0;var _config = __webpack_require__(/*! ../../../config.js */ 46);
+
+
+var myRequest = function myRequest() {var option = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  return new Promise(function (reslove, reject) {
+    uni.request({
+      url: _config.baseUrl + option.url,
+      data: option.data,
+      header: {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+
+      method: option.method || "GET",
+      success: function success(result) {
+        reslove(result);
+      },
+      fail: function fail(error) {
+        reject(error);
+      } });
+
+  });
+};exports.myRequest = myRequest;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 456 */,
+/* 457 */,
+/* 458 */,
+/* 459 */,
+/* 460 */,
+/* 461 */,
+/* 462 */,
+/* 463 */,
+/* 464 */,
+/* 465 */,
+/* 466 */,
+/* 467 */,
+/* 468 */,
+/* 469 */,
+/* 470 */
+/*!***************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/libs/util/async-validator.js ***!
+  \***************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(process) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;function ownKeys(object, enumerableOnly) {var keys = Object.keys(object);if (Object.getOwnPropertySymbols) {var symbols = Object.getOwnPropertySymbols(object);if (enumerableOnly) symbols = symbols.filter(function (sym) {return Object.getOwnPropertyDescriptor(object, sym).enumerable;});keys.push.apply(keys, symbols);}return keys;}function _objectSpread(target) {for (var i = 1; i < arguments.length; i++) {var source = arguments[i] != null ? arguments[i] : {};if (i % 2) {ownKeys(Object(source), true).forEach(function (key) {_defineProperty(target, key, source[key]);});} else if (Object.getOwnPropertyDescriptors) {Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));} else {ownKeys(Object(source)).forEach(function (key) {Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));});}}return target;}function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function _extends() {
+  _extends = Object.assign || function (target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+
+    return target;
+  };
+
+  return _extends.apply(this, arguments);
+}
+
+/* eslint no-console:0 */
+var formatRegExp = /%[sdj%]/g;
+var warning = function warning() {}; // don't print warning message when in production env or node runtime
+
+if (typeof process !== 'undefined' && Object({"VUE_APP_NAME":"共享旅途","VUE_APP_PLATFORM":"mp-weixin","NODE_ENV":"development","BASE_URL":"/"}) && "development" !== 'production' && typeof window !==
+'undefined' && typeof document !== 'undefined') {
+  warning = function warning(type, errors) {
+    if (typeof console !== 'undefined' && console.warn) {
+      if (errors.every(function (e) {return typeof e === 'string';})) {
+        console.warn(type, errors);
+      }
+    }
+  };
+}
+
+function convertFieldsError(errors) {
+  if (!errors || !errors.length) return null;
+  var fields = {};
+  errors.forEach(function (error) {var
+    field = error.field;
+    fields[field] = fields[field] || [];
+    fields[field].push(error);
+  });
+  return fields;
+}
+
+function format() {
+  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
+  }
+
+  var i = 1;
+  var f = args[0];
+  var len = args.length;
+
+  if (typeof f === 'function') {
+    return f.apply(null, args.slice(1));
+  }
+
+  if (typeof f === 'string') {
+    var str = String(f).replace(formatRegExp, function (x) {
+      if (x === '%%') {
+        return '%';
+      }
+
+      if (i >= len) {
+        return x;
+      }
+
+      switch (x) {
+        case '%s':
+          return String(args[i++]);
+
+        case '%d':
+          return Number(args[i++]);
+
+        case '%j':
+          try {
+            return JSON.stringify(args[i++]);
+          } catch (_) {
+            return '[Circular]';
+          }
+
+          break;
+
+        default:
+          return x;}
+
+    });
+
+    for (var arg = args[i]; i < len; arg = args[++i]) {
+      str += " ".concat(arg);
+    }
+
+    return str;
+  }
+
+  return f;
+}
+
+function isNativeStringType(type) {
+  return type === 'string' || type === 'url' || type === 'hex' || type === 'email' || type === 'pattern';
+}
+
+function isEmptyValue(value, type) {
+  if (value === undefined || value === null) {
+    return true;
+  }
+
+  if (type === 'array' && Array.isArray(value) && !value.length) {
+    return true;
+  }
+
+  if (isNativeStringType(type) && typeof value === 'string' && !value) {
+    return true;
+  }
+
+  return false;
+}
+
+function asyncParallelArray(arr, func, callback) {
+  var results = [];
+  var total = 0;
+  var arrLength = arr.length;
+
+  function count(errors) {
+    results.push.apply(results, errors);
+    total++;
+
+    if (total === arrLength) {
+      callback(results);
+    }
+  }
+
+  arr.forEach(function (a) {
+    func(a, count);
+  });
+}
+
+function asyncSerialArray(arr, func, callback) {
+  var index = 0;
+  var arrLength = arr.length;
+
+  function next(errors) {
+    if (errors && errors.length) {
+      callback(errors);
+      return;
+    }
+
+    var original = index;
+    index += 1;
+
+    if (original < arrLength) {
+      func(arr[original], next);
+    } else {
+      callback([]);
+    }
+  }
+
+  next([]);
+}
+
+function flattenObjArr(objArr) {
+  var ret = [];
+  Object.keys(objArr).forEach(function (k) {
+    ret.push.apply(ret, objArr[k]);
+  });
+  return ret;
+}
+
+function asyncMap(objArr, option, func, callback) {
+  if (option.first) {
+    var _pending = new Promise(function (resolve, reject) {
+      var next = function next(errors) {
+        callback(errors);
+        return errors.length ? reject({
+          errors: errors,
+          fields: convertFieldsError(errors) }) :
+        resolve();
+      };
+
+      var flattenArr = flattenObjArr(objArr);
+      asyncSerialArray(flattenArr, func, next);
+    });
+
+    _pending.catch(function (e) {return e;});
+
+    return _pending;
+  }
+
+  var firstFields = option.firstFields || [];
+
+  if (firstFields === true) {
+    firstFields = Object.keys(objArr);
+  }
+
+  var objArrKeys = Object.keys(objArr);
+  var objArrLength = objArrKeys.length;
+  var total = 0;
+  var results = [];
+  var pending = new Promise(function (resolve, reject) {
+    var next = function next(errors) {
+      results.push.apply(results, errors);
+      total++;
+
+      if (total === objArrLength) {
+        callback(results);
+        return results.length ? reject({
+          errors: results,
+          fields: convertFieldsError(results) }) :
+        resolve();
+      }
+    };
+
+    if (!objArrKeys.length) {
+      callback(results);
+      resolve();
+    }
+
+    objArrKeys.forEach(function (key) {
+      var arr = objArr[key];
+
+      if (firstFields.indexOf(key) !== -1) {
+        asyncSerialArray(arr, func, next);
+      } else {
+        asyncParallelArray(arr, func, next);
+      }
+    });
+  });
+  pending.catch(function (e) {return e;});
+  return pending;
+}
+
+function complementError(rule) {
+  return function (oe) {
+    if (oe && oe.message) {
+      oe.field = oe.field || rule.fullField;
+      return oe;
+    }
+
+    return {
+      message: typeof oe === 'function' ? oe() : oe,
+      field: oe.field || rule.fullField };
+
+  };
+}
+
+function deepMerge(target, source) {
+  if (source) {
+    for (var s in source) {
+      if (source.hasOwnProperty(s)) {
+        var value = source[s];
+
+        if (typeof value === 'object' && typeof target[s] === 'object') {
+          target[s] = _objectSpread(_objectSpread({}, target[s]), value);
+        } else {
+          target[s] = value;
+        }
+      }
+    }
+  }
+
+  return target;
+}
+
+/**
+   *  Rule for validating required fields.
+   *
+   *  @param rule The validation rule.
+   *  @param value The value of the field on the source object.
+   *  @param source The source object being validated.
+   *  @param errors An array of errors that this rule may add
+   *  validation errors to.
+   *  @param options The validation options.
+   *  @param options.messages The validation messages.
+   */
+
+function required(rule, value, source, errors, options, type) {
+  if (rule.required && (!source.hasOwnProperty(rule.field) || isEmptyValue(value, type || rule.type))) {
+    errors.push(format(options.messages.required, rule.fullField));
+  }
+}
+
+/**
+   *  Rule for validating whitespace.
+   *
+   *  @param rule The validation rule.
+   *  @param value The value of the field on the source object.
+   *  @param source The source object being validated.
+   *  @param errors An array of errors that this rule may add
+   *  validation errors to.
+   *  @param options The validation options.
+   *  @param options.messages The validation messages.
+   */
+
+function whitespace(rule, value, source, errors, options) {
+  if (/^\s+$/.test(value) || value === '') {
+    errors.push(format(options.messages.whitespace, rule.fullField));
+  }
+}
+
+/* eslint max-len:0 */
+
+var pattern = {
+  // http://emailregex.com/
+  email: /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+  url: new RegExp(
+  "^(?!mailto:)(?:(?:http|https|ftp)://|//)(?:\\S+(?::\\S*)?@)?(?:(?:(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}(?:\\.(?:[0-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))|(?:(?:[a-z\\u00a1-\\uffff0-9]+-*)*[a-z\\u00a1-\\uffff0-9]+)(?:\\.(?:[a-z\\u00a1-\\uffff0-9]+-*)*[a-z\\u00a1-\\uffff0-9]+)*(?:\\.(?:[a-z\\u00a1-\\uffff]{2,})))|localhost)(?::\\d{2,5})?(?:(/|\\?|#)[^\\s]*)?$",
+  'i'),
+
+  hex: /^#?([a-f0-9]{6}|[a-f0-9]{3})$/i };
+
+var types = {
+  integer: function integer(value) {
+    return /^(-)?\d+$/.test(value);
+  },
+  float: function float(value) {
+    return /^(-)?\d+(\.\d+)?$/.test(value);
+  },
+  array: function array(value) {
+    return Array.isArray(value);
+  },
+  regexp: function regexp(value) {
+    if (value instanceof RegExp) {
+      return true;
+    }
+
+    try {
+      return !!new RegExp(value);
+    } catch (e) {
+      return false;
+    }
+  },
+  date: function date(value) {
+    return typeof value.getTime === 'function' && typeof value.getMonth === 'function' && typeof value.getYear ===
+    'function';
+  },
+  number: function number(value) {
+    if (isNaN(value)) {
+      return false;
+    }
+
+    // 修改源码，将字符串数值先转为数值
+    return typeof +value === 'number';
+  },
+  object: function object(value) {
+    return typeof value === 'object' && !types.array(value);
+  },
+  method: function method(value) {
+    return typeof value === 'function';
+  },
+  email: function email(value) {
+    return typeof value === 'string' && !!value.match(pattern.email) && value.length < 255;
+  },
+  url: function url(value) {
+    return typeof value === 'string' && !!value.match(pattern.url);
+  },
+  hex: function hex(value) {
+    return typeof value === 'string' && !!value.match(pattern.hex);
+  } };
+
+/**
+        *  Rule for validating the type of a value.
+        *
+        *  @param rule The validation rule.
+        *  @param value The value of the field on the source object.
+        *  @param source The source object being validated.
+        *  @param errors An array of errors that this rule may add
+        *  validation errors to.
+        *  @param options The validation options.
+        *  @param options.messages The validation messages.
+        */
+
+function type(rule, value, source, errors, options) {
+  if (rule.required && value === undefined) {
+    required(rule, value, source, errors, options);
+    return;
+  }
+
+  var custom = ['integer', 'float', 'array', 'regexp', 'object', 'method', 'email', 'number', 'date', 'url', 'hex'];
+  var ruleType = rule.type;
+
+  if (custom.indexOf(ruleType) > -1) {
+    if (!types[ruleType](value)) {
+      errors.push(format(options.messages.types[ruleType], rule.fullField, rule.type));
+    } // straight typeof check
+  } else if (ruleType && typeof value !== rule.type) {
+    errors.push(format(options.messages.types[ruleType], rule.fullField, rule.type));
+  }
+}
+
+/**
+   *  Rule for validating minimum and maximum allowed values.
+   *
+   *  @param rule The validation rule.
+   *  @param value The value of the field on the source object.
+   *  @param source The source object being validated.
+   *  @param errors An array of errors that this rule may add
+   *  validation errors to.
+   *  @param options The validation options.
+   *  @param options.messages The validation messages.
+   */
+
+function range(rule, value, source, errors, options) {
+  var len = typeof rule.len === 'number';
+  var min = typeof rule.min === 'number';
+  var max = typeof rule.max === 'number'; // 正则匹配码点范围从U+010000一直到U+10FFFF的文字（补充平面Supplementary Plane）
+
+  var spRegexp = /[\uD800-\uDBFF][\uDC00-\uDFFF]/g;
+  var val = value;
+  var key = null;
+  var num = typeof value === 'number';
+  var str = typeof value === 'string';
+  var arr = Array.isArray(value);
+
+  if (num) {
+    key = 'number';
+  } else if (str) {
+    key = 'string';
+  } else if (arr) {
+    key = 'array';
+  } // if the value is not of a supported type for range validation
+  // the validation rule rule should use the
+  // type property to also test for a particular type
+
+  if (!key) {
+    return false;
+  }
+
+  if (arr) {
+    val = value.length;
+  }
+
+  if (str) {
+    // 处理码点大于U+010000的文字length属性不准确的bug，如"𠮷𠮷𠮷".lenght !== 3
+    val = value.replace(spRegexp, '_').length;
+  }
+
+  if (len) {
+    if (val !== rule.len) {
+      errors.push(format(options.messages[key].len, rule.fullField, rule.len));
+    }
+  } else if (min && !max && val < rule.min) {
+    errors.push(format(options.messages[key].min, rule.fullField, rule.min));
+  } else if (max && !min && val > rule.max) {
+    errors.push(format(options.messages[key].max, rule.fullField, rule.max));
+  } else if (min && max && (val < rule.min || val > rule.max)) {
+    errors.push(format(options.messages[key].range, rule.fullField, rule.min, rule.max));
+  }
+}
+
+var ENUM = 'enum';
+/**
+                    *  Rule for validating a value exists in an enumerable list.
+                    *
+                    *  @param rule The validation rule.
+                    *  @param value The value of the field on the source object.
+                    *  @param source The source object being validated.
+                    *  @param errors An array of errors that this rule may add
+                    *  validation errors to.
+                    *  @param options The validation options.
+                    *  @param options.messages The validation messages.
+                    */
+
+function enumerable(rule, value, source, errors, options) {
+  rule[ENUM] = Array.isArray(rule[ENUM]) ? rule[ENUM] : [];
+
+  if (rule[ENUM].indexOf(value) === -1) {
+    errors.push(format(options.messages[ENUM], rule.fullField, rule[ENUM].join(', ')));
+  }
+}
+
+/**
+   *  Rule for validating a regular expression pattern.
+   *
+   *  @param rule The validation rule.
+   *  @param value The value of the field on the source object.
+   *  @param source The source object being validated.
+   *  @param errors An array of errors that this rule may add
+   *  validation errors to.
+   *  @param options The validation options.
+   *  @param options.messages The validation messages.
+   */
+
+function pattern$1(rule, value, source, errors, options) {
+  if (rule.pattern) {
+    if (rule.pattern instanceof RegExp) {
+      // if a RegExp instance is passed, reset `lastIndex` in case its `global`
+      // flag is accidentally set to `true`, which in a validation scenario
+      // is not necessary and the result might be misleading
+      rule.pattern.lastIndex = 0;
+
+      if (!rule.pattern.test(value)) {
+        errors.push(format(options.messages.pattern.mismatch, rule.fullField, value, rule.pattern));
+      }
+    } else if (typeof rule.pattern === 'string') {
+      var _pattern = new RegExp(rule.pattern);
+
+      if (!_pattern.test(value)) {
+        errors.push(format(options.messages.pattern.mismatch, rule.fullField, value, rule.pattern));
+      }
+    }
+  }
+}
+
+var rules = {
+  required: required,
+  whitespace: whitespace,
+  type: type,
+  range: range,
+  enum: enumerable,
+  pattern: pattern$1 };
+
+
+/**
+                         *  Performs validation for string types.
+                         *
+                         *  @param rule The validation rule.
+                         *  @param value The value of the field on the source object.
+                         *  @param callback The callback function.
+                         *  @param source The source object being validated.
+                         *  @param options The validation options.
+                         *  @param options.messages The validation messages.
+                         */
+
+function string(rule, value, callback, source, options) {
+  var errors = [];
+  var validate = rule.required || !rule.required && source.hasOwnProperty(rule.field);
+
+  if (validate) {
+    if (isEmptyValue(value, 'string') && !rule.required) {
+      return callback();
+    }
+
+    rules.required(rule, value, source, errors, options, 'string');
+
+    if (!isEmptyValue(value, 'string')) {
+      rules.type(rule, value, source, errors, options);
+      rules.range(rule, value, source, errors, options);
+      rules.pattern(rule, value, source, errors, options);
+
+      if (rule.whitespace === true) {
+        rules.whitespace(rule, value, source, errors, options);
+      }
+    }
+  }
+
+  callback(errors);
+}
+
+/**
+   *  Validates a function.
+   *
+   *  @param rule The validation rule.
+   *  @param value The value of the field on the source object.
+   *  @param callback The callback function.
+   *  @param source The source object being validated.
+   *  @param options The validation options.
+   *  @param options.messages The validation messages.
+   */
+
+function method(rule, value, callback, source, options) {
+  var errors = [];
+  var validate = rule.required || !rule.required && source.hasOwnProperty(rule.field);
+
+  if (validate) {
+    if (isEmptyValue(value) && !rule.required) {
+      return callback();
+    }
+
+    rules.required(rule, value, source, errors, options);
+
+    if (value !== undefined) {
+      rules.type(rule, value, source, errors, options);
+    }
+  }
+
+  callback(errors);
+}
+
+/**
+   *  Validates a number.
+   *
+   *  @param rule The validation rule.
+   *  @param value The value of the field on the source object.
+   *  @param callback The callback function.
+   *  @param source The source object being validated.
+   *  @param options The validation options.
+   *  @param options.messages The validation messages.
+   */
+
+function number(rule, value, callback, source, options) {
+  var errors = [];
+  var validate = rule.required || !rule.required && source.hasOwnProperty(rule.field);
+
+  if (validate) {
+    if (value === '') {
+      value = undefined;
+    }
+
+    if (isEmptyValue(value) && !rule.required) {
+      return callback();
+    }
+
+    rules.required(rule, value, source, errors, options);
+
+    if (value !== undefined) {
+      rules.type(rule, value, source, errors, options);
+      rules.range(rule, value, source, errors, options);
+    }
+  }
+
+  callback(errors);
+}
+
+/**
+   *  Validates a boolean.
+   *
+   *  @param rule The validation rule.
+   *  @param value The value of the field on the source object.
+   *  @param callback The callback function.
+   *  @param source The source object being validated.
+   *  @param options The validation options.
+   *  @param options.messages The validation messages.
+   */
+
+function _boolean(rule, value, callback, source, options) {
+  var errors = [];
+  var validate = rule.required || !rule.required && source.hasOwnProperty(rule.field);
+
+  if (validate) {
+    if (isEmptyValue(value) && !rule.required) {
+      return callback();
+    }
+
+    rules.required(rule, value, source, errors, options);
+
+    if (value !== undefined) {
+      rules.type(rule, value, source, errors, options);
+    }
+  }
+
+  callback(errors);
+}
+
+/**
+   *  Validates the regular expression type.
+   *
+   *  @param rule The validation rule.
+   *  @param value The value of the field on the source object.
+   *  @param callback The callback function.
+   *  @param source The source object being validated.
+   *  @param options The validation options.
+   *  @param options.messages The validation messages.
+   */
+
+function regexp(rule, value, callback, source, options) {
+  var errors = [];
+  var validate = rule.required || !rule.required && source.hasOwnProperty(rule.field);
+
+  if (validate) {
+    if (isEmptyValue(value) && !rule.required) {
+      return callback();
+    }
+
+    rules.required(rule, value, source, errors, options);
+
+    if (!isEmptyValue(value)) {
+      rules.type(rule, value, source, errors, options);
+    }
+  }
+
+  callback(errors);
+}
+
+/**
+   *  Validates a number is an integer.
+   *
+   *  @param rule The validation rule.
+   *  @param value The value of the field on the source object.
+   *  @param callback The callback function.
+   *  @param source The source object being validated.
+   *  @param options The validation options.
+   *  @param options.messages The validation messages.
+   */
+
+function integer(rule, value, callback, source, options) {
+  var errors = [];
+  var validate = rule.required || !rule.required && source.hasOwnProperty(rule.field);
+
+  if (validate) {
+    if (isEmptyValue(value) && !rule.required) {
+      return callback();
+    }
+
+    rules.required(rule, value, source, errors, options);
+
+    if (value !== undefined) {
+      rules.type(rule, value, source, errors, options);
+      rules.range(rule, value, source, errors, options);
+    }
+  }
+
+  callback(errors);
+}
+
+/**
+   *  Validates a number is a floating point number.
+   *
+   *  @param rule The validation rule.
+   *  @param value The value of the field on the source object.
+   *  @param callback The callback function.
+   *  @param source The source object being validated.
+   *  @param options The validation options.
+   *  @param options.messages The validation messages.
+   */
+
+function floatFn(rule, value, callback, source, options) {
+  var errors = [];
+  var validate = rule.required || !rule.required && source.hasOwnProperty(rule.field);
+
+  if (validate) {
+    if (isEmptyValue(value) && !rule.required) {
+      return callback();
+    }
+
+    rules.required(rule, value, source, errors, options);
+
+    if (value !== undefined) {
+      rules.type(rule, value, source, errors, options);
+      rules.range(rule, value, source, errors, options);
+    }
+  }
+
+  callback(errors);
+}
+
+/**
+   *  Validates an array.
+   *
+   *  @param rule The validation rule.
+   *  @param value The value of the field on the source object.
+   *  @param callback The callback function.
+   *  @param source The source object being validated.
+   *  @param options The validation options.
+   *  @param options.messages The validation messages.
+   */
+
+function array(rule, value, callback, source, options) {
+  var errors = [];
+  var validate = rule.required || !rule.required && source.hasOwnProperty(rule.field);
+
+  if (validate) {
+    if (isEmptyValue(value, 'array') && !rule.required) {
+      return callback();
+    }
+
+    rules.required(rule, value, source, errors, options, 'array');
+
+    if (!isEmptyValue(value, 'array')) {
+      rules.type(rule, value, source, errors, options);
+      rules.range(rule, value, source, errors, options);
+    }
+  }
+
+  callback(errors);
+}
+
+/**
+   *  Validates an object.
+   *
+   *  @param rule The validation rule.
+   *  @param value The value of the field on the source object.
+   *  @param callback The callback function.
+   *  @param source The source object being validated.
+   *  @param options The validation options.
+   *  @param options.messages The validation messages.
+   */
+
+function object(rule, value, callback, source, options) {
+  var errors = [];
+  var validate = rule.required || !rule.required && source.hasOwnProperty(rule.field);
+
+  if (validate) {
+    if (isEmptyValue(value) && !rule.required) {
+      return callback();
+    }
+
+    rules.required(rule, value, source, errors, options);
+
+    if (value !== undefined) {
+      rules.type(rule, value, source, errors, options);
+    }
+  }
+
+  callback(errors);
+}
+
+var ENUM$1 = 'enum';
+/**
+                      *  Validates an enumerable list.
+                      *
+                      *  @param rule The validation rule.
+                      *  @param value The value of the field on the source object.
+                      *  @param callback The callback function.
+                      *  @param source The source object being validated.
+                      *  @param options The validation options.
+                      *  @param options.messages The validation messages.
+                      */
+
+function enumerable$1(rule, value, callback, source, options) {
+  var errors = [];
+  var validate = rule.required || !rule.required && source.hasOwnProperty(rule.field);
+
+  if (validate) {
+    if (isEmptyValue(value) && !rule.required) {
+      return callback();
+    }
+
+    rules.required(rule, value, source, errors, options);
+
+    if (value !== undefined) {
+      rules[ENUM$1](rule, value, source, errors, options);
+    }
+  }
+
+  callback(errors);
+}
+
+/**
+   *  Validates a regular expression pattern.
+   *
+   *  Performs validation when a rule only contains
+   *  a pattern property but is not declared as a string type.
+   *
+   *  @param rule The validation rule.
+   *  @param value The value of the field on the source object.
+   *  @param callback The callback function.
+   *  @param source The source object being validated.
+   *  @param options The validation options.
+   *  @param options.messages The validation messages.
+   */
+
+function pattern$2(rule, value, callback, source, options) {
+  var errors = [];
+  var validate = rule.required || !rule.required && source.hasOwnProperty(rule.field);
+
+  if (validate) {
+    if (isEmptyValue(value, 'string') && !rule.required) {
+      return callback();
+    }
+
+    rules.required(rule, value, source, errors, options);
+
+    if (!isEmptyValue(value, 'string')) {
+      rules.pattern(rule, value, source, errors, options);
+    }
+  }
+
+  callback(errors);
+}
+
+function date(rule, value, callback, source, options) {
+  var errors = [];
+  var validate = rule.required || !rule.required && source.hasOwnProperty(rule.field);
+
+  if (validate) {
+    if (isEmptyValue(value) && !rule.required) {
+      return callback();
+    }
+
+    rules.required(rule, value, source, errors, options);
+
+    if (!isEmptyValue(value)) {
+      var dateObject;
+
+      if (typeof value === 'number') {
+        dateObject = new Date(value);
+      } else {
+        dateObject = value;
+      }
+
+      rules.type(rule, dateObject, source, errors, options);
+
+      if (dateObject) {
+        rules.range(rule, dateObject.getTime(), source, errors, options);
+      }
+    }
+  }
+
+  callback(errors);
+}
+
+function required$1(rule, value, callback, source, options) {
+  var errors = [];
+  var type = Array.isArray(value) ? 'array' : typeof value;
+  rules.required(rule, value, source, errors, options, type);
+  callback(errors);
+}
+
+function type$1(rule, value, callback, source, options) {
+  var ruleType = rule.type;
+  var errors = [];
+  var validate = rule.required || !rule.required && source.hasOwnProperty(rule.field);
+
+  if (validate) {
+    if (isEmptyValue(value, ruleType) && !rule.required) {
+      return callback();
+    }
+
+    rules.required(rule, value, source, errors, options, ruleType);
+
+    if (!isEmptyValue(value, ruleType)) {
+      rules.type(rule, value, source, errors, options);
+    }
+  }
+
+  callback(errors);
+}
+
+/**
+   *  Performs validation for any type.
+   *
+   *  @param rule The validation rule.
+   *  @param value The value of the field on the source object.
+   *  @param callback The callback function.
+   *  @param source The source object being validated.
+   *  @param options The validation options.
+   *  @param options.messages The validation messages.
+   */
+
+function any(rule, value, callback, source, options) {
+  var errors = [];
+  var validate = rule.required || !rule.required && source.hasOwnProperty(rule.field);
+
+  if (validate) {
+    if (isEmptyValue(value) && !rule.required) {
+      return callback();
+    }
+
+    rules.required(rule, value, source, errors, options);
+  }
+
+  callback(errors);
+}
+
+var validators = {
+  string: string,
+  method: method,
+  number: number,
+  boolean: _boolean,
+  regexp: regexp,
+  integer: integer,
+  float: floatFn,
+  array: array,
+  object: object,
+  enum: enumerable$1,
+  pattern: pattern$2,
+  date: date,
+  url: type$1,
+  hex: type$1,
+  email: type$1,
+  required: required$1,
+  any: any };
+
+
+function newMessages() {
+  return {
+    default: 'Validation error on field %s',
+    required: '%s is required',
+    enum: '%s must be one of %s',
+    whitespace: '%s cannot be empty',
+    date: {
+      format: '%s date %s is invalid for format %s',
+      parse: '%s date could not be parsed, %s is invalid ',
+      invalid: '%s date %s is invalid' },
+
+    types: {
+      string: '%s is not a %s',
+      method: '%s is not a %s (function)',
+      array: '%s is not an %s',
+      object: '%s is not an %s',
+      number: '%s is not a %s',
+      date: '%s is not a %s',
+      boolean: '%s is not a %s',
+      integer: '%s is not an %s',
+      float: '%s is not a %s',
+      regexp: '%s is not a valid %s',
+      email: '%s is not a valid %s',
+      url: '%s is not a valid %s',
+      hex: '%s is not a valid %s' },
+
+    string: {
+      len: '%s must be exactly %s characters',
+      min: '%s must be at least %s characters',
+      max: '%s cannot be longer than %s characters',
+      range: '%s must be between %s and %s characters' },
+
+    number: {
+      len: '%s must equal %s',
+      min: '%s cannot be less than %s',
+      max: '%s cannot be greater than %s',
+      range: '%s must be between %s and %s' },
+
+    array: {
+      len: '%s must be exactly %s in length',
+      min: '%s cannot be less than %s in length',
+      max: '%s cannot be greater than %s in length',
+      range: '%s must be between %s and %s in length' },
+
+    pattern: {
+      mismatch: '%s value %s does not match pattern %s' },
+
+    clone: function clone() {
+      var cloned = JSON.parse(JSON.stringify(this));
+      cloned.clone = this.clone;
+      return cloned;
+    } };
+
+}
+var messages = newMessages();
+
+/**
+                               *  Encapsulates a validation schema.
+                               *
+                               *  @param descriptor An object declaring validation rules
+                               *  for this schema.
+                               */
+
+function Schema(descriptor) {
+  this.rules = null;
+  this._messages = messages;
+  this.define(descriptor);
+}
+
+Schema.prototype = {
+  messages: function messages(_messages) {
+    if (_messages) {
+      this._messages = deepMerge(newMessages(), _messages);
+    }
+
+    return this._messages;
+  },
+  define: function define(rules) {
+    if (!rules) {
+      throw new Error('Cannot configure a schema with no rules');
+    }
+
+    if (typeof rules !== 'object' || Array.isArray(rules)) {
+      throw new Error('Rules must be an object');
+    }
+
+    this.rules = {};
+    var z;
+    var item;
+
+    for (z in rules) {
+      if (rules.hasOwnProperty(z)) {
+        item = rules[z];
+        this.rules[z] = Array.isArray(item) ? item : [item];
+      }
+    }
+  },
+  validate: function validate(source_, o, oc) {
+    var _this = this;
+
+    if (o === void 0) {
+      o = {};
+    }
+
+    if (oc === void 0) {
+      oc = function oc() {};
+    }
+
+    var source = source_;
+    var options = o;
+    var callback = oc;
+
+    if (typeof options === 'function') {
+      callback = options;
+      options = {};
+    }
+
+    if (!this.rules || Object.keys(this.rules).length === 0) {
+      if (callback) {
+        callback();
+      }
+
+      return Promise.resolve();
+    }
+
+    function complete(results) {
+      var i;
+      var errors = [];
+      var fields = {};
+
+      function add(e) {
+        if (Array.isArray(e)) {
+          var _errors;
+
+          errors = (_errors = errors).concat.apply(_errors, e);
+        } else {
+          errors.push(e);
+        }
+      }
+
+      for (i = 0; i < results.length; i++) {
+        add(results[i]);
+      }
+
+      if (!errors.length) {
+        errors = null;
+        fields = null;
+      } else {
+        fields = convertFieldsError(errors);
+      }
+
+      callback(errors, fields);
+    }
+
+    if (options.messages) {
+      var messages$1 = this.messages();
+
+      if (messages$1 === messages) {
+        messages$1 = newMessages();
+      }
+
+      deepMerge(messages$1, options.messages);
+      options.messages = messages$1;
+    } else {
+      options.messages = this.messages();
+    }
+
+    var arr;
+    var value;
+    var series = {};
+    var keys = options.keys || Object.keys(this.rules);
+    keys.forEach(function (z) {
+      arr = _this.rules[z];
+      value = source[z];
+      arr.forEach(function (r) {
+        var rule = r;
+
+        if (typeof rule.transform === 'function') {
+          if (source === source_) {
+            source = _objectSpread({}, source);
+          }
+
+          value = source[z] = rule.transform(value);
+        }
+
+        if (typeof rule === 'function') {
+          rule = {
+            validator: rule };
+
+        } else {
+          rule = _objectSpread({}, rule);
+        }
+
+        rule.validator = _this.getValidationMethod(rule);
+        rule.field = z;
+        rule.fullField = rule.fullField || z;
+        rule.type = _this.getType(rule);
+
+        if (!rule.validator) {
+          return;
+        }
+
+        series[z] = series[z] || [];
+        series[z].push({
+          rule: rule,
+          value: value,
+          source: source,
+          field: z });
+
+      });
+    });
+    var errorFields = {};
+    return asyncMap(series, options, function (data, doIt) {var
+      rule = data.rule;
+      var deep = (rule.type === 'object' || rule.type === 'array') && (typeof rule.fields === 'object' || typeof rule.defaultField ===
+      'object');
+      deep = deep && (rule.required || !rule.required && data.value);
+      rule.field = data.field;
+
+      function addFullfield(key, schema) {
+        return _objectSpread(_objectSpread({}, schema), {}, { fullField: "".concat(rule.fullField, ".").concat(key) });
+      }
+
+      function cb(e) {
+        if (e === void 0) {
+          e = [];
+        }
+
+        var errors = e;
+
+        if (!Array.isArray(errors)) {
+          errors = [errors];
+        }
+
+        if (!options.suppressWarning && errors.length) {
+          Schema.warning('async-validator:', errors);
+        }
+
+        if (errors.length && rule.message) {
+          errors = [].concat(rule.message);
+        }
+
+        errors = errors.map(complementError(rule));
+
+        if (options.first && errors.length) {
+          errorFields[rule.field] = 1;
+          return doIt(errors);
+        }
+
+        if (!deep) {
+          doIt(errors);
+        } else {
+          // if rule is required but the target object
+          // does not exist fail at the rule level and don't
+          // go deeper
+          if (rule.required && !data.value) {
+            if (rule.message) {
+              errors = [].concat(rule.message).map(complementError(rule));
+            } else if (options.error) {
+              errors = [options.error(rule, format(options.messages.required, rule.field))];
+            } else {
+              errors = [];
+            }
+
+            return doIt(errors);
+          }
+
+          var fieldsSchema = {};
+
+          if (rule.defaultField) {
+            for (var k in data.value) {
+              if (data.value.hasOwnProperty(k)) {
+                fieldsSchema[k] = rule.defaultField;
+              }
+            }
+          }
+
+          fieldsSchema = _objectSpread(_objectSpread({}, fieldsSchema), data.rule.fields);
+
+          for (var f in fieldsSchema) {
+            if (fieldsSchema.hasOwnProperty(f)) {
+              var fieldSchema = Array.isArray(fieldsSchema[f]) ? fieldsSchema[f] : [fieldsSchema[f]];
+              fieldsSchema[f] = fieldSchema.map(addFullfield.bind(null, f));
+            }
+          }
+
+          var schema = new Schema(fieldsSchema);
+          schema.messages(options.messages);
+
+          if (data.rule.options) {
+            data.rule.options.messages = options.messages;
+            data.rule.options.error = options.error;
+          }
+
+          schema.validate(data.value, data.rule.options || options, function (errs) {
+            var finalErrors = [];
+
+            if (errors && errors.length) {
+              finalErrors.push.apply(finalErrors, errors);
+            }
+
+            if (errs && errs.length) {
+              finalErrors.push.apply(finalErrors, errs);
+            }
+
+            doIt(finalErrors.length ? finalErrors : null);
+          });
+        }
+      }
+
+      var res;
+
+      if (rule.asyncValidator) {
+        res = rule.asyncValidator(rule, data.value, cb, data.source, options);
+      } else if (rule.validator) {
+        res = rule.validator(rule, data.value, cb, data.source, options);
+
+        if (res === true) {
+          cb();
+        } else if (res === false) {
+          cb(rule.message || "".concat(rule.field, " fails"));
+        } else if (res instanceof Array) {
+          cb(res);
+        } else if (res instanceof Error) {
+          cb(res.message);
+        }
+      }
+
+      if (res && res.then) {
+        res.then(function () {return cb();}, function (e) {return cb(e);});
+      }
+    }, function (results) {
+      complete(results);
+    });
+  },
+  getType: function getType(rule) {
+    if (rule.type === undefined && rule.pattern instanceof RegExp) {
+      rule.type = 'pattern';
+    }
+
+    if (typeof rule.validator !== 'function' && rule.type && !validators.hasOwnProperty(rule.type)) {
+      throw new Error(format('Unknown rule type %s', rule.type));
+    }
+
+    return rule.type || 'string';
+  },
+  getValidationMethod: function getValidationMethod(rule) {
+    if (typeof rule.validator === 'function') {
+      return rule.validator;
+    }
+
+    var keys = Object.keys(rule);
+    var messageIndex = keys.indexOf('message');
+
+    if (messageIndex !== -1) {
+      keys.splice(messageIndex, 1);
+    }
+
+    if (keys.length === 1 && keys[0] === 'required') {
+      return validators.required;
+    }
+
+    return validators[this.getType(rule)] || false;
+  } };
+
+
+Schema.register = function register(type, validator) {
+  if (typeof validator !== 'function') {
+    throw new Error('Cannot register a validator by type, validator is not a function');
+  }
+
+  validators[type] = validator;
+};
+
+Schema.warning = warning;
+Schema.messages = messages;var _default =
+
+Schema;
+// # sourceMappingURL=index.js.map
+exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../../../../../HBuilderX/plugins/uniapp-cli/node_modules/node-libs-browser/mock/process.js */ 22)))
+
+/***/ }),
+/* 471 */,
+/* 472 */,
+/* 473 */,
+/* 474 */,
+/* 475 */,
+/* 476 */
+/*!*************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-text/value.js ***!
+  \*************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  computed: {
+    // 经处理后需要显示的值
+    value: function value() {var
+
+      text =
+
+
+
+      this.text,mode = this.mode,format = this.format,href = this.href;
+      // 价格类型
+      if (mode === 'price') {
+        // 如果text不为金额进行提示
+        if (!/^\d+(\.\d+)?$/.test(text)) {
+          uni.$u.error('金额模式下，text参数需要为金额格式');
+        }
+        // 进行格式化，判断用户传入的format参数为正则，或者函数，如果没有传入format，则使用默认的金额格式化处理
+        if (uni.$u.test.func(format)) {
+          // 如果用户传入的是函数，使用函数格式化
+          return format(text);
+        }
+        // 如果format非正则，非函数，则使用默认的金额格式化方法进行操作
+        return uni.$u.priceFormat(text, 2);
+      }if (mode === 'date') {
+        // 判断是否合法的日期或者时间戳
+        !uni.$u.test.date(text) && uni.$u.error('日期模式下，text参数需要为日期或时间戳格式');
+        // 进行格式化，判断用户传入的format参数为正则，或者函数，如果没有传入format，则使用默认的格式化处理
+        if (uni.$u.test.func(format)) {
+          // 如果用户传入的是函数，使用函数格式化
+          return format(text);
+        }if (this.formart) {
+          // 如果format非正则，非函数，则使用默认的时间格式化方法进行操作
+          return uni.$u.timeFormat(text, format);
+        }
+        // 如果没有设置format，则设置为默认的时间格式化形式
+        return uni.$u.timeFormat(text, 'yyyy-mm-dd');
+      }if (mode === 'phone') {
+        // 判断是否合法的手机号
+        !uni.$u.test.mobile(text) && uni.$u.error('手机号模式下，text参数需要为手机号码格式');
+        if (uni.$u.test.func(format)) {
+          // 如果用户传入的是函数，使用函数格式化
+          return format(text);
+        }if (format === 'encrypt') {
+          // 如果format为encrypt，则将手机号进行星号加密处理
+          return "".concat(text.substr(0, 3), "****").concat(text.substr(7));
+        }
+        return text;
+      }if (mode === 'name') {
+        // 判断是否合法的字符粗
+        !(typeof text === 'string') && uni.$u.error('姓名模式下，text参数需要为字符串格式');
+        if (uni.$u.test.func(format)) {
+          // 如果用户传入的是函数，使用函数格式化
+          return format(text);
+        }if (format === 'encrypt') {
+          // 如果format为encrypt，则将姓名进行星号加密处理
+          return this.formatName(text);
+        }
+        return text;
+      }if (mode === 'link') {
+        // 判断是否合法的字符粗
+        !uni.$u.test.url(href) && uni.$u.error('超链接模式下，href参数需要为URL格式');
+        return text;
+      }
+      return text;
+    } },
+
+  methods: {
+    // 默认的姓名脱敏规则
+    formatName: function formatName(name) {
+      var value = '';
+      if (name.length === 2) {
+        value = name.substr(0, 1) + '*';
+      } else if (name.length > 2) {
+        var char = '';
+        for (var i = 0, len = name.length - 2; i < len; i++) {
+          char += '*';
+        }
+        value = name.substr(0, 1) + char + name.substr(-1, 1);
+      } else {
+        value = name;
+      }
+      return value;
+    } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 477 */,
+/* 478 */,
+/* 479 */,
+/* 480 */,
+/* 481 */,
+/* 482 */,
+/* 483 */,
+/* 484 */
+/*!*********************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-loading-icon/props.js ***!
+  \*********************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    // 是否显示组件
+    show: {
+      type: Boolean,
+      default: uni.$u.props.loadingIcon.show },
+
+    // 颜色
+    color: {
+      type: String,
+      default: uni.$u.props.loadingIcon.color },
+
+    // 提示文字颜色
+    textColor: {
+      type: String,
+      default: uni.$u.props.loadingIcon.textColor },
+
+    // 文字和图标是否垂直排列
+    vertical: {
+      type: Boolean,
+      default: uni.$u.props.loadingIcon.vertical },
+
+    // 模式选择，circle-圆形，spinner-花朵形，semicircle-半圆形
+    mode: {
+      type: String,
+      default: uni.$u.props.loadingIcon.mode },
+
+    // 图标大小，单位默认px
+    size: {
+      type: [String, Number],
+      default: uni.$u.props.loadingIcon.size },
+
+    // 文字大小
+    textSize: {
+      type: [String, Number],
+      default: uni.$u.props.loadingIcon.textSize },
+
+    // 文字内容
+    text: {
+      type: [String, Number],
+      default: uni.$u.props.loadingIcon.text },
+
+    // 动画模式
+    timingFunction: {
+      type: String,
+      default: uni.$u.props.loadingIcon.timingFunction },
+
+    // 动画执行周期时间
+    duration: {
+      type: [String, Number],
+      default: uni.$u.props.loadingIcon.duration },
+
+    // mode=circle时的暗边颜色
+    inactiveColor: {
+      type: String,
+      default: uni.$u.props.loadingIcon.inactiveColor } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 485 */,
+/* 486 */,
+/* 487 */,
+/* 488 */,
+/* 489 */,
+/* 490 */,
+/* 491 */,
+/* 492 */
+/*!************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-gap/props.js ***!
+  \************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    // 背景颜色（默认transparent）
+    bgColor: {
+      type: String,
+      default: uni.$u.props.gap.bgColor },
+
+    // 分割槽高度，单位px（默认30）
+    height: {
+      type: [String, Number],
+      default: uni.$u.props.gap.height },
+
+    // 与上一个组件的距离
+    marginTop: {
+      type: [String, Number],
+      default: uni.$u.props.gap.marginTop },
+
+    // 与下一个组件的距离
+    marginBottom: {
+      type: [String, Number],
+      default: uni.$u.props.gap.marginBottom } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 493 */,
+/* 494 */,
+/* 495 */,
+/* 496 */,
+/* 497 */,
+/* 498 */,
+/* 499 */,
+/* 500 */
+/*!************************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-number-keyboard/props.js ***!
+  \************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    // 键盘的类型，number-数字键盘，card-身份证键盘
+    mode: {
+      type: String,
+      default: uni.$u.props.numberKeyboard.value },
+
+    // 是否显示键盘的"."符号
+    dotDisabled: {
+      type: Boolean,
+      default: uni.$u.props.numberKeyboard.dotDisabled },
+
+    // 是否打乱键盘按键的顺序
+    random: {
+      type: Boolean,
+      default: uni.$u.props.numberKeyboard.random } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 501 */,
+/* 502 */,
+/* 503 */,
+/* 504 */,
+/* 505 */,
+/* 506 */,
+/* 507 */,
+/* 508 */
+/*!*********************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-car-keyboard/props.js ***!
+  \*********************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    // 是否打乱键盘按键的顺序
+    random: {
+      type: Boolean,
+      default: false },
+
+    // 输入一个中文后，是否自动切换到英文
+    autoChange: {
+      type: Boolean,
+      default: false } } };exports.default = _default;
+
+/***/ }),
+/* 509 */,
+/* 510 */,
+/* 511 */,
+/* 512 */,
+/* 513 */,
+/* 514 */,
+/* 515 */,
+/* 516 */
+/*!****************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-overlay/props.js ***!
+  \****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    // 是否显示遮罩
+    show: {
+      type: Boolean,
+      default: uni.$u.props.overlay.show },
+
+    // 层级z-index
+    zIndex: {
+      type: [String, Number],
+      default: uni.$u.props.overlay.zIndex },
+
+    // 遮罩的过渡时间，单位为ms
+    duration: {
+      type: [String, Number],
+      default: uni.$u.props.overlay.duration },
+
+    // 不透明度值，当做rgba的第四个参数
+    opacity: {
+      type: [String, Number],
+      default: uni.$u.props.overlay.opacity } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 517 */,
+/* 518 */,
+/* 519 */,
+/* 520 */,
+/* 521 */,
+/* 522 */,
+/* 523 */,
+/* 524 */
+/*!*******************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-transition/props.js ***!
+  \*******************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    // 是否展示组件
+    show: {
+      type: Boolean,
+      default: uni.$u.props.transition.show },
+
+    // 使用的动画模式
+    mode: {
+      type: String,
+      default: uni.$u.props.transition.mode },
+
+    // 动画的执行时间，单位ms
+    duration: {
+      type: [String, Number],
+      default: uni.$u.props.transition.duration },
+
+    // 使用的动画过渡函数
+    timingFunction: {
+      type: String,
+      default: uni.$u.props.transition.timingFunction } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 525 */
+/*!************************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-transition/transition.js ***!
+  \************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _regenerator = _interopRequireDefault(__webpack_require__(/*! ./node_modules/@babel/runtime/regenerator */ 71));
+
+
+var _nvueAniMap = _interopRequireDefault(__webpack_require__(/*! ./nvue.ani-map.js */ 526));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};} // 定义一个一定时间后自动成功的promise，让调用nextTick方法处，进入下一个then方法
+var nextTick = function nextTick() {return new Promise(function (resolve) {return setTimeout(resolve, 1000 / 50);});}; // nvue动画模块实现细节抽离在外部文件
+
+// 定义类名，通过给元素动态切换类名，赋予元素一定的css动画样式
+var getClassNames = function getClassNames(name) {return {
+    enter: "u-".concat(name, "-enter u-").concat(name, "-enter-active"),
+    'enter-to': "u-".concat(name, "-enter-to u-").concat(name, "-enter-active"),
+    leave: "u-".concat(name, "-leave u-").concat(name, "-leave-active"),
+    'leave-to': "u-".concat(name, "-leave-to u-").concat(name, "-leave-active") };};var _default =
+
+
+
+
+
+
+
+
+
+
+{
+  methods: {
+    // 组件被点击发出事件
+    clickHandler: function clickHandler() {
+      this.$emit('click');
+    },
+
+    // vue版本的组件进场处理
+    vueEnter: function vueEnter() {var _this = this;
+      // 动画进入时的类名
+      var classNames = getClassNames(this.mode);
+      // 定义状态和发出动画进入前事件
+      this.status = 'enter';
+      this.$emit('beforeEnter');
+      this.inited = true;
+      this.display = true;
+      this.classes = classNames.enter;
+      this.$nextTick( /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee() {return _regenerator.default.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
+
+
+
+                // 组件动画进入后触发的事件
+                _this.$emit('afterEnter');
+                // 标识动画尚未结束
+                _this.transitionEnded = false;
+                // 赋予组件enter-to类名
+                _this.classes = classNames['enter-to'];case 3:case "end":return _context.stop();}}}, _callee);})));
+
+    },
+    // 动画离场处理
+    vueLeave: function vueLeave() {var _this2 = this;
+      // 如果不是展示状态，无需执行逻辑
+      if (!this.display) return;
+      var classNames = getClassNames(this.mode);
+      // 标记离开状态和发出事件
+      this.status = 'leave';
+      this.$emit('beforeLeave');
+      // 获得类名
+      this.classes = classNames.leave;
+
+      this.$nextTick(function () {
+        // 标记动画已经结束了
+        _this2.transitionEnded = false;
+        // 组件执行动画，到了执行的执行时间后，执行一些额外处理
+        setTimeout(_this2.onTransitionEnd, _this2.duration);
+        _this2.classes = classNames['leave-to'];
+      });
+    },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // 完成过渡后触发
+    onTransitionEnd: function onTransitionEnd() {
+      // 如果已经是结束的状态，无需再处理
+      if (this.transitionEnded) return;
+      this.transitionEnded = true;
+      // 发出组件动画执行后的事件
+      this.$emit(this.status === 'leave' ? 'afterLeave' : 'afterEnter');
+      if (!this.show && this.display) {
+        this.display = false;
+        this.inited = false;
+      }
+    } } };exports.default = _default;
+
+/***/ }),
+/* 526 */
+/*!**************************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-transition/nvue.ani-map.js ***!
+  \**************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  fade: {
+    enter: { opacity: 0 },
+    'enter-to': { opacity: 1 },
+    leave: { opacity: 1 },
+    'leave-to': { opacity: 0 } },
+
+  'fade-up': {
+    enter: { opacity: 0, transform: 'translateY(100%)' },
+    'enter-to': { opacity: 1, transform: 'translateY(0)' },
+    leave: { opacity: 1, transform: 'translateY(0)' },
+    'leave-to': { opacity: 0, transform: 'translateY(100%)' } },
+
+  'fade-down': {
+    enter: { opacity: 0, transform: 'translateY(-100%)' },
+    'enter-to': { opacity: 1, transform: 'translateY(0)' },
+    leave: { opacity: 1, transform: 'translateY(0)' },
+    'leave-to': { opacity: 0, transform: 'translateY(-100%)' } },
+
+  'fade-left': {
+    enter: { opacity: 0, transform: 'translateX(-100%)' },
+    'enter-to': { opacity: 1, transform: 'translateY(0)' },
+    leave: { opacity: 1, transform: 'translateY(0)' },
+    'leave-to': { opacity: 0, transform: 'translateX(-100%)' } },
+
+  'fade-right': {
+    enter: { opacity: 0, transform: 'translateX(100%)' },
+    'enter-to': { opacity: 1, transform: 'translateY(0)' },
+    leave: { opacity: 1, transform: 'translateY(0)' },
+    'leave-to': { opacity: 0, transform: 'translateX(100%)' } },
+
+  'slide-up': {
+    enter: { transform: 'translateY(100%)' },
+    'enter-to': { transform: 'translateY(0)' },
+    leave: { transform: 'translateY(0)' },
+    'leave-to': { transform: 'translateY(100%)' } },
+
+  'slide-down': {
+    enter: { transform: 'translateY(-100%)' },
+    'enter-to': { transform: 'translateY(0)' },
+    leave: { transform: 'translateY(0)' },
+    'leave-to': { transform: 'translateY(-100%)' } },
+
+  'slide-left': {
+    enter: { transform: 'translateX(-100%)' },
+    'enter-to': { transform: 'translateY(0)' },
+    leave: { transform: 'translateY(0)' },
+    'leave-to': { transform: 'translateX(-100%)' } },
+
+  'slide-right': {
+    enter: { transform: 'translateX(100%)' },
+    'enter-to': { transform: 'translateY(0)' },
+    leave: { transform: 'translateY(0)' },
+    'leave-to': { transform: 'translateX(100%)' } },
+
+  zoom: {
+    enter: { transform: 'scale(0.95)' },
+    'enter-to': { transform: 'scale(1)' },
+    leave: { transform: 'scale(1)' },
+    'leave-to': { transform: 'scale(0.95)' } },
+
+  'fade-zoom': {
+    enter: { opacity: 0, transform: 'scale(0.95)' },
+    'enter-to': { opacity: 1, transform: 'scale(1)' },
+    leave: { opacity: 1, transform: 'scale(1)' },
+    'leave-to': { opacity: 0, transform: 'scale(0.95)' } } };exports.default = _default;
+
+/***/ }),
+/* 527 */,
+/* 528 */,
+/* 529 */,
+/* 530 */,
+/* 531 */,
+/* 532 */,
+/* 533 */,
+/* 534 */
+/*!*******************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-status-bar/props.js ***!
+  \*******************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    bgColor: {
+      type: String,
+      default: uni.$u.props.statusBar.bgColor } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+/* 535 */,
+/* 536 */,
+/* 537 */,
+/* 538 */,
+/* 539 */,
+/* 540 */,
+/* 541 */,
+/* 542 */
+/*!********************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-safe-bottom/props.js ***!
+  \********************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {} };exports.default = _default;
+
+/***/ }),
+/* 543 */,
+/* 544 */,
+/* 545 */,
+/* 546 */,
+/* 547 */,
+/* 548 */,
+/* 549 */,
+/* 550 */
+/*!*************************************************************************************!*\
+  !*** C:/Users/IT/Desktop/共享旅途/mini/uni_modules/uview-ui/components/u-link/props.js ***!
+  \*************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    // 文字颜色
+    color: {
+      type: String,
+      default: uni.$u.props.link.color },
+
+    // 字体大小，单位px
+    fontSize: {
+      type: [String, Number],
+      default: uni.$u.props.link.fontSize },
+
+    // 是否显示下划线
+    underLine: {
+      type: Boolean,
+      default: uni.$u.props.link.underLine },
+
+    // 要跳转的链接
+    href: {
+      type: String,
+      default: uni.$u.props.link.href },
+
+    // 小程序中复制到粘贴板的提示语
+    mpTips: {
+      type: String,
+      default: uni.$u.props.link.mpTips },
+
+    // 下划线颜色
+    lineColor: {
+      type: String,
+      default: uni.$u.props.link.lineColor },
+
+    // 超链接的问题，不使用slot形式传入，是因为nvue下无法修改颜色
+    text: {
+      type: String,
+      default: uni.$u.props.link.text } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ })
 ]]);

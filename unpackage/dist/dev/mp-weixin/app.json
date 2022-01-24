@@ -3,7 +3,18 @@
     "pages/index/index",
     "pages/journey/list",
     "pages/message/list",
-    "pages/mine/index"
+    "pages/mine/index",
+    "pages/login/index",
+    "pages/login/login",
+    "pages/login/bind",
+    "pages/register/register",
+    "pages/password/password",
+    "pages/login/agreement",
+    "pages/login/policy",
+    "pages/money/index",
+    "pages/money/withdraw",
+    "pages/terms/index",
+    "pages/material/index"
   ],
   "subPackages": [],
   "window": {

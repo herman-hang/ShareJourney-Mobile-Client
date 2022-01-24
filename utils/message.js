@@ -14,15 +14,17 @@ export const success = (msg, callback) => {
 }
 
 /**
- * 显示失败提示框
+ * 显示确认框
  */
-export const error = (msg, callback) => {
+export const confirm = (msg, callback) => {
 	uni.showModal({
-		title: '友情提示',
+		title: '温馨提示',
 		content: msg,
-		showCancel: false,
+		showCancel: true,
 		success(res) {
-			callback && callback()
+			if (res.confirm) {
+				callback && callback()
+			}
 		}
 	})
 }
@@ -36,5 +38,14 @@ export const toast = (msg, duration = 1500) => {
 		icon: 'none',
 		mask: true, // 是否显示透明蒙层，防止触摸穿透
 		duration // 提示的延迟时间，单位毫秒，默认：1500	
+	})
+}
+
+/**
+ * 加载提示框
+ */
+export const loading = (title) => {
+	uni.showLoading({
+		title: title
 	})
 }

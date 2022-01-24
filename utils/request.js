@@ -22,9 +22,19 @@ axios.interceptors.response.use(res => {
 	if (res.data.code === 0) {
 		// 删除token
 		db.del('token')
+		uni.showModal({
+			title: '温馨提示',
+			content: res.data.msg,
+			showCancel: false,
+			success() {
+				uni.navigateTo({
+					url: 'pages/login/index'
+				})
+			}
+		})
 	}
 	// 响应存在Authorization则更新token
-	if (res.header.Authorization !== '' || res.header.Authorization !== null || res.header.Authorization !==
+	if (res.header.Authorization !== '' && res.header.Authorization !== null && res.header.Authorization !==
 		undefined) {
 		db.set('token', res.header.Authorization)
 	}
