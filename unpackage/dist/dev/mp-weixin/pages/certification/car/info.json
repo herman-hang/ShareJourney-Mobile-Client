@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "车辆信息",
+  "usingComponents": {
+    "u--form": "/uni_modules/uview-ui/components/u--form/u--form",
+    "u-upload": "/uni_modules/uview-ui/components/u-upload/u-upload",
+    "u-form-item": "/uni_modules/uview-ui/components/u-form-item/u-form-item",
+    "u--input": "/uni_modules/uview-ui/components/u--input/u--input",
+    "u-button": "/uni_modules/uview-ui/components/u-button/u-button"
+  }
+}

@@ -32,7 +32,21 @@
 		{
 			"path": "pages/index/index",
 			"style": {
+				"navigationStyle": "custom",
 				"navigationBarTitleText": "共享旅途"
+			}
+		},
+		{
+			"path": "pages/index/destination",
+			"style": {
+				"navigationBarTitleText": "选择目的地"
+			}
+		},
+		{
+			"path": "pages/index/plan",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "出发路线"
 			}
 		},
 		{
@@ -120,6 +134,73 @@
 			"path": "pages/material/index",
 			"style": {
 				"navigationBarTitleText": "个人资料"
+			}
+		},
+		{
+			"path": "pages/certification/index",
+			"style": {
+				"navigationBarTitleText": "车主认证"
+			}
+		},
+		{
+			"path": "pages/certification/agreement",
+			"style": {
+				"navigationBarTitleText": "车主认证协议"
+			}
+		},
+		{
+			"path": "pages/certification/card/step-1",
+			"style": {
+				"navigationBarTitleText": "实名认证"
+			}
+		},
+		{
+			"path": "pages/certification/card/step-2",
+			"style": {
+				"navigationBarTitleText": "实名认证"
+			}
+		},
+		{
+			"path": "pages/certification/withdraw/info",
+			"style": {
+				"navigationBarTitleText": "提现信息"
+			}
+		},
+		{
+			"path": "pages/certification/car/info",
+			"style": {
+				"navigationBarTitleText": "车辆信息"
+			}
+		},
+		{
+			"path": "pages/certification/patente/patente",
+			"style": {
+				"navigationBarTitleText": "驾驶证上传"
+			}
+		},
+		{
+			"path": "pages/certification/registration/registration",
+			"style": {
+				"navigationBarTitleText": "行驶证上传"
+			}
+		},
+		{
+			"path": "pages/certification/message",
+			"style": {
+				"navigationBarTitleText": "认证情况",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/money/rule",
+			"style": {
+				"navigationBarTitleText": "提现规则"
+			}
+		},
+		{
+			"path": "pages/indent/list",
+			"style": {
+				"navigationBarTitleText": "我的订单"
 			}
 		}
 	],

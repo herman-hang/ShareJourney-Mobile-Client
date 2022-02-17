@@ -22,10 +22,10 @@ export default {
 @import './static/css/icon/iconfont.css';
 
 /*每个页面公共css */
-body,
+/* body,
 html {
 	overflow-x: hidden;
-}
+} */
 body::-webkit-scrollbar {
 	display: none;
 }
@@ -46,8 +46,8 @@ uni-page-body,
 	// #ifdef H5
 	white-space: normal;
 	background-color: #f3f5f3;
-	height: 100%;
 	width: 100%;
+	height: 100%;
 	padding: 0upx;
 	clear: both;
 	float: left;	
@@ -65,7 +65,7 @@ uni-page-body,
 	// #endif
 }
 .card {
-	margin: 20rpx;
+	margin: 10rpx 20rpx;
 	background-color: #ffffff;
 	padding: 15rpx;
 	border-radius: 15rpx;

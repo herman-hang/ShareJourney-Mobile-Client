@@ -3,7 +3,15 @@
 	<view class="ym-content">
 		<view class="my-1">
 			<view class="my-3">
-				<image @click="material" :src="sex == '0' ? '/static/image/sex/girl.png' : '/static/image/sex/man.png'" mode="scaleToFill" border="0" class="my-4 head"></image>
+				<image v-if="photo" @click="material" :src="photo" mode="scaleToFill" border="0" class="my-4 head"></image>
+				<image
+					v-else
+					@click="material"
+					:src="sex == '0' ? '/static/image/sex/girl.png' : '/static/image/sex/man.png'"
+					mode="scaleToFill"
+					border="0"
+					class="my-4 head"
+				></image>
 				<view class="my-5">
 					<view v-show="isLogin">
 						<text decode="true" class="my-7" @click="material">{{ nickname }}</text>
@@ -33,7 +41,7 @@
 						<text decode="true" class="my-19">￥{{ is_owner == '0' ? '0.00' : withdraw_money }}</text>
 						<view class="my-20">
 							<image src="/static/image/my/images/my_21_21.jpg" mode="scaleToFill" border="0" class="my-21"></image>
-							<image src="/static/image/my/images/my_22_22.jpg" mode="scaleToFill" border="0" class="my-22"></image>
+							<image src="/static/image/my/images/my_22_22.jpg" mode="scaleToFill" border="0" class="my-22" @click="toRule"></image>
 						</view>
 					</view>
 				</view>
@@ -51,13 +59,15 @@
 						<image src="/static/image/my/images/my_40_40.jpg" mode="scaleToFill" border="0" class="my-44"></image>
 					</view>
 					<view class="my-45">
-						<image src="/static/image/my/images/my_46_46.jpg" mode="scaleToFill" border="0" class="my-46"></image>
-						<text decode="true" class="my-47">车主认证</text>
-						<image src="/static/image/my/images/my_40_40.jpg" mode="scaleToFill" border="0" class="my-48"></image>
+						<view @click="toCertification">
+							<image src="/static/image/my/images/my_46_46.jpg" mode="scaleToFill" border="0" class="my-46"></image>
+							<text decode="true" class="my-47">车主认证</text>
+							<image src="/static/image/my/images/my_40_40.jpg" mode="scaleToFill" border="0" class="my-48"></image>
+						</view>
 					</view>
 				</view>
 				<view class="my-49">
-					<view class="my-54">
+					<view class="my-54" @click="toMyIndent">
 						<image src="/static/image/my/images/my_28_28.jpg" mode="scaleToFill" border="0" class="my-55"></image>
 						<text decode="true" class="my-56">我的订单</text>
 						<image src="/static/image/my/images/my_40_40.jpg" mode="scaleToFill" border="0" class="my-57"></image>
@@ -158,6 +168,27 @@ export default {
 		 */
 		toTerms() {
 			this.$app.navTo('/pages/terms/index');
+		},
+
+		/**
+		 * 跳转到车主认证
+		 */
+		toCertification() {
+			this.$app.navTo('/pages/certification/index');
+		},
+
+		/**
+		 * 跳转到提现规则
+		 */
+		toRule() {
+			this.$app.navTo('/pages/money/rule');
+		},
+
+		/**
+		 * 跳到我的订单
+		 */
+		toMyIndent() {
+			this.$app.navTo('/pages/indent/list');
 		},
 
 		/**

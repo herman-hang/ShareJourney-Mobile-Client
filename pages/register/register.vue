@@ -29,7 +29,7 @@
 			</view>
 			<button class="confirm-btn" @click="toRegister">立即注册</button>
 			<view class="footer">
-				<text @tap="isShowAgree" class="cuIcon" :class="showAgree ? 'cuIcon-radiobox' : 'cuIcon-round'">同意</text>
+				<text @click="isShowAgree" class="cuIcon" :class="showAgree ? 'cuIcon-radiobox' : 'cuIcon-round'">同意</text>
 				<!-- 协议地址 -->
 				<navigator url="/pages/login/policy" open-type="navigate">《隐私政策》</navigator>
 				和

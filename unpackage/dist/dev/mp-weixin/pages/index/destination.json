@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "选择目的地",
+  "usingComponents": {
+    "u-search": "/uni_modules/uview-ui/components/u-search/u-search",
+    "u-loading-icon": "/uni_modules/uview-ui/components/u-loading-icon/u-loading-icon",
+    "u-icon": "/uni_modules/uview-ui/components/u-icon/u-icon",
+    "u--text": "/uni_modules/uview-ui/components/u--text/u--text",
+    "u-line": "/uni_modules/uview-ui/components/u-line/u-line"
+  }
+}

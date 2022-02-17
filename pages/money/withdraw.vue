@@ -7,7 +7,7 @@
 					<u--input disabled disabledColor="#ffffff" placeholder="请选择到账方式" border="none" v-model="formData.withdraw_way"></u--input>
 					<u-icon slot="right" name="arrow-right"></u-icon>
 				</u-form-item>
-				<u-form-item label="提现金额" borderBottom labelWidth="140rpx" prop="withdraw_money">
+				<u-form-item label="提现金额" borderBottom labelWidth="160rpx" prop="withdraw_money">
 					<u-input border="none" placeholder="请输入金额" v-model="formData.withdraw_money" @focus="hideKeyboard">
 						<template slot="suffix">
 							<u-button size="mini" type="primary" :plain="true" text="全部提现" @click="allWithdraw"></u-button>

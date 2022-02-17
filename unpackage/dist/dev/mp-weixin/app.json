@@ -1,6 +1,8 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/index/destination",
+    "pages/index/plan",
     "pages/journey/list",
     "pages/message/list",
     "pages/mine/index",
@@ -14,7 +16,18 @@
     "pages/money/index",
     "pages/money/withdraw",
     "pages/terms/index",
-    "pages/material/index"
+    "pages/material/index",
+    "pages/certification/index",
+    "pages/certification/agreement",
+    "pages/certification/card/step-1",
+    "pages/certification/card/step-2",
+    "pages/certification/withdraw/info",
+    "pages/certification/car/info",
+    "pages/certification/patente/patente",
+    "pages/certification/registration/registration",
+    "pages/certification/message",
+    "pages/money/rule",
+    "pages/indent/list"
   ],
   "subPackages": [],
   "window": {
@@ -55,5 +68,14 @@
       }
     ]
   },
-  "usingComponents": {}
+  "permission": {
+    "scope.userLocation": {
+      "desc": "你的位置信息将用于小程序位置接口的效果展示"
+    }
+  },
+  "uniStatistics": {
+    "enable": false
+  },
+  "usingComponents": {},
+  "sitemapLocation": "sitemap.json"
 }

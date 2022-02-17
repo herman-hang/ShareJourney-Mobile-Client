@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "我的订单",
+  "usingComponents": {
+    "u--text": "/uni_modules/uview-ui/components/u--text/u--text",
+    "u-line": "/uni_modules/uview-ui/components/u-line/u-line",
+    "u-divider": "/uni_modules/uview-ui/components/u-divider/u-divider"
+  }
+}

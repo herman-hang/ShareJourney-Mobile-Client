@@ -1,0 +1,11 @@
+{
+  "navigationStyle": "custom",
+  "navigationBarTitleText": "出发路线",
+  "usingComponents": {
+    "u-icon": "/uni_modules/uview-ui/components/u-icon/u-icon",
+    "u--text": "/uni_modules/uview-ui/components/u--text/u--text",
+    "u-button": "/uni_modules/uview-ui/components/u-button/u-button",
+    "u-datetime-picker": "/uni_modules/uview-ui/components/u-datetime-picker/u-datetime-picker",
+    "u-popup": "/uni_modules/uview-ui/components/u-popup/u-popup"
+  }
+}

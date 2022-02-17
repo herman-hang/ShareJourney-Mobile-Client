@@ -8513,10 +8513,10 @@ swiper.round-dot .wx-swiper-dot.wx-swiper-dot-active {
   background: transparent;
 }
 /*每个页面公共css */
-page,
-page {
-  overflow-x: hidden;
-}
+/* body,
+html {
+	overflow-x: hidden;
+} */
 page::-webkit-scrollbar {
   display: none;
 }
@@ -8532,7 +8532,7 @@ uni-page-body,
   height: 100%;
 }
 .card {
-  margin: 20rpx;
+  margin: 10rpx 20rpx;
   background-color: #ffffff;
   padding: 15rpx;
   border-radius: 15rpx;

@@ -2,12 +2,14 @@ import App from './App'
 import Vue from 'vue'
 import axios from 'axios'
 
-import * as core from 'commom/app.js'
+import * as core from 'common/app.js'
 // 请求拦截器和响应器
 import './utils/request.js'
 import * as db from './utils/db.js'
 // 时间过滤器
 import './utils/filter.js'
+// 字符串简写
+import './utils/format.js'
 import * as message from './utils/message.js'
 // 导入uview-ui框架
 import uView from '@/uni_modules/uview-ui'

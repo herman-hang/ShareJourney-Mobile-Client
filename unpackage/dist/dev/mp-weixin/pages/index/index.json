@@ -1,4 +1,14 @@
 {
+  "navigationStyle": "custom",
   "navigationBarTitleText": "共享旅途",
-  "usingComponents": {}
+  "usingComponents": {
+    "u-navbar": "/uni_modules/uview-ui/components/u-navbar/u-navbar",
+    "u--text": "/uni_modules/uview-ui/components/u--text/u--text",
+    "u-tabs": "/uni_modules/uview-ui/components/u-tabs/u-tabs",
+    "u-icon": "/uni_modules/uview-ui/components/u-icon/u-icon",
+    "u-count-down": "/uni_modules/uview-ui/components/u-count-down/u-count-down",
+    "u-line": "/uni_modules/uview-ui/components/u-line/u-line",
+    "u-avatar": "/uni_modules/uview-ui/components/u-avatar/u-avatar",
+    "u-button": "/uni_modules/uview-ui/components/u-button/u-button"
+  }
 }

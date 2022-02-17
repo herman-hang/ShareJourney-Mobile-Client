@@ -1,10 +1,14 @@
 {
   "navigationBarTitleText": "个人资料",
   "usingComponents": {
+    "u-upload": "/uni_modules/uview-ui/components/u-upload/u-upload",
     "u-image": "/uni_modules/uview-ui/components/u-image/u-image",
     "u--form": "/uni_modules/uview-ui/components/u--form/u--form",
     "u-form-item": "/uni_modules/uview-ui/components/u-form-item/u-form-item",
+    "u--text": "/uni_modules/uview-ui/components/u--text/u--text",
     "u--input": "/uni_modules/uview-ui/components/u--input/u--input",
-    "u--textarea": "/uni_modules/uview-ui/components/u--textarea/u--textarea"
+    "u-icon": "/uni_modules/uview-ui/components/u-icon/u-icon",
+    "u--textarea": "/uni_modules/uview-ui/components/u--textarea/u--textarea",
+    "u-action-sheet": "/uni_modules/uview-ui/components/u-action-sheet/u-action-sheet"
   }
 }
