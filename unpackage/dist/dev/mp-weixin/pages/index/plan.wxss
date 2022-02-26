@@ -96,6 +96,6 @@ cover-view.data-v-bdfbe702 {
   flex: 0;
 }
 .select.data-v-bdfbe702 {
-  margin-top: 30rpx;
+  margin-top: 0rpx;
 }
 

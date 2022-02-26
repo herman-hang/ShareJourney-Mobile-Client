@@ -1,0 +1,12 @@
+{
+  "navigationStyle": "custom",
+  "navigationBarTitleText": "出发路线",
+  "usingComponents": {
+    "u-icon": "/uni_modules/uview-ui/components/u-icon/u-icon",
+    "u--text": "/uni_modules/uview-ui/components/u--text/u--text",
+    "u-line": "/uni_modules/uview-ui/components/u-line/u-line",
+    "u-avatar": "/uni_modules/uview-ui/components/u-avatar/u-avatar",
+    "u-button": "/uni_modules/uview-ui/components/u-button/u-button",
+    "u-tag": "/uni_modules/uview-ui/components/u-tag/u-tag"
+  }
+}

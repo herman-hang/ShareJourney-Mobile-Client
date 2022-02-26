@@ -43,7 +43,21 @@
 			}
 		},
 		{
+			"path": "pages/index/owner",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "出发详情"
+			}
+		},
+		{
 			"path": "pages/index/plan",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "出发详情"
+			}
+		},
+		{
+			"path": "pages/index/navigation",
 			"style": {
 				"navigationStyle": "custom",
 				"navigationBarTitleText": "出发路线"
@@ -53,7 +67,7 @@
 			"path": "pages/journey/list",
 			"style": {
 				"enablePullDownRefresh": true,
-				"navigationBarTitleText": "旅途"
+				"navigationBarTitleText": "旅途列表"
 			}
 		},
 		{

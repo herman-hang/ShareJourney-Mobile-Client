@@ -96,28 +96,34 @@ var components
 try {
   components = {
     uNavbar: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-navbar/u-navbar */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-navbar/u-navbar")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-navbar/u-navbar.vue */ 392))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-navbar/u-navbar */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-navbar/u-navbar")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-navbar/u-navbar.vue */ 414))
     },
     "u-Text": function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u--text/u--text */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u--text/u--text")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u--text/u--text.vue */ 400))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u--text/u--text */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u--text/u--text")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u--text/u--text.vue */ 422))
     },
     uTabs: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-tabs/u-tabs */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-tabs/u-tabs")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-tabs/u-tabs.vue */ 406))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-tabs/u-tabs */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-tabs/u-tabs")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-tabs/u-tabs.vue */ 428))
+    },
+    uBadge: function() {
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-badge/u-badge */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-badge/u-badge")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-badge/u-badge.vue */ 436))
     },
     uIcon: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-icon/u-icon */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-icon/u-icon")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-icon/u-icon.vue */ 414))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-icon/u-icon */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-icon/u-icon")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-icon/u-icon.vue */ 444))
     },
-    uCountDown: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-count-down/u-count-down */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-count-down/u-count-down")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-count-down/u-count-down.vue */ 423))
+    uTag: function() {
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-tag/u-tag */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-tag/u-tag")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-tag/u-tag.vue */ 453))
     },
     uLine: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-line/u-line */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-line/u-line")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-line/u-line.vue */ 432))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-line/u-line */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-line/u-line")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-line/u-line.vue */ 461))
     },
     uAvatar: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-avatar/u-avatar */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-avatar/u-avatar")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-avatar/u-avatar.vue */ 440))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-avatar/u-avatar */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-avatar/u-avatar")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-avatar/u-avatar.vue */ 469))
     },
     uButton: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-button/u-button */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-button/u-button")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-button/u-button.vue */ 448))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-button/u-button */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-button/u-button")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-button/u-button.vue */ 477))
+    },
+    uCountDown: function() {
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-count-down/u-count-down */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-count-down/u-count-down")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-count-down/u-count-down.vue */ 487))
     }
   }
 } catch (e) {
@@ -144,10 +150,24 @@ var render = function() {
   var f0 = _vm.site.formatted_addresses.recommend
     ? _vm._f("stateFormat")(_vm.site.formatted_addresses.recommend)
     : null
+  var f1 =
+    _vm.startType === 0
+      ? _vm._f("stateFormat")("北京东路1北京东路北京东路号")
+      : null
+  var f2 =
+    _vm.startType === 0 ? _vm._f("stateFormat")("广州市科学城创意大夏B2") : null
+  var f3 =
+    _vm.startType === 1
+      ? _vm._f("stateFormat")("北京东路1北京东路北京东路号")
+      : null
+  var f4 =
+    _vm.startType === 1 ? _vm._f("stateFormat")("广州市科学城创意大夏B2") : null
 
-  var f1 = _vm._f("stateFormat")("北京东路1北京东路北京东路号")
-
-  var f2 = _vm._f("stateFormat")("广州市科学城创意大夏B2")
+  if (!_vm._isMounted) {
+    _vm.e0 = function($event) {
+      _vm.isPathLine = true
+    }
+  }
 
   _vm.$mp.data = Object.assign(
     {},
@@ -155,7 +175,9 @@ var render = function() {
       $root: {
         f0: f0,
         f1: f1,
-        f2: f2
+        f2: f2,
+        f3: f3,
+        f4: f4
       }
     }
   )
@@ -192,7 +214,85 @@ __webpack_require__.r(__webpack_exports__);
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _regenerator = _interopRequireDefault(__webpack_require__(/*! ./node_modules/@babel/runtime/regenerator */ 72));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -304,7 +404,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 var _qqmapWxJssdkMin = _interopRequireDefault(__webpack_require__(/*! ../../static/js/qqmap/qqmap-wx-jssdk.min.js */ 181));
-var _config = __webpack_require__(/*! @/config.js */ 44);function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}var _default =
+var _config = __webpack_require__(/*! @/config.js */ 44);function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}var _default =
 {
   data: function data() {
     return {
@@ -317,7 +417,10 @@ var _config = __webpack_require__(/*! @/config.js */ 44);function _interopRequir
       // 当前地址记录
       site: {
         formatted_addresses: {
-          recommend: '正在获取当前位置...' } },
+          recommend: '正在获取当前位置...' },
+
+        ad_info: {
+          city: '' } },
 
 
       // 标记点用于在地图上显示标记的位置
@@ -351,10 +454,14 @@ var _config = __webpack_require__(/*! @/config.js */ 44);function _interopRequir
         name: '车主' }],
 
 
-      // 标签默认索引（旅客）
-      tabIndex: 0,
       // 倒计时数据
-      timeData: {} };
+      timeData: {},
+      // 当前乘车对象
+      startType: 0,
+      // 轨迹线弹窗
+      isPathLine: false,
+      // 是否存在正在进行的旅途订单
+      isJourneyIndent: false };
 
   },
   onLoad: function onLoad() {
@@ -371,9 +478,15 @@ var _config = __webpack_require__(/*! @/config.js */ 44);function _interopRequir
       key: _config.qqMapKey });
 
   },
+  onShow: function onShow() {
+    var vm = this;
+    // 调用检测当前是否存在进行的订单
+    vm.checkIndentStatus();
+  },
   onReady: function onReady() {
     var vm = this;
     vm.map = uni.createMapContext('map', this);
+    // 获取定位
     vm.getLocation(1);
   },
   methods: {
@@ -402,6 +515,19 @@ var _config = __webpack_require__(/*! @/config.js */ 44);function _interopRequir
           }
         } });
 
+    },
+
+    /**
+        * 检测当前是否存在进行的订单
+        */
+    checkIndentStatus: function checkIndentStatus() {var _this = this;return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee() {var vm, _yield$vm$$http$get, res;return _regenerator.default.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
+                vm = _this;_context.next = 3;return (
+                  vm.$http.get('base/check/indent/status'));case 3:_yield$vm$$http$get = _context.sent;res = _yield$vm$$http$get.data;
+                if (res.code === 403) {
+                  vm.isJourneyIndent = true;
+                } else {
+                  vm.isJourneyIndent = false;
+                }case 6:case "end":return _context.stop();}}}, _callee);}))();
     },
 
     /**
@@ -467,8 +593,24 @@ var _config = __webpack_require__(/*! @/config.js */ 44);function _interopRequir
         * 点击顶部标签栏
         * @param {Object} index 索引:0为旅客 1为车主
         */
-    onTabs: function onTabs(index) {
-      console.log(index);
+    onTabs: function onTabs(e) {
+      var vm = this;
+      vm.startType = e.index;
+      if (vm.startType === 1) {
+        vm.checkUser();
+      }
+    },
+
+    /**
+        * 判断是否为车主
+        */
+    checkUser: function checkUser() {var _this2 = this;return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee2() {var vm, _yield$vm$$http$get2, res;return _regenerator.default.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
+                vm = _this2;_context2.next = 3;return (
+                  vm.$http.get('base/check/user'));case 3:_yield$vm$$http$get2 = _context2.sent;res = _yield$vm$$http$get2.data;if (!(
+                res.code !== 200)) {_context2.next = 8;break;}
+                vm.startType = 0;return _context2.abrupt("return",
+                vm.$message.toast(res.msg));case 8:case "end":return _context2.stop();}}}, _callee2);}))();
+
     },
 
     /**
@@ -483,18 +625,34 @@ var _config = __webpack_require__(/*! @/config.js */ 44);function _interopRequir
     /**
         * 跳转到选择目的地
         */
-    toSelectDestination: function toSelectDestination() {
-      var vm = this;
-      if (vm.site.ad_info.city === '' || vm.site.ad_info.city === null || vm.site.ad_info.city === undefined) {
-        return vm.$app.toast('定位中...');
-      }
-      var item = JSON.stringify({
-        city: vm.site.ad_info.city,
-        address: vm.site.formatted_addresses.recommend,
-        longitude: vm.markers[0].longitude,
-        latitude: vm.markers[0].latitude });
+    toSelectDestination: function toSelectDestination() {var _this3 = this;return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee3() {var vm, _yield$vm$$http$get3, res, item;return _regenerator.default.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
+                vm = _this3;if (!(
+                vm.site.ad_info.city === '' || vm.site.ad_info.city === null || vm.site.ad_info.city === undefined)) {_context3.next = 3;break;}return _context3.abrupt("return",
+                vm.$message.toast('定位中...'));case 3:_context3.next = 5;return (
 
-      vm.$app.navTo('pages/index/destination?item=' + encodeURIComponent(item));
+                  vm.$http.get('base/check/authentication'));case 5:_yield$vm$$http$get3 = _context3.sent;res = _yield$vm$$http$get3.data;
+                if (res.code !== 200) {
+                  vm.$message.confirm(res.msg, function () {
+                    vm.$app.navTo('/pages/certification/card/step-1');
+                  });
+                } else {
+                  item = JSON.stringify({
+                    city: vm.site.ad_info.city,
+                    address: vm.site.formatted_addresses.recommend,
+                    longitude: vm.markers[0].longitude,
+                    latitude: vm.markers[0].latitude,
+                    type: vm.startType });
+
+                  vm.$app.navTo('/pages/index/destination?item=' + encodeURIComponent(item));
+                }case 8:case "end":return _context3.stop();}}}, _callee3);}))();
+    },
+
+    /**
+        * 跳转到导航路线
+        */
+    toNavigation: function toNavigation() {
+      var vm = this;
+      vm.$app.navTo('/pages/index/navigation');
     } } };exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 

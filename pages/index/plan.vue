@@ -1,5 +1,6 @@
 <template>
 	<view class="container">
+		<!-- 地图开始 -->
 		<map
 			id="map"
 			class="mapView"
@@ -12,6 +13,8 @@
 			<view class="arrow" @click="toIndex"><u-icon bold name="arrow-left"></u-icon></view>
 			<cover-image class="img" @click="moveToLocation()" src="../../static/image/map/position.png"></cover-image>
 		</map>
+		<!-- 地图结束 -->
+
 		<!-- 地点选择开始 -->
 		<view class="card">
 			<view class="item">
@@ -33,12 +36,22 @@
 			<view class="item">
 				<view class="item-text">
 					<u--text :lines="1" text="拼成价"></u--text>
-					<u--text :lines="1" size="24" bold mode="price" text="58.5"></u--text>
+					<u--text :lines="1" size="24" bold mode="price" :text="tripData.money"></u--text>
 					<u--text :lines="1" text="起"></u--text>
 				</view>
 			</view>
 			<view class="hint">
 				<view class="item-text"><u--text type="info" :lines="1" size="11" text="具体乘车优惠请与司机商量"></u--text></view>
+			</view>
+			<view>
+				<view class="item-text">
+					<u--text :lines="1" text="全程共"></u--text>
+					<u--text bold :lines="1" :text="tripData.km"></u--text>
+					<u--text :lines="1" text="公里,"></u--text>
+					<u--text :lines="1" text="预计需要"></u--text>
+					<u--text bold :lines="1" :text="tripData.time"></u--text>
+					<u--text :lines="1" text="小时"></u--text>
+				</view>
 			</view>
 			<view class="item">
 				<view class="item-text select">
@@ -47,9 +60,14 @@
 					<u--text @click="showSelectPeople = true" site="12" :lines="1" text="选择出行人数"></u--text>
 				</view>
 			</view>
-			<view class="item"><u-button type="primary" text="出发旅途"></u-button></view>
+			<view class="item"><u-button type="primary" text="出发旅途" @click="toNavigation"></u-button></view>
 		</view>
 		<!-- 拼车价格信息结束 -->
+
+		<!-- 加载图标开始 -->
+		<u-loading-page :loading="isLoading"></u-loading-page>
+		<!-- 加载图标结束 -->
+
 		<!-- 选择出发时间开始 -->
 		<u-datetime-picker
 			:minDate="1587524800000"
@@ -66,8 +84,17 @@
 		<!-- 选择出发时间结束 -->
 
 		<!-- 选择出行人数开始 -->
-		<u-popup :show="showSelectPeople" mode="bottom" :round="10" @close="closeSelectPeople" closeable>
-			<view><text>出淤泥而不染，濯清涟而不妖</text></view>
+		<u-popup :show="showSelectPeople" mode="bottom" @close="closeSelectPeople" closeable>
+			<view class="item"><u--text :lines="1" size="18" text="请选择出行人数"></u--text></view>
+			<view class="hint"><u--text type="info" :lines="1" size="11" text="儿童,婴儿同行需要计入出行人数中"></u--text></view>
+			<view class="item">
+				<u-radio-group @change="trip" borderBottom placement="column" iconPlacement="right" value="one">
+					<u-radio :customStyle="{ marginBottom: '8px' }" label="1人同行" name="one" activeColor="#409eff"></u-radio>
+					<u-radio :customStyle="{ marginBottom: '8px' }" label="2人同行" name="two" activeColor="#409eff"></u-radio>
+					<u-radio :customStyle="{ marginBottom: '8px' }" label="3人同行" name="three" activeColor="#409eff"></u-radio>
+					<u-radio :customStyle="{ marginBottom: '8px' }" label="4人同行" name="four" activeColor="#409eff"></u-radio>
+				</u-radio-group>
+			</view>
 		</u-popup>
 		<!-- 选择出行人数结束 -->
 	</view>
@@ -119,7 +146,7 @@ export default {
 						}
 					],
 					color: '#409eff',
-					width: 2
+					width: 5
 				}
 			],
 			// 出发地和目的地
@@ -138,16 +165,31 @@ export default {
 			// 表单数据绑定
 			formData: {
 				deadline: '',
-				money: 0.0,
-				number: 0
+				number: 1
 			},
 			// 选择出行人数的弹出层显示与隐藏
-			showSelectPeople: false
+			showSelectPeople: false,
+			// 服务端返回的出行数据
+			tripData: {
+				money: '0.00',
+				km: '0.00',
+				time: '0.0'
+			},
+			// 点击出发旅途加载图标显示与隐藏
+			isLoading: false
 		};
 	},
 	onLoad(option) {
 		var vm = this;
 		vm.init(option);
+	},
+	onReady() {
+		let vm = this;
+		vm.map = uni.createMapContext('map', this);
+		// 路线规划
+		vm.directions();
+		// 获取最晚出发时间
+		vm.getCurrentTime(2);
 	},
 	methods: {
 		/**
@@ -160,18 +202,12 @@ export default {
 			uni.getSystemInfo({
 				success: function(e) {
 					vm.screenWidth = e.screenWidth;
-					vm.screenHeight = e.screenHeight * 0.6;
+					vm.screenHeight = e.screenHeight * 0.58;
 				}
 			});
-			vm.map = uni.createMapContext('map', this);
 			// 实例化腾讯地图API
 			vm.qqmapsdk = new QQMapWX({
 				key: qqMapKey
-			});
-			// 定位回到当前位置
-			vm.map.moveToLocation({
-				longitude: vm.site.start.longitude,
-				latitude: vm.site.start.latitude
 			});
 			vm.polyline = [
 				{
@@ -183,11 +219,25 @@ export default {
 			];
 			// 显示坐标图标
 			vm.addPosition(vm.site.start.longitude, vm.site.start.latitude, vm.site.start.address, 0);
-			vm.addPosition(vm.site.end.longitude, vm.site.end.latitude, vm.site.end.address, 12);
-			// 路线规划
-			vm.directions();
-			// 获取最晚出发时间
-			vm.getCurrentTime(2);
+			vm.addPosition(vm.site.end.longitude, vm.site.end.latitude, vm.site.end.address, 11);
+		},
+
+		/**
+		 * 获取出行相关数据
+		 */
+		async getTripData() {
+			let vm = this;
+			const { data: res } = await vm.$http.get('index/trip/compute', {
+				params: {
+					money: vm.directionData.routes[0].taxi_fare.fare,
+					km: vm.directionData.routes[0].distance,
+					time: vm.directionData.routes[0].duration,
+					number: vm.formData.number,
+					type: vm.site.start.type
+				}
+			});
+			if (res.code !== 200) return vm.$message.toast(res.msg);
+			vm.tripData = res.data;
 		},
 
 		/**
@@ -195,10 +245,17 @@ export default {
 		 */
 		moveToLocation() {
 			let vm = this;
-			// 回到当前位置
-			vm.map.moveToLocation({
-				longitude: vm.site.start.longitude,
-				latitude: vm.site.start.latitude
+			// 获取当前的地理位置、速度。
+			uni.getLocation({
+				type: 'gcj02',
+				isHighAccuracy: true,
+				success: function(e) {
+					// 回到当前位置
+					vm.map.moveToLocation({
+						longitude: e.longitude,
+						latitude: e.latitude
+					});
+				}
 			});
 		},
 
@@ -219,7 +276,7 @@ export default {
 				iconPath;
 			if (id === 0) {
 				iconPath = '/static/image/map/start.png';
-			} else if (id === 12) {
+			} else if (id === 11) {
 				iconPath = '/static/image/map/end.png';
 			} else {
 				iconPath = '/static/image/map/location.png';
@@ -295,9 +352,11 @@ export default {
 						longitude: vm.site.end.longitude
 					},
 					sig: qqMapSig,
+					policy: 'PICKUP,LEAST_FEE,REAL_TRAFFIC,NAV_POINT_FIRST',
 					success(res) {
 						if (res.status === 0) {
 							vm.directionData = res.result;
+							vm.getTripData();
 							vm.setPolyline(res.result.routes[0].polyline);
 						}
 					}
@@ -315,9 +374,11 @@ export default {
 					},
 					sig: qqMapSig,
 					waypoints: vm.site.waypoints,
+					policy: 'PICKUP,LEAST_FEE,REAL_TRAFFIC,NAV_POINT_FIRST',
 					success(res) {
 						if (res.status === 0) {
 							vm.directionData = res.result;
+							vm.getTripData();
 							vm.setPolyline(res.result.routes[0].polyline);
 							vm.waypoints++;
 						}
@@ -342,7 +403,7 @@ export default {
 			for (let i = 0; i < coors.length; i += 2) {
 				tempArr.push({ latitude: coors[i], longitude: coors[i + 1] });
 			}
-			vm.polyline[0].points = tempArr;
+			vm.polyline[0].points = tempArr; // 待性能优化
 			vm.includePoints();
 		},
 
@@ -396,6 +457,78 @@ export default {
 		closeSelectPeople() {
 			let vm = this;
 			vm.showSelectPeople = false;
+		},
+
+		/**
+		 * 出行人数选择
+		 * @param {Object} e 当前出行人数
+		 */
+		trip(e) {
+			console.log(e);
+			let vm = this;
+			switch (e) {
+				case 'one':
+					vm.formData.number = 1;
+					break;
+				case 'two':
+					vm.formData.number = 2;
+					break;
+				case 'three':
+					vm.formData.number = 3;
+					break;
+				case 'four':
+					vm.formData.number = 4;
+					break;
+				default:
+					return vm.$app.toast('没有这个选项！');
+			}
+			vm.showSelectPeople = false;
+			vm.getTripData();
+		},
+
+		/**
+		 * 跳转到路线导航详情
+		 */
+		async toNavigation() {
+			let vm = this;
+			vm.isLoading = true;
+			// 删除第一个元素
+			const tempArr = vm.markers.slice(1, vm.markers.length);
+			// 调用获取所有出发地点方法
+			const siteArr = vm.$app.getSite(tempArr);
+			// 获取微信登录临时凭证
+			const code = await vm.$app.wechatLogin();
+			// 序列化数据并跳转到导航页
+			const item = encodeURIComponent(
+				JSON.stringify({
+					markers: tempArr,
+					polyline: vm.polyline
+				})
+			);
+			const { data: res } = await vm.$http.post('pay/wechat', { code: code, site: siteArr, type: vm.site.start.type, trip: vm.formData, line: item });
+			if (res.code !== 200) {
+				vm.isLoading = false;
+				return vm.$message.modal(res.msg);
+			}
+
+			/* 			// 发起支付
+			uni.requestPayment({
+				provider: 'wxpay',
+				timeStamp: res.timeStamp,
+				nonceStr: res.nonceStr,
+				package: res.package,
+				signType: res.signType,
+				paySign: res.paySign,
+				success: function(res) {
+					console.log('success:' + JSON.stringify(res)); */
+
+			vm.$app.navTo('/pages/index/navigation?item=' + item);
+
+			/* },
+				fail: function(err) {
+					console.log('fail:' + JSON.stringify(err));
+				}
+			}); */
 		}
 	}
 };
@@ -465,6 +598,6 @@ cover-view {
 	}
 }
 .select {
-	margin-top: 30rpx;
+	margin-top: 0rpx;
 }
 </style>

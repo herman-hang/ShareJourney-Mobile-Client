@@ -96,19 +96,19 @@ var components
 try {
   components = {
     uSearch: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-search/u-search */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-search/u-search")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-search/u-search.vue */ 458))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-search/u-search */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-search/u-search")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-search/u-search.vue */ 496))
     },
     uLoadingIcon: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-loading-icon/u-loading-icon */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-loading-icon/u-loading-icon")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-loading-icon/u-loading-icon.vue */ 466))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-loading-icon/u-loading-icon */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-loading-icon/u-loading-icon")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-loading-icon/u-loading-icon.vue */ 504))
     },
     uIcon: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-icon/u-icon */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-icon/u-icon")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-icon/u-icon.vue */ 414))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-icon/u-icon */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-icon/u-icon")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-icon/u-icon.vue */ 444))
     },
     "u-Text": function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u--text/u--text */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u--text/u--text")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u--text/u--text.vue */ 400))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u--text/u--text */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u--text/u--text")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u--text/u--text.vue */ 422))
     },
     uLine: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-line/u-line */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-line/u-line")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-line/u-line.vue */ 432))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-line/u-line */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-line/u-line")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-line/u-line.vue */ 461))
     }
   }
 } catch (e) {
@@ -204,8 +204,24 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
+
+
+
+
+
+
+
 var _qqmapWxJssdkMin = _interopRequireDefault(__webpack_require__(/*! ../../static/js/qqmap/qqmap-wx-jssdk.min.js */ 181));
 var _config = __webpack_require__(/*! @/config.js */ 44);function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };} //
+//
+//
+//
+//
+//
+//
+//
+//
 //
 //
 //
@@ -255,17 +271,9 @@ var _default = { data: function data() {return { // 搜索右边控件样式
                                                                                                              * 获取城市周边地点
                                                                                                              */getCity: function getCity(keyword) {var vm = this; // 实例化腾讯地图API
       vm.qqmapsdk = new _qqmapWxJssdkMin.default({ key: _config.qqMapKey });vm.qqmapsdk.search({ keyword: keyword, //搜索关键词
-        sig: _config.qqMapSig, page_size: 20, success: function success(res) {if (res.status === 0) {vm.cityData = res.data;
-            vm.isShow = true;
-          }
-        } });
-
-    },
-
-    /**
-        * 选择地址
-        */
-    selectSite: function selectSite() {var address = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+        sig: _config.qqMapSig, page_size: 20, success: function success(res) {if (res.status === 0) {vm.cityData = res.data;vm.isShow = true;}} });}, /**
+                                                                                                                                                       * 选择地址
+                                                                                                                                                       */selectSite: function selectSite() {var address = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
       var vm = this;
       if (address === '') {
         uni.chooseLocation({
@@ -285,7 +293,9 @@ var _default = { data: function data() {return { // 搜索右边控件样式
                 latitude: res.latitude } });
 
 
-            vm.$app.navTo('pages/index/plan?item=' + encodeURIComponent(item));
+            vm.site.type === 0 ?
+            vm.$app.navTo('/pages/index/plan?item=' + encodeURIComponent(item)) :
+            vm.$app.navTo('/pages/index/owner?item=' + encodeURIComponent(item));
           } });
 
       } else {
@@ -297,7 +307,7 @@ var _default = { data: function data() {return { // 搜索右边控件样式
             latitude: address.location.lat } });
 
 
-        vm.$app.navTo('pages/index/plan?item=' + encodeURIComponent(item));
+        vm.site.type === 0 ? vm.$app.navTo('/pages/index/plan?item=' + encodeURIComponent(item)) : vm.$app.navTo('pages/index/owner?item=' + encodeURIComponent(item));
       }
     },
 

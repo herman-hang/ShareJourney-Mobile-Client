@@ -1,5 +1,6 @@
 <template>
 	<view>
+		<!-- 搜索框开始 -->
 		<view class="card">
 			<u-search
 				@clickIcon="selectSite"
@@ -20,7 +21,13 @@
 				v-model="keyword"
 			></u-search>
 		</view>
+		<!-- 搜索框结束 -->
+
+		<!-- 加载图标开始 -->
 		<u-loading-icon mode="circle" text="加载中" :show="!isShow"></u-loading-icon>
+		<!-- 加载图标结束 -->
+
+		<!-- 地点列表开始 -->
 		<view class="card" v-show="isShow">
 			<view v-for="(item, index) in cityData" :key="item.id">
 				<view class="box">
@@ -33,6 +40,7 @@
 				<u-line></u-line>
 			</view>
 		</view>
+		<!-- 地点列表结束 -->
 	</view>
 </template>
 
@@ -118,7 +126,9 @@ export default {
 								latitude: res.latitude
 							}
 						});
-						vm.$app.navTo('pages/index/plan?item=' + encodeURIComponent(item));
+						vm.site.type === 0
+							? vm.$app.navTo('/pages/index/plan?item=' + encodeURIComponent(item))
+							: vm.$app.navTo('/pages/index/owner?item=' + encodeURIComponent(item));
 					}
 				});
 			} else {
@@ -130,7 +140,7 @@ export default {
 						latitude: address.location.lat
 					}
 				});
-				vm.$app.navTo('pages/index/plan?item=' + encodeURIComponent(item));
+				vm.site.type === 0 ? vm.$app.navTo('/pages/index/plan?item=' + encodeURIComponent(item)) : vm.$app.navTo('pages/index/owner?item=' + encodeURIComponent(item));
 			}
 		},
 

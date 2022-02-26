@@ -21,7 +21,7 @@
 			</view>
 			<view class="box">
 				<view class="box-item">
-					<navigator url="pages/certification/agreement" open-type="navigate">
+					<navigator url="/pages/certification/agreement" open-type="navigate">
 						<text class="box-font">车主认证协议</text>
 						<image src="/static/image/my/images/my_40_40.jpg" mode="scaleToFill" border="0" class="box-img"></image>
 					</navigator>
@@ -30,7 +30,7 @@
 			</view>
 			<view class="box">
 				<view class="box-item">
-					<navigator url="pages/money/rule" open-type="navigate">
+					<navigator url="/pages/money/rule" open-type="navigate">
 						<text class="box-font">提现规则</text>
 						<image src="/static/image/my/images/my_40_40.jpg" mode="scaleToFill" border="0" class="box-img"></image>
 					</navigator>

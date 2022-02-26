@@ -18,13 +18,13 @@
 				<u-line></u-line>
 				<view class="box-item">
 					<view class="box-item-text box-item-bottom">
-						<u--text v-if="item.status === '1'" :lines="1" mode="price" text="30.00" type="success"></u--text>
+						<u--text v-if="item.status === '1'" :lines="1" mode="price" :text="item.money" type="success"></u--text>
 						<u--text v-else :lines="1" text="未付款" type="error"></u--text>
 					</view>
 				</view>
 			</view>
 		</view>
-		<view v-else class="card"><u-divider text="无数据" :hairline="true"></u-divider></view>
+		<view v-if="listData.length === 0" class="card"><u-divider text="无数据" :hairline="true"></u-divider></view>
 	</view>
 </template>
 

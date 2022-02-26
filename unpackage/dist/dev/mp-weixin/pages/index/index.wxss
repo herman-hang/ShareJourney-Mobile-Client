@@ -35,20 +35,35 @@
 /* 行为相关颜色 */
 cover-image.data-v-57280228 {
   display: inline-block;
-  border-radius: 25%;
   padding: 10rpx;
+  background-color: #ffffff;
+}
+cover-view.data-v-57280228 {
   background-color: #ffffff;
 }
 cover-view.data-v-57280228 {
   top: 95%;
 }
-.img.data-v-57280228 {
+.position.data-v-57280228 {
   position: absolute;
+  border-radius: 25%;
   width: 32rpx;
   height: 32rpx;
   right: 15rpx;
   top: 90%;
   box-shadow: 0px 0px 5px 1px #f6f6f6;
+}
+.indent.data-v-57280228 {
+  display: flex;
+  position: absolute;
+  border-radius: 15rpx 1rpx 15rpx 15rpx;
+  left: 15rpx;
+  top: 90%;
+  box-shadow: 0px 0px 5px 1px #f6f6f6;
+}
+.indent .image.data-v-57280228 {
+  width: 32rpx;
+  height: 32rpx;
 }
 .item.data-v-57280228 {
   margin: 20rpx;
@@ -69,7 +84,7 @@ cover-view.data-v-57280228 {
   background-color: #ffffff;
 }
 .box.data-v-57280228 {
-  margin-top: 150rpx;
+  margin-top: -30rpx;
 }
 .u-nav-slot.data-v-57280228 {
   display: flex;

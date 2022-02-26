@@ -119,7 +119,9 @@ export default {
 	components: {},
 	onLoad() {},
 	onShow() {
-		this.checkLogin();
+		if (uni.getStorageSync('token')) {
+			this.checkLogin();
+		}
 	},
 	methods: {
 		/**

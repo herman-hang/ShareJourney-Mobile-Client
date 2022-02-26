@@ -2,7 +2,7 @@
 	<view class="container">
 		<!-- 导航开始 -->
 		<view class="nav">
-			<u-navbar title="共享旅途">
+			<u-navbar title="共享旅途" fixed placeholder>
 				<view class="u-nav-slot" slot="left" @click="toSelectDestination">
 					<u--text v-if="site.ad_info.city" :text="site.ad_info.city" prefixIcon="map" bold></u--text>
 					<u--text v-else text="定位中" prefixIcon="map"></u--text>
@@ -10,8 +10,13 @@
 			</u-navbar>
 		</view>
 		<!-- 导航结束 -->
+
 		<view class="box">
-			<view class="tabs-item"><u-tabs :scrollable="false" :list="tabs" @click="onTabs"></u-tabs></view>
+			<!-- 顶部标签开始 -->
+			<view class="tabs-item"><u-tabs :scrollable="false" :list="tabs" @click="onTabs" :current="startType"></u-tabs></view>
+			<!-- 顶部标签结束 -->
+
+			<!-- 地图开始 -->
 			<map
 				id="map"
 				class="mapView"
@@ -24,8 +29,15 @@
 				@callouttap="toSelectDestination"
 				@tap="tap"
 			>
-				<cover-image class="img" @click="getLocation(1)" src="../../static/image/map/position.png"></cover-image>
+				<cover-image class="position" @click="getLocation(1)" src="../../static/image/map/position.png"></cover-image>
+				<cover-view class="indent" @click="toNavigation" v-if="isJourneyIndent">
+					<cover-image class="image" src="../../static/image/map/indent.png"></cover-image>
+					<u--text text="进行中"></u--text>
+					<u-badge isDot></u-badge>
+				</cover-view>
 			</map>
+			<!-- 地图结束 -->
+
 			<!-- 地点选择开始 -->
 			<view class="card">
 				<view class="item" v-if="site.formatted_addresses.recommend">
@@ -46,7 +58,67 @@
 				</view>
 			</view>
 			<!-- 地点选择结束 -->
-			<view class="card">
+
+			<!-- 旅客订单列表开始 -->
+			<view class="card" v-if="startType === 0">
+				<view class="time-item">
+					<text>状态：</text>
+					<u-tag text="未满座" type="success" plain size="mini"></u-tag>
+				</view>
+				<u-line></u-line>
+
+				<!-- 地点选择开始 -->
+				<view class="time-item">
+					<view class="item-box">
+						<view class="time-item-text time-item-length">
+							<u--text text="●" type="primary"></u--text>
+							<u--text :lines="1" :text="'北京东路1北京东路北京东路号' | stateFormat"></u--text>
+							<u--text type="info" :lines="1" size="12" text="100m"></u--text>
+						</view>
+						<view class="time-item-text time-item-length">
+							<u--text text="●" type="success"></u--text>
+							<u--text :lines="1" :text="'广州市科学城创意大夏B2' | stateFormat"></u--text>
+							<u--text type="info" :lines="1" size="12" text="1km"></u--text>
+						</view>
+					</view>
+					<view class="item-box"><u-icon name="arrow-right" size="12" bold @click="isPathLine = true"></u-icon></view>
+					<view class="item-box relation">
+						<u-icon name="chat" color="#409eff" size="28"></u-icon>
+						<u-icon name="phone" color="#409eff" size="28"></u-icon>
+					</view>
+				</view>
+				<!-- 地点选择结束 -->
+				<u-line></u-line>
+				<!-- 司机信息开始 -->
+				<view class="time-item">
+					<view class="item-footer">
+						<view class="time-item-text">
+							<u-avatar src="/static/image/sex/man.png"></u-avatar>
+							<u--text :lines="1" text="谢先生" bold></u--text>
+							<u--text :lines="1" text="|" type="info"></u--text>
+							<u--text :lines="1" text="接单99次"></u--text>
+						</view>
+						<view><u-button shape="circle" text="呼叫车主"></u-button></view>
+					</view>
+				</view>
+				<!-- 司机信息结束 -->
+			</view>
+			<!-- 旅客订单列表结束 -->
+
+			<!-- 旅途轨迹线开始 -->
+			<!-- 			<u-popup mode="center" :round="10" :show="isPathLine" @close="isPathLine = false">
+				<view>
+					<u-steps current="1" direction="column">
+						<u-steps-item title="已下单" desc="10:30"></u-steps-item>
+						<u-steps-item title="已出库" desc="10:35"></u-steps-item>
+						<u-steps-item title="运输中" desc="11:40"></u-steps-item>
+					</u-steps>
+				</view>
+			</u-popup> -->
+			<!-- 旅途轨迹线结束 -->
+
+			<!-- 车主订单列表开始 -->
+			<view class="card" v-if="startType === 1">
 				<!-- 顶部倒计时开始 -->
 				<view>
 					<u-count-down :time="30 * 60 * 60 * 1000" format="DD:HH:mm:ss" autoStart millisecond @change="onTimeChange">
@@ -72,6 +144,8 @@
 				</view>
 				<u-line></u-line>
 				<!-- 顶部倒计时结束 -->
+
+				<!-- 地点选择开始 -->
 				<view class="time-item">
 					<view class="item-box">
 						<view class="time-item-text time-item-length">
@@ -85,25 +159,29 @@
 							<u--text type="info" :lines="1" size="12" text="1km"></u--text>
 						</view>
 					</view>
-					<view class="item-box"><u-icon name="arrow-down-fill" size="10"></u-icon></view>
+					<view class="item-box"><u-icon name="arrow-right" size="12" bold></u-icon></view>
 					<view class="item-box relation">
 						<u-icon name="chat" color="#409eff" size="28"></u-icon>
 						<u-icon name="phone" color="#409eff" size="28"></u-icon>
 					</view>
 				</view>
+				<!-- 地点选择结束 -->
 				<u-line></u-line>
+				<!-- 司机信息开始 -->
 				<view class="time-item">
 					<view class="item-footer">
 						<view class="time-item-text">
 							<u-avatar src="/static/image/sex/man.png"></u-avatar>
-							<u--text :lines="1" text="谢先生" bold></u--text>
+							<u--text :lines="1" text="刘先生" bold></u--text>
 							<u--text :lines="1" text="|" type="info"></u--text>
-							<u--text :lines="1" text="接单99次"></u--text>
+							<u--text :lines="1" text="共2人同行"></u--text>
 						</view>
-						<view><u-button shape="circle" text="邀请车主"></u-button></view>
+						<view><u-button shape="circle" text="邀请旅客"></u-button></view>
 					</view>
 				</view>
+				<!-- 司机信息结束 -->
 			</view>
+			<!-- 车主订单列表结束 -->
 		</view>
 	</view>
 </template>
@@ -124,6 +202,9 @@ export default {
 			site: {
 				formatted_addresses: {
 					recommend: '正在获取当前位置...'
+				},
+				ad_info: {
+					city: ''
 				}
 			},
 			// 标记点用于在地图上显示标记的位置
@@ -157,10 +238,14 @@ export default {
 					name: '车主'
 				}
 			],
-			// 标签默认索引（旅客）
-			tabIndex: 0,
 			// 倒计时数据
-			timeData: {}
+			timeData: {},
+			// 当前乘车对象
+			startType: 0,
+			// 轨迹线弹窗
+			isPathLine: false,
+			// 是否存在正在进行的旅途订单
+			isJourneyIndent: false
 		};
 	},
 	onLoad() {
@@ -177,9 +262,15 @@ export default {
 			key: qqMapKey
 		});
 	},
+	onShow() {
+		let vm = this;
+		// 调用检测当前是否存在进行的订单
+		vm.checkIndentStatus();
+	},
 	onReady() {
 		let vm = this;
 		vm.map = uni.createMapContext('map', this);
+		// 获取定位
 		vm.getLocation(1);
 	},
 	methods: {
@@ -208,6 +299,19 @@ export default {
 					}
 				}
 			});
+		},
+
+		/**
+		 * 检测当前是否存在进行的订单
+		 */
+		async checkIndentStatus() {
+			let vm = this;
+			const { data: res } = await vm.$http.get('base/check/indent/status');
+			if (res.code === 403) {
+				vm.isJourneyIndent = true;
+			} else {
+				vm.isJourneyIndent = false;
+			}
 		},
 
 		/**
@@ -273,8 +377,24 @@ export default {
 		 * 点击顶部标签栏
 		 * @param {Object} index 索引:0为旅客 1为车主
 		 */
-		onTabs(index) {
-			console.log(index);
+		onTabs(e) {
+			let vm = this;
+			vm.startType = e.index;
+			if (vm.startType === 1) {
+				vm.checkUser();
+			}
+		},
+
+		/**
+		 * 判断是否为车主
+		 */
+		async checkUser() {
+			let vm = this;
+			const { data: res } = await vm.$http.get('base/check/user');
+			if (res.code !== 200) {
+				vm.startType = 0;
+				return vm.$message.toast(res.msg);
+			}
 		},
 
 		/**
@@ -289,18 +409,34 @@ export default {
 		/**
 		 * 跳转到选择目的地
 		 */
-		toSelectDestination() {
+		async toSelectDestination() {
 			let vm = this;
 			if (vm.site.ad_info.city === '' || vm.site.ad_info.city === null || vm.site.ad_info.city === undefined) {
-				return vm.$app.toast('定位中...');
+				return vm.$message.toast('定位中...');
 			}
-			const item = JSON.stringify({
-				city: vm.site.ad_info.city,
-				address: vm.site.formatted_addresses.recommend,
-				longitude: vm.markers[0].longitude,
-				latitude: vm.markers[0].latitude
-			});
-			vm.$app.navTo('pages/index/destination?item=' + encodeURIComponent(item));
+			const { data: res } = await vm.$http.get('base/check/authentication');
+			if (res.code !== 200) {
+				vm.$message.confirm(res.msg, function() {
+					vm.$app.navTo('/pages/certification/card/step-1');
+				});
+			} else {
+				const item = JSON.stringify({
+					city: vm.site.ad_info.city,
+					address: vm.site.formatted_addresses.recommend,
+					longitude: vm.markers[0].longitude,
+					latitude: vm.markers[0].latitude,
+					type: vm.startType
+				});
+				vm.$app.navTo('/pages/index/destination?item=' + encodeURIComponent(item));
+			}
+		},
+
+		/**
+		 * 跳转到导航路线
+		 */
+		toNavigation() {
+			let vm = this;
+			vm.$app.navTo('/pages/index/navigation');
 		}
 	}
 };
@@ -309,20 +445,35 @@ export default {
 <style lang="scss" scoped>
 cover-image {
 	display: inline-block;
-	border-radius: 25%;
 	padding: 10rpx;
+	background-color: #ffffff;
+}
+cover-view {
 	background-color: #ffffff;
 }
 cover-view {
 	top: 95%;
 }
-.img {
+.position {
 	position: absolute;
+	border-radius: 25%;
 	width: 32rpx;
 	height: 32rpx;
 	right: 15rpx;
 	top: 90%;
 	box-shadow: 0px 0px 5px 1px #f6f6f6;
+}
+.indent {
+	display: flex;
+	position: absolute;
+	border-radius: 15rpx 1rpx 15rpx 15rpx;
+	left: 15rpx;
+	top: 90%;
+	box-shadow: 0px 0px 5px 1px #f6f6f6;
+	.image {
+		width: 32rpx;
+		height: 32rpx;
+	}
 }
 .item {
 	margin: 20rpx;
@@ -343,12 +494,7 @@ cover-view {
 	background-color: #ffffff;
 }
 .box {
-	// #ifdef MP-WEIXIN
-	margin-top: 150rpx;
-	// #endif
-	// #ifdef H5
-	margin-top: 88rpx;
-	// #endif
+	margin-top: -30rpx;
 }
 .u-nav-slot {
 	display: flex;

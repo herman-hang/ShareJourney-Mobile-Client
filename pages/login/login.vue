@@ -207,7 +207,11 @@ export default {
 				url: '/pages/register/register'
 			});
 		},
-
+		
+		/**
+		 * 输入框事件
+		 * @param {Object} e
+		 */
 		inputChange(e) {
 			const key = e.currentTarget.dataset.key;
 			this[key] = e.detail.value;

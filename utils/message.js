@@ -30,6 +30,22 @@ export const confirm = (msg, callback) => {
 }
 
 /**
+ * 显示弹窗
+ */
+export const modal = (msg, callback) => {
+	uni.showModal({
+		title: '温馨提示',
+		content: msg,
+		showCancel: false,
+		success(res) {
+			if (res.confirm) {
+				callback && callback()
+			}
+		}
+	})
+}
+
+/**
  * 显示纯文字提示框
  */
 export const toast = (msg, duration = 1500) => {

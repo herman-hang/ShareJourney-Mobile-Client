@@ -3,7 +3,7 @@ import {
 } from '@/config.js';
 import * as db from '../utils/db.js'
 /**
- * 加载更多列表数据
+ * @desc 加载更多列表数据
  * @param {Object} resList 新列表数据
  * @param {Object} oldList 旧列表数据
  * @param {int} pageNo 当前页码
@@ -16,7 +16,7 @@ export const getMoreListData = (resList, oldList, pageNo) => {
 }
 
 /**
- * 跳转
+ * @desc 跳转
  */
 export const navTo = (url) => {
 	uni.navigateTo({
@@ -25,7 +25,7 @@ export const navTo = (url) => {
 }
 
 /**
- * 上传文件
+ * @desc 上传文件
  * @type file:文件 image:图片
  */
 export const uploadFilePromise = (url, type, suffix = 'base/upload', form = {}) => {
@@ -78,7 +78,7 @@ export const debounce = (fn, timerDelay = 300, immediate = true) => {
 }
 
 /**
- * 检测是否登录
+ * @desc 检测是否登录
  */
 export const checkToken = () => {
 	if (!uni.getStorageSync('token')) {
@@ -86,4 +86,34 @@ export const checkToken = () => {
 			url: '/pages/login/index'
 		});
 	}
+}
+
+/**
+ * @desc 获取微信登录凭证code
+ */
+export const wechatLogin = () => {
+	return new Promise((resolve, reject) => {
+		uni.login({
+			provider: 'weixin',
+			success: res => {
+				resolve(res.code);
+			},
+			fail: reject
+		});
+	});
+}
+
+/**
+ * @desc 获取所有出发地点
+ * siteArr 未过滤的所有地点数组
+ */
+export const getSite = (siteArr) => {
+	let tempArr = [];
+	for (let i = 0; i < siteArr.length; i++) {
+		tempArr[i] = {
+			id: siteArr[i].id,
+			destination: siteArr[i].callout.content
+		};
+	}
+	return tempArr;
 }
