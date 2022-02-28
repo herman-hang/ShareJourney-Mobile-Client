@@ -142,6 +142,7 @@ export default {
 		async getStatus() {
 			const { data: res } = await this.$http.get('mine/certification');
 			if (res.code !== 200) return this.$message.toast(res.msg);
+			console.log(res);
 			switch (res.data.is_owner) {
 				case '0':
 					this.statusData = res.data;

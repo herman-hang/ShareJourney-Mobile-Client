@@ -47,8 +47,7 @@
 				<view class="item-text">
 					<u--text :lines="1" text="全程共"></u--text>
 					<u--text bold :lines="1" :text="tripData.km"></u--text>
-					<u--text :lines="1" text="公里,"></u--text>
-					<u--text :lines="1" text="预计需要"></u--text>
+					<u--text :lines="1" text="公里,预计需要"></u--text>
 					<u--text bold :lines="1" :text="tripData.time"></u--text>
 					<u--text :lines="1" text="小时"></u--text>
 				</view>
@@ -180,7 +179,7 @@ export default {
 		};
 	},
 	onLoad(option) {
-		var vm = this;
+		let vm = this;
 		vm.init(option);
 	},
 	onReady() {
@@ -196,7 +195,7 @@ export default {
 		 * 初始化
 		 */
 		init(option) {
-			var vm = this;
+			let vm = this;
 			vm.site = JSON.parse(decodeURIComponent(decodeURIComponent(option.item)));
 			// 获取设备信息
 			uni.getSystemInfo({
@@ -464,7 +463,6 @@ export default {
 		 * @param {Object} e 当前出行人数
 		 */
 		trip(e) {
-			console.log(e);
 			let vm = this;
 			switch (e) {
 				case 'one':

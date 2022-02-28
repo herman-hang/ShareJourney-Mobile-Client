@@ -1,7 +1,7 @@
 <template>
 	<view class="container">
 		<!-- 搜索框开始 -->
-		<u-search :showAction="false" margin="20rpx" placeholder="请输入关键字" bgColor="#ffffff"></u-search>
+		<view class="card"><u-search placeholder="请输入关键字" :actionStyle="{ color: '#409eff' }"></u-search></view>
 		<!-- 搜索框结束 -->
 		<view class="u-page">
 			<u-list @scrolltolower="scrolltolower">

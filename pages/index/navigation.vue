@@ -236,7 +236,7 @@ export default {
 			if (type === 1) {
 				// 确认订单
 				vm.$message.confirm('是否要确认订单？', async function() {
-					const { data: res } = await vm.$http.post('index/edit/order', { id: vm.journeyData.id, status: '6' });
+					const { data: res } = await vm.$http.post('index/edit/order', { id: vm.journeyData.id, status: '6', owner: vm.journeyData.owner });
 					if (res.code !== 200) return vm.$message.toast(res.msg);
 					vm.$message.toast(res.msg);
 					setTimeout(function() {
@@ -245,10 +245,10 @@ export default {
 						});
 					}, 2000);
 				});
-			} else if (type) {
+			} else if (type === 0) {
 				// 取消订单
 				vm.$message.confirm('是否要取消订单？', async function() {
-					const { data: res } = await vm.$http.post('index/edit/order', { id: vm.journeyData.id, status: '5' });
+					const { data: res } = await vm.$http.post('index/edit/order', { id: vm.journeyData.id, status: '5', owner: vm.journeyData.owner });
 					if (res.code !== 200) return vm.$message.toast(res.msg);
 					vm.$message.toast(res.msg);
 					setTimeout(function() {
@@ -269,7 +269,7 @@ export default {
 				const { data: res } = await vm.$http.post('index/indent/start', { owner_id: vm.journeyData.owner.owner_id });
 				if (res.code !== 200) return vm.$message.toast(res.msg);
 				vm.getJourney();
-				return vm.$message.modal(res.msg);
+				return vm.$message.toast(res.msg);
 			});
 		}
 	}

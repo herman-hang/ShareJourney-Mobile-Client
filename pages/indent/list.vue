@@ -49,7 +49,6 @@ export default {
 		this.getlistData();
 	},
 	onReachBottom() {
-		const oldList = this.listData;
 		if (this.queryInfo.current_page < this.queryInfo.total) {
 			this.queryInfo.current_page = this.queryInfo.current_page + 1;
 			this.getlistData();

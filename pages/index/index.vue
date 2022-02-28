@@ -60,7 +60,7 @@
 			<!-- 地点选择结束 -->
 
 			<!-- 旅客订单列表开始 -->
-			<view class="card" v-if="startType === 0">
+			<view class="card" v-if="startType === 0" v-for="(item, index) in userListData" :key="item.id">
 				<view class="time-item">
 					<text>状态：</text>
 					<u-tag text="未满座" type="success" plain size="mini"></u-tag>
@@ -71,20 +71,20 @@
 				<view class="time-item">
 					<view class="item-box">
 						<view class="time-item-text time-item-length">
-							<u--text text="●" type="primary"></u--text>
-							<u--text :lines="1" :text="'北京东路1北京东路北京东路号' | stateFormat"></u--text>
+							<u--text text="●" type="success"></u--text>
+							<u--text :lines="1" :text="item.start | stateFormat"></u--text>
 							<u--text type="info" :lines="1" size="12" text="100m"></u--text>
 						</view>
 						<view class="time-item-text time-item-length">
-							<u--text text="●" type="success"></u--text>
-							<u--text :lines="1" :text="'广州市科学城创意大夏B2' | stateFormat"></u--text>
+							<u--text text="●" type="primary"></u--text>
+							<u--text :lines="1" :text="item.end | stateFormat"></u--text>
 							<u--text type="info" :lines="1" size="12" text="1km"></u--text>
 						</view>
 					</view>
-					<view class="item-box"><u-icon name="arrow-right" size="12" bold @click="isPathLine = true"></u-icon></view>
+					<view class="item-box"><u-icon name="arrow-right" size="12" bold @click="getPathLineData(item.id)"></u-icon></view>
 					<view class="item-box relation">
 						<u-icon name="chat" color="#409eff" size="28"></u-icon>
-						<u-icon name="phone" color="#409eff" size="28"></u-icon>
+						<u-icon name="phone" color="#409eff" size="28" @click="rindUp(item.mobile)"></u-icon>
 					</view>
 				</view>
 				<!-- 地点选择结束 -->
@@ -93,51 +93,60 @@
 				<view class="time-item">
 					<view class="item-footer">
 						<view class="time-item-text">
-							<u-avatar src="/static/image/sex/man.png"></u-avatar>
-							<u--text :lines="1" text="谢先生" bold></u--text>
+							<u-avatar :src="item.photo"></u-avatar>
+							<u--text :lines="1" :text="item.name + '司机'" bold></u--text>
 							<u--text :lines="1" text="|" type="info"></u--text>
-							<u--text :lines="1" text="接单99次"></u--text>
+							<u--text :lines="1" :text="'接单' + item.indent_sum + '次'"></u--text>
+							<u--text :lines="1" text="|" type="info"></u--text>
+							<u--text :lines="1" :text="'空' + item.number + '人'"></u--text>
 						</view>
-						<view><u-button shape="circle" text="呼叫车主"></u-button></view>
+						<view><u-button shape="circle" text="呼叫车主" @click="callOwner(item)"></u-button></view>
 					</view>
 				</view>
 				<!-- 司机信息结束 -->
 			</view>
 			<!-- 旅客订单列表结束 -->
 
+			<!-- 旅客列表底部分割线开始 -->
+			<u-divider v-if="startType === 0 && isDataShowUser === true" text="已经到底啦~"></u-divider>
+			<!-- 旅客列表底部分割线结束 -->
+
 			<!-- 旅途轨迹线开始 -->
-			<!-- 			<u-popup mode="center" :round="10" :show="isPathLine" @close="isPathLine = false">
-				<view>
-					<u-steps current="1" direction="column">
-						<u-steps-item title="已下单" desc="10:30"></u-steps-item>
-						<u-steps-item title="已出库" desc="10:35"></u-steps-item>
-						<u-steps-item title="运输中" desc="11:40"></u-steps-item>
+			<u-popup mode="center" :round="10" :show="isPathLine" @close="isPathLine = false">
+				<view class="step">
+					<u-steps :current="stepsSort" direction="column" :list="stepsData">
+						<u-steps-item
+							v-for="(item, index) in stepsData"
+							:key="index"
+							:title="item.title | stateFormat"
+							:desc="item.status === null ? '出发地' : item.status === '0' ? '未达到' : '已达到' + '　' + item.arrival_time"
+						></u-steps-item>
 					</u-steps>
 				</view>
-			</u-popup> -->
+			</u-popup>
 			<!-- 旅途轨迹线结束 -->
 
 			<!-- 车主订单列表开始 -->
-			<view class="card" v-if="startType === 1">
+			<view class="card" v-if="startType === 1" v-for="(item, index) in ownerListData" :key="index">
 				<!-- 顶部倒计时开始 -->
 				<view>
-					<u-count-down :time="30 * 60 * 60 * 1000" format="DD:HH:mm:ss" autoStart millisecond @change="onTimeChange">
+					<u-count-down :time="item.deadline * 1000" format="DD:HH:mm:ss" autoStart millisecond @finish="getAllIndent" @change="onTimeChange($event, index)">
 						<view class="time">
 							<view><text>距离结束：</text></view>
 							<view class="time__custom">
-								<text class="time__custom__item">{{ timeData.days }}天</text>
+								<text class="time__custom__item">{{ item.date.days }}天</text>
 							</view>
 							<text class="time__doc">:</text>
 							<view class="time__custom">
-								<text class="time__custom__item">{{ timeData.hours > 10 ? timeData.hours : '0' + timeData.hours }}</text>
+								<text class="time__custom__item">{{ item.date.hours > 10 ? item.date.hours : '0' + item.date.hours }}</text>
 							</view>
 							<text class="time__doc">:</text>
 							<view class="time__custom">
-								<text class="time__custom__item">{{ timeData.minutes }}</text>
+								<text class="time__custom__item">{{ item.date.minutes }}</text>
 							</view>
 							<text class="time__doc">:</text>
 							<view class="time__custom">
-								<text class="time__custom__item">{{ timeData.seconds }}</text>
+								<text class="time__custom__item">{{ item.date.seconds }}</text>
 							</view>
 						</view>
 					</u-count-down>
@@ -149,20 +158,20 @@
 				<view class="time-item">
 					<view class="item-box">
 						<view class="time-item-text time-item-length">
-							<u--text text="●" type="primary"></u--text>
-							<u--text :lines="1" :text="'北京东路1北京东路北京东路号' | stateFormat"></u--text>
+							<u--text text="●" type="success"></u--text>
+							<u--text :lines="1" :text="item.start | stateFormat"></u--text>
 							<u--text type="info" :lines="1" size="12" text="100m"></u--text>
 						</view>
 						<view class="time-item-text time-item-length">
-							<u--text text="●" type="success"></u--text>
-							<u--text :lines="1" :text="'广州市科学城创意大夏B2' | stateFormat"></u--text>
+							<u--text text="●" type="primary"></u--text>
+							<u--text :lines="1" :text="item.end | stateFormat"></u--text>
 							<u--text type="info" :lines="1" size="12" text="1km"></u--text>
 						</view>
 					</view>
-					<view class="item-box"><u-icon name="arrow-right" size="12" bold></u-icon></view>
+					<view class="item-box"><u-icon name="arrow-right" size="12" bold @click="getPathLineData(item.id)"></u-icon></view>
 					<view class="item-box relation">
 						<u-icon name="chat" color="#409eff" size="28"></u-icon>
-						<u-icon name="phone" color="#409eff" size="28"></u-icon>
+						<u-icon name="phone" color="#409eff" size="28" @click="rindUp(item.mobile)"></u-icon>
 					</view>
 				</view>
 				<!-- 地点选择结束 -->
@@ -171,17 +180,21 @@
 				<view class="time-item">
 					<view class="item-footer">
 						<view class="time-item-text">
-							<u-avatar src="/static/image/sex/man.png"></u-avatar>
-							<u--text :lines="1" text="刘先生" bold></u--text>
+							<u-avatar :src="item.photo"></u-avatar>
+							<u--text :lines="1" :text="item.sex === '0' ? item.name + '女士' : item.sex === '1' ? item.name + '先生' : item.name + '旅客'" bold></u--text>
 							<u--text :lines="1" text="|" type="info"></u--text>
-							<u--text :lines="1" text="共2人同行"></u--text>
+							<u--text :lines="1" :text="'共' + item.trip + '人同行'"></u--text>
 						</view>
-						<view><u-button shape="circle" text="邀请旅客"></u-button></view>
+						<view><u-button shape="circle" text="邀请旅客" @click="invitationUser(item)"></u-button></view>
 					</view>
 				</view>
 				<!-- 司机信息结束 -->
 			</view>
 			<!-- 车主订单列表结束 -->
+
+			<!-- 车主列表底部分割线开始 -->
+			<u-divider v-if="startType === 1 && isDataShowOwner === true" text="已经到底啦~"></u-divider>
+			<!-- 车主列表底部分割线结束 -->
 		</view>
 	</view>
 </template>
@@ -238,14 +251,42 @@ export default {
 					name: '车主'
 				}
 			],
-			// 倒计时数据
-			timeData: {},
 			// 当前乘车对象
 			startType: 0,
 			// 轨迹线弹窗
 			isPathLine: false,
 			// 是否存在正在进行的旅途订单
-			isJourneyIndent: false
+			isJourneyIndent: false,
+			// 旅客分页参数
+			userQueryInfo: {
+				//当前页码
+				current_page: 1,
+				//每页显示多少条数据
+				per_page: 6,
+				// 总页数
+				total: 0
+			},
+			// 旅客列表数据
+			userListData: [],
+			// 旅客列表数据是否加载完
+			isDataShowUser: false,
+			// 旅客分页参数
+			ownerQueryInfo: {
+				//当前页码
+				current_page: 1,
+				//每页显示多少条数据
+				per_page: 6,
+				// 总页数
+				total: 0
+			},
+			// 车主列表数据
+			ownerListData: [],
+			// 车主列表数据是否加载完
+			isDataShowOwner: false,
+			// 步骤条数据绑定
+			stepsData: [],
+			// 步骤条进行到的步骤
+			stepsSort: '1'
 		};
 	},
 	onLoad() {
@@ -266,12 +307,27 @@ export default {
 		let vm = this;
 		// 调用检测当前是否存在进行的订单
 		vm.checkIndentStatus();
+		// 获取列表订单
+		vm.getAllIndent();
 	},
 	onReady() {
 		let vm = this;
 		vm.map = uni.createMapContext('map', this);
 		// 获取定位
 		vm.getLocation(1);
+	},
+	onReachBottom() {
+		let vm = this;
+		if (vm.startType === 0) {
+			if (vm.userQueryInfo.current_page < vm.userQueryInfo.total) {
+				vm.userQueryInfo.current_page = vm.userQueryInfo.current_page + 1;
+			}
+		} else {
+			if (vm.ownerQueryInfo.current_page < vm.ownerQueryInfo.total) {
+				vm.ownerQueryInfo.current_page = vm.ownerQueryInfo.current_page + 1;
+			}
+		}
+		vm.getAllIndent();
 	},
 	methods: {
 		/**
@@ -380,6 +436,7 @@ export default {
 		onTabs(e) {
 			let vm = this;
 			vm.startType = e.index;
+			vm.getAllIndent();
 			if (vm.startType === 1) {
 				vm.checkUser();
 			}
@@ -399,11 +456,10 @@ export default {
 
 		/**
 		 * 时间回调的值
-		 * @param {Object} e
 		 */
-		onTimeChange(e) {
+		onTimeChange(e, index) {
 			let vm = this;
-			vm.timeData = e;
+			vm.ownerListData[index].date = e;
 		},
 
 		/**
@@ -437,6 +493,81 @@ export default {
 		toNavigation() {
 			let vm = this;
 			vm.$app.navTo('/pages/index/navigation');
+		},
+
+		/**
+		 * 获取列表订单数据
+		 */
+		async getAllIndent() {
+			let vm = this;
+			if (vm.startType === 0) {
+				const { data: res } = await vm.$http.get('index/owner/indent', { params: vm.userQueryInfo });
+				if (res.code !== 200) return vm.$message.toast(res.msg);
+				vm.userQueryInfo.total = res.data.total;
+				vm.userListData = vm.$app.getMoreListData(res.data.data, vm.userListData, vm.userQueryInfo.current_page);
+				if (res.data.data.length < vm.userQueryInfo.per_page) {
+					vm.isDataShowUser = true;
+				}
+			} else {
+				const { data: res } = await vm.$http.get('index/user/indent', { params: vm.ownerQueryInfo });
+				if (res.code !== 200) return vm.$message.toast(res.msg);
+				vm.ownerQueryInfo.total = res.data.total;
+				vm.ownerListData = vm.$app.getMoreListData(res.data.data, vm.ownerListData, vm.ownerQueryInfo.current_page);
+				if (res.data.data.length < vm.ownerQueryInfo.per_page) {
+					vm.isDataShowOwner = true;
+				}
+			}
+		},
+
+		/**
+		 * 拨打车主电话
+		 * @param {Object} mobile
+		 */
+		rindUp(mobile) {
+			uni.makePhoneCall({
+				phoneNumber: mobile
+			});
+		},
+
+		/**
+		 * 根据旅途信息ID获取轨迹线
+		 * @param {Object} id
+		 */
+		async getPathLineData(id) {
+			let vm = this;
+			const { data: res } = await vm.$http.get('index/path/line', { params: { id: id } });
+			if (res.code !== 200) return vm.$message.toast(res.msg);
+			vm.stepsSort = res.data.sort;
+			vm.stepsData = res.data.data;
+			vm.isPathLine = true;
+		},
+
+		/**
+		 * 邀请旅客
+		 * @param {Object} item 旅客的相关信息
+		 */
+		invitationUser(item) {
+			let vm = this;
+			vm.$message.confirm('确认要邀请该旅客吗？', async function() {
+				const { data: res } = await vm.$http.post('owner/invitation/user', { id: item.id, user_id: item.user_id, trip: item.trip });
+				if (res.code !== 200) return vm.$message.toast(res.msg);
+				vm.$app.navTo('/pages/index/navigation');
+			});
+		},
+
+		/**
+		 * 呼叫车主
+		 * @param {Object} item 车主旅途的相关信息
+		 */
+		callOwner(item) {
+			let vm = this;
+			vm.$message.confirm('确认要呼叫该车主吗？', function() {
+				if (vm.isJourneyIndent) {
+					return vm.$message.modal('您当前正在进行一个订单！');
+				} else {
+					vm.$app.navTo('/pages/index/call?item=' + encodeURIComponent(JSON.stringify(item)));
+				}
+			});
 		}
 	}
 };
@@ -557,5 +688,15 @@ cover-view {
 		width: 100%;
 		justify-content: space-between;
 	}
+}
+.step {
+	display: flex;
+	justify-content: center;
+	width: auto;
+	margin: 0 auto;
+	height: auto;
+	max-height: 500rpx;
+	padding: 20rpx 20rpx;
+	overflow: auto;
 }
 </style>

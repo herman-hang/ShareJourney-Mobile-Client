@@ -143,4 +143,14 @@ cover-view.data-v-57280228 {
   width: 100%;
   justify-content: space-between;
 }
+.step.data-v-57280228 {
+  display: flex;
+  justify-content: center;
+  width: auto;
+  margin: 0 auto;
+  height: auto;
+  max-height: 500rpx;
+  padding: 20rpx 20rpx;
+  overflow: auto;
+}
 

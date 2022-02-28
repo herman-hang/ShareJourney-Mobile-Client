@@ -492,7 +492,6 @@ export default {
 		 * 跳转到路线导航详情
 		 */
 		async toNavigation() {
-			console.log(111);
 			let vm = this;
 			// 显示加载图标
 			vm.isLoading = true;
@@ -503,7 +502,8 @@ export default {
 			const item = encodeURIComponent(
 				JSON.stringify({
 					markers: tempArr,
-					polyline: vm.polyline
+					polyline: vm.polyline,
+					trip:vm.tripData
 				})
 			);
 			const { data: res } = await vm.$http.post('owner/start', { site: siteArr, type: vm.site.start.type, trip: vm.formData, line: item });

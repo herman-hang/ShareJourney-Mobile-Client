@@ -4,6 +4,7 @@
     "pages/index/destination",
     "pages/index/owner",
     "pages/index/plan",
+    "pages/index/call",
     "pages/index/navigation",
     "pages/journey/list",
     "pages/message/list",

@@ -14,15 +14,7 @@
 				<u-form-item labelWidth="160rpx" label="昵称" borderBottom>
 					<u--input @change="saveMaterial()" v-model="materialForm.nickname" placeholder="请输入昵称" border="none"></u--input>
 				</u-form-item>
-				<u-form-item
-					@click="
-						showSex = true;
-						hideKeyboard();
-					"
-					labelWidth="160rpx"
-					label="性别"
-					borderBottom
-				>
+				<u-form-item @click="showSex = true" labelWidth="160rpx" label="性别" borderBottom>
 					<u--input v-model="sexValue" disabled disabledColor="#ffffff" placeholder="请选择性别" border="none"></u--input>
 					<u-icon slot="right" name="arrow-right"></u-icon>
 				</u-form-item>

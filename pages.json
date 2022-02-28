@@ -57,6 +57,13 @@
 			}
 		},
 		{
+			"path": "pages/index/call",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "出发详情"
+			}
+		},
+		{
 			"path": "pages/index/navigation",
 			"style": {
 				"navigationStyle": "custom",

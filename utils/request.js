@@ -28,7 +28,19 @@ axios.interceptors.response.use(res => {
 			showCancel: false,
 			success() {
 				uni.navigateTo({
-					url: 'pages/login/index'
+					url: '/pages/login/index'
+				})
+			}
+		})
+	}
+	if (res.data.code === 401) {
+		return uni.showModal({
+			title: '温馨提示',
+			content: res.data.msg,
+			showCancel: false,
+			success() {
+				uni.navigateTo({
+					url: '/pages/certification/card/step-1'
 				})
 			}
 		})

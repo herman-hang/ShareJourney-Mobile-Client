@@ -94,4 +94,14 @@
   font-size: 15px;
   margin-right: 4px;
 }
+.step.data-v-01c3b006 {
+  display: flex;
+  justify-content: center;
+  width: auto;
+  margin: 0 auto;
+  height: auto;
+  max-height: 500rpx;
+  padding: 20rpx 20rpx;
+  overflow: auto;
+}
 
