@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "绑定邮箱",
+  "usingComponents": {
+    "verify": "/components/verify/verify"
+  }
+}

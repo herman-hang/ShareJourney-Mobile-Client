@@ -96,19 +96,19 @@ var components
 try {
   components = {
     uSearch: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-search/u-search */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-search/u-search")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-search/u-search.vue */ 536))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-search/u-search */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-search/u-search")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-search/u-search.vue */ 637))
     },
     uLoadingIcon: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-loading-icon/u-loading-icon */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-loading-icon/u-loading-icon")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-loading-icon/u-loading-icon.vue */ 544))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-loading-icon/u-loading-icon */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-loading-icon/u-loading-icon")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-loading-icon/u-loading-icon.vue */ 645))
     },
     uIcon: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-icon/u-icon */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-icon/u-icon")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-icon/u-icon.vue */ 452))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-icon/u-icon */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-icon/u-icon")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-icon/u-icon.vue */ 553))
     },
     "u-Text": function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u--text/u--text */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u--text/u--text")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u--text/u--text.vue */ 430))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u--text/u--text */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u--text/u--text")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u--text/u--text.vue */ 531))
     },
     uLine: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-line/u-line */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-line/u-line")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-line/u-line.vue */ 469))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-line/u-line */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-line/u-line")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-line/u-line.vue */ 570))
     }
   }
 } catch (e) {
@@ -211,10 +211,8 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
 var _qqmapWxJssdkMin = _interopRequireDefault(__webpack_require__(/*! ../../static/js/qqmap/qqmap-wx-jssdk.min.js */ 181));
 var _config = __webpack_require__(/*! @/config.js */ 44);function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };} //
-//
 //
 //
 //
@@ -267,13 +265,15 @@ var _default = { data: function data() {return { // 搜索右边控件样式
       isShow: false };}, onLoad: function onLoad(option) {var vm = this;vm.init(option);}, methods: { /**
                                                                                                        * 初始化
                                                                                                        */init: function init(option) {var vm = this; // 对中文解码
-      vm.site = JSON.parse(decodeURIComponent(decodeURIComponent(option.item)));vm.getCity(vm.site.city);}, /**
-                                                                                                             * 获取城市周边地点
-                                                                                                             */getCity: function getCity(keyword) {var vm = this; // 实例化腾讯地图API
-      vm.qqmapsdk = new _qqmapWxJssdkMin.default({ key: _config.qqMapKey });vm.qqmapsdk.search({ keyword: keyword, //搜索关键词
+      vm.site = JSON.parse(decodeURIComponent(decodeURIComponent(option.item))); // 实例化腾讯地图API
+      vm.qqmapsdk = new _qqmapWxJssdkMin.default({ key: _config.qqMapKey });vm.getCity(vm.site.city);}, /**
+                                                                                                         * 获取城市周边地点
+                                                                                                         * @param {Object} keyword //搜索关键词
+                                                                                                         */getCity: function getCity(keyword) {var vm = this;vm.qqmapsdk.search({ keyword: keyword, //搜索关键词
         sig: _config.qqMapSig, page_size: 20, success: function success(res) {if (res.status === 0) {vm.cityData = res.data;vm.isShow = true;}} });}, /**
                                                                                                                                                        * 选择地址
-                                                                                                                                                       */selectSite: function selectSite() {var address = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+                                                                                                                                                       */
+    selectSite: function selectSite() {var address = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
       var vm = this;
       if (address === '') {
         uni.chooseLocation({
@@ -322,9 +322,27 @@ var _default = { data: function data() {return { // 搜索右边控件样式
     /**
         * 内容发生变化时
         */
-    change: function change() {
+    search: function search() {
       var vm = this;
-      vm.getCity(vm.keyword);
+      vm.getSuggestion(vm.keyword);
+    },
+
+    /**
+        * 搜索地名关键词
+        */
+    getSuggestion: function getSuggestion(keyword) {
+      var vm = this;
+      vm.qqmapsdk.getSuggestion({
+        keyword: keyword, //搜索关键词
+        sig: _config.qqMapSig,
+        page_size: 20,
+        success: function success(res) {
+          if (res.status === 0) {
+            vm.cityData = res.data;
+            vm.isShow = true;
+          }
+        } });
+
     } } };exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 

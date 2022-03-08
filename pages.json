@@ -15,7 +15,7 @@
 				"selectedIconPath": "static/image/tabbar/car-active.png",
 				"text": "旅途"
 			}, {
-				"pagePath": "pages/message/list",
+				"pagePath": "pages/chat/conversations",
 				"iconPath": "static/image/tabbar/comment.png",
 				"selectedIconPath": "static/image/tabbar/comment-active.png",
 				"text": "消息"
@@ -78,10 +78,16 @@
 			}
 		},
 		{
-			"path": "pages/message/list",
+			"path": "pages/chat/conversations",
 			"style": {
 				"enablePullDownRefresh": true,
 				"navigationBarTitleText": "消息"
+			}
+		},
+		{
+			"path": "pages/chat/private/chat",
+			"style": {
+				"navigationBarTitleText": "私聊"
 			}
 		},
 		{
@@ -89,6 +95,18 @@
 			"style": {
 				"navigationBarTitleText": "我的",
 				"backgroundTextStyle": "dark"
+			}
+		},
+		{
+			"path": "pages/mine/withdraw",
+			"style": {
+				"navigationBarTitleText": "提现明细"
+			}
+		},
+		{
+			"path": "pages/mine/income",
+			"style": {
+				"navigationBarTitleText": "账单"
 			}
 		},
 		{
@@ -222,6 +240,66 @@
 			"path": "pages/indent/list",
 			"style": {
 				"navigationBarTitleText": "我的订单"
+			}
+		},
+		{
+			"path": "pages/record/list",
+			"style": {
+				"navigationBarTitleText": "旅行记录"
+			}
+		},
+		{
+			"path": "pages/system/system",
+			"style": {
+				"navigationBarTitleText": "系统设置"
+			}
+		},
+		{
+			"path": "pages/system/about",
+			"style": {
+				"navigationBarTitleText": "关于"
+			}
+		},
+		{
+			"path": "pages/system/about/introduce",
+			"style": {
+				"navigationBarTitleText": "功能介绍"
+			}
+		},
+		{
+			"path": "pages/system/password",
+			"style": {
+				"navigationBarTitleText": "修改密码"
+			}
+		},
+		{
+			"path": "pages/system/mobile/mobile",
+			"style": {
+				"navigationBarTitleText": "手机号码"
+			}
+		},
+		{
+			"path": "pages/system/mobile/change",
+			"style": {
+				"navigationBarTitleText": "更换手机"
+			}
+		},
+		{
+			"path": "pages/system/email/email",
+			"style": {
+				"navigationBarTitleText": "邮箱"
+			}
+		},
+		{
+			"path": "pages/system/email/change",
+			"style": {
+				"navigationBarTitleText": "更换邮箱"
+			}
+		},
+		{
+			"path": "pages/system/email/bind",
+			"style": {
+				"navigationBarTitleText": "绑定邮箱"
 			}
 		}
 	],

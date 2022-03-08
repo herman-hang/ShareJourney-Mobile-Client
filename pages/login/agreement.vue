@@ -155,7 +155,7 @@
         <view style="font-weight: bold;text-align: left;text-indent: 2rem"> 本协议自签订之日起生效。
             本协议签订之日，即用户注册时，点击‘同意’的当天,视为合同已签订生效。
         </view>
-        <view style="text-align: right;margin-right: 8px;font-weight: bold;margin-top: 16px"> 共享旅途作者：小航
+        <view style="text-align: right;margin-right: 8px;font-weight: bold;margin-top: 16px"> 共享旅途作者：谢观华
         </view>
 
 

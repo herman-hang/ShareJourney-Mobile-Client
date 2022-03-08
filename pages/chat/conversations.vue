@@ -1,0 +1,309 @@
+<template>
+	<scroll-view class="conversations" scroll-y="true">
+		<!-- 搜索框开始 -->
+		<view class="card"><u-search placeholder="请输入关键字" :actionStyle="{ color: '#409eff' }"></u-search></view>
+		<!-- 搜索框结束 -->
+		<view>
+			<view class="scroll-item" @click="navigateToChat()">
+				<view class="item-head">
+					<image src="/static/image/sex/man.png" class="head-icon"></image>
+					<view class="item-head_unread">99+</view>
+				</view>
+				<view class="scroll-item_info">
+					<view class="item-info-top">
+						<text class="item-info-top_name">小航</text>
+						<view class="item-info-top_time">2022-03-02 20:16:38</view>
+					</view>
+					<view class="item-info-bottom">
+						<view class="item-info-bottom-item">
+							<view class="item-info-top_content">做毕设，要决战到天亮</view>
+							<view class="item-info-bottom_action"></view>
+						</view>
+					</view>
+				</view>
+			</view>
+		</view>
+
+		<view>
+			<view class="scroll-item" @click="navigateToChat()">
+				<view class="item-head">
+					<image src="/static/image/sex/man.png" class="head-icon"></image>
+					<view class="item-head_unread">99+</view>
+				</view>
+				<view class="scroll-item_info">
+					<view class="item-info-top">
+						<text class="item-info-top_name">小航</text>
+						<view class="item-info-top_time">2022-03-02 20:16:38</view>
+					</view>
+					<view class="item-info-bottom">
+						<view class="item-info-bottom-item">
+							<view class="item-info-top_content">做毕设，要决战到天亮</view>
+							<view class="item-info-bottom_action"></view>
+						</view>
+					</view>
+				</view>
+			</view>
+		</view>
+
+		<view>
+			<view class="scroll-item" @click="navigateToChat()">
+				<view class="item-head">
+					<image src="/static/image/sex/man.png" class="head-icon"></image>
+					<view class="item-head_unread">99+</view>
+				</view>
+				<view class="scroll-item_info">
+					<view class="item-info-top">
+						<text class="item-info-top_name">小航</text>
+						<view class="item-info-top_time">2022-03-02 20:16:38</view>
+					</view>
+					<view class="item-info-bottom">
+						<view class="item-info-bottom-item">
+							<view class="item-info-top_content">做毕设，要决战到天亮</view>
+							<view class="item-info-bottom_action"></view>
+						</view>
+					</view>
+				</view>
+			</view>
+		</view>
+
+		<view>
+			<view class="scroll-item" @click="navigateToChat()">
+				<view class="item-head">
+					<image src="/static/image/sex/man.png" class="head-icon"></image>
+					<view class="item-head_unread">99+</view>
+				</view>
+				<view class="scroll-item_info">
+					<view class="item-info-top">
+						<text class="item-info-top_name">小航</text>
+						<view class="item-info-top_time">2022-03-02 20:16:38</view>
+					</view>
+					<view class="item-info-bottom">
+						<view class="item-info-bottom-item">
+							<view class="item-info-top_content">做毕设，要决战到天亮</view>
+							<view class="item-info-bottom_action"></view>
+						</view>
+					</view>
+				</view>
+			</view>
+		</view>
+
+		<view>
+			<view class="scroll-item" @click="navigateToChat()">
+				<view class="item-head">
+					<image src="/static/image/sex/man.png" class="head-icon"></image>
+					<view class="item-head_unread">99+</view>
+				</view>
+				<view class="scroll-item_info">
+					<view class="item-info-top">
+						<text class="item-info-top_name">小航</text>
+						<view class="item-info-top_time">2022-03-02 20:16:38</view>
+					</view>
+					<view class="item-info-bottom">
+						<view class="item-info-bottom-item">
+							<view class="item-info-top_content">做毕设，要决战到天亮</view>
+							<view class="item-info-bottom_action"></view>
+						</view>
+					</view>
+				</view>
+			</view>
+		</view>
+
+		<view>
+			<view class="scroll-item" @click="navigateToChat()">
+				<view class="item-head">
+					<image src="/static/image/sex/man.png" class="head-icon"></image>
+					<view class="item-head_unread">99+</view>
+				</view>
+				<view class="scroll-item_info">
+					<view class="item-info-top">
+						<text class="item-info-top_name">小航</text>
+						<view class="item-info-top_time">2022-03-02 20:16:38</view>
+					</view>
+					<view class="item-info-bottom">
+						<view class="item-info-bottom-item">
+							<view class="item-info-top_content">做毕设，要决战到天亮</view>
+							<view class="item-info-bottom_action"></view>
+						</view>
+					</view>
+				</view>
+			</view>
+		</view>
+
+		<view>
+			<view class="scroll-item" @click="navigateToChat()">
+				<view class="item-head">
+					<image src="/static/image/sex/man.png" class="head-icon"></image>
+					<view class="item-head_unread">99+</view>
+				</view>
+				<view class="scroll-item_info">
+					<view class="item-info-top">
+						<text class="item-info-top_name">小航</text>
+						<view class="item-info-top_time">2022-03-02 20:16:38</view>
+					</view>
+					<view class="item-info-bottom">
+						<view class="item-info-bottom-item">
+							<view class="item-info-top_content">做毕设，要决战到天亮</view>
+							<view class="item-info-bottom_action"></view>
+						</view>
+					</view>
+				</view>
+			</view>
+		</view>
+
+		<view>
+			<view class="scroll-item" @click="navigateToChat()">
+				<view class="item-head">
+					<image src="/static/image/sex/man.png" class="head-icon"></image>
+					<view class="item-head_unread">99+</view>
+				</view>
+				<view class="scroll-item_info">
+					<view class="item-info-top">
+						<text class="item-info-top_name">小航</text>
+						<view class="item-info-top_time">2022-03-02 20:16:38</view>
+					</view>
+					<view class="item-info-bottom">
+						<view class="item-info-bottom-item">
+							<view class="item-info-top_content">做毕设，要决战到天亮</view>
+							<view class="item-info-bottom_action"></view>
+						</view>
+					</view>
+				</view>
+			</view>
+		</view>
+
+		<view>
+			<view class="scroll-item" @click="navigateToChat()">
+				<view class="item-head">
+					<image src="/static/image/sex/man.png" class="head-icon"></image>
+					<view class="item-head_unread">99+</view>
+				</view>
+				<view class="scroll-item_info">
+					<view class="item-info-top">
+						<text class="item-info-top_name">小航</text>
+						<view class="item-info-top_time">2022-03-02 20:16:38</view>
+					</view>
+					<view class="item-info-bottom">
+						<view class="item-info-bottom-item">
+							<view class="item-info-top_content">做毕设，要决战到天亮</view>
+							<view class="item-info-bottom_action"></view>
+						</view>
+					</view>
+				</view>
+			</view>
+		</view>
+
+		<view class="no-conversation" v-if="false">当前没有会话</view>
+	</scroll-view>
+</template>
+
+<script>
+export default {
+	data() {
+		return {};
+	},
+	onShow() {},
+	methods: {
+		navigateToChat() {
+			this.$app.navTo('/pages/chat/private/chat');
+		}
+	}
+};
+</script>
+
+<style>
+page {
+	height: 100%;
+}
+.conversations {
+	width: 750rpx;
+	overflow-x: hidden;
+	display: flex;
+	flex-direction: column;
+	box-sizing: border-box;
+	height: 100%;
+}
+.conversations .scroll-item {
+	height: 120rpx;
+	display: flex;
+	align-items: center;
+	padding-left: 32rpx;
+}
+.conversations .scroll-item .head-icon {
+	width: 100rpx;
+	height: 100rpx;
+	margin-right: 28rpx;
+}
+.conversations .scroll-item_info {
+	height: 120rpx;
+	width: 590rpx;
+	padding-right: 32rpx;
+	box-sizing: border-box;
+	/* border-bottom: 1px solid #efefef; */
+}
+.conversations .scroll-item_info .item-info-top {
+	padding-top: 20rpx;
+	height: 60rpx;
+	line-height: 60rpx;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+.conversations .item-info-top_name {
+	font-size: 34rpx;
+	color: #262628;
+}
+.conversations .item-info-top_time {
+	font-size: 26rpx;
+	color: rgba(179, 179, 179, 0.8);
+	font-family: Source Han Sans CN;
+}
+.conversations .item-info-bottom {
+	height: 40rpx;
+	line-height: 40rpx;
+	overflow: hidden;
+}
+.conversations .item-info-bottom-item {
+	display: flex;
+	justify-content: space-between;
+}
+.item-info-bottom .item-info-top_content {
+	font-size: 30rpx;
+	color: #b3b3b3;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.item-info-bottom .item-info-bottom_action {
+	width: 50rpx;
+	height: 50rpx;
+	font-size: 20rpx;
+	background: url('@/static/image/chat/action.png') no-repeat center;
+	background-size: 28rpx 30rpx;
+}
+.no-conversation {
+	width: 100%;
+	text-align: center;
+	height: 80rpx;
+	line-height: 80rpx;
+	font-size: 28rpx;
+	color: #9d9d9d;
+}
+.item-head {
+	position: relative;
+}
+.item-head .item-head_unread {
+	padding: 6rpx;
+	background-color: #ee593c;
+	color: #ffffff;
+	font-size: 18rpx;
+	line-height: 28rpx;
+	border-radius: 24rpx;
+	min-width: 24rpx;
+	min-height: 24rpx;
+	text-align: center;
+	position: absolute;
+	top: 0;
+	right: 15rpx;
+}
+</style>

@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "系统设置",
+  "usingComponents": {
+    "u-line": "/uni_modules/uview-ui/components/u-line/u-line"
+  }
+}

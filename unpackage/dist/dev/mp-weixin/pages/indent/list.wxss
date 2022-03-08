@@ -45,10 +45,21 @@
 .box .box-item .box-item-text.data-v-d7a0b890 {
   display: flex;
 }
-.box .box-item .box-item-bottom.data-v-d7a0b890 {
-  margin-top: 20rpx;
-}
 .box.data-v-d7a0b890 .u-text {
   flex: 0;
+}
+.box-bottom.data-v-d7a0b890 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20rpx;
+}
+.content.data-v-d7a0b890 {
+  width: 500rpx;
+  margin: 0 auto;
+  height: auto;
+  max-height: 500rpx;
+  padding: 20rpx 20rpx;
+  overflow: auto;
 }
 

@@ -77,7 +77,7 @@
 		<view>
 			方披露自己的个人信息，如联络方式或者邮政地址。请您妥善保护自己的个人信息，仅在必要的情形下向他人提供。如您发现自己的个人信息泄密，尤其是本应用用户名及密码发生泄露，请您立即联络本应用客服，以便本应用采取相应措施。
 		</view>
-		<view style="margin-top:8px;text-align: center">共享旅途作者：小航</view>
+		<view style="margin-top:8px;text-align: center">共享旅途作者：谢观华</view>
 	</view>
 </template>
 

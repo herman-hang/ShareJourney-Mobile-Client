@@ -14,7 +14,7 @@ router.beforeEach((to, from, next) => {
 		'/pages/login/login', // 登录
 		'/pages/login/index', // 授权登录
 		'/pages/index/index', // 首页
-		'/pages/message/list', // 消息列表
+		'/pages/chat/conversations', // 消息列表
 		'/pages/journey/list', // 旅途列表
 		'/pages/mine/index', // 我的
 		'/pages/register/register', // 注册页面

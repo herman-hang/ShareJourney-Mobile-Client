@@ -59,7 +59,7 @@
 				</view>
 				<view class="item-box"><u-icon name="arrow-right" size="12" bold @click="getPathLineData(item.id)"></u-icon></view>
 				<view class="item-box relation">
-					<u-icon name="chat" color="#409eff" size="28"></u-icon>
+					<u-icon name="chat" color="#409eff" size="28" @click="navigateToChat"></u-icon>
 					<u-icon name="phone" color="#409eff" size="28" @click="rindUp(item.mobile)"></u-icon>
 				</view>
 			</view>
@@ -90,7 +90,7 @@
 					<u-steps-item
 						v-for="(item, index) in stepsData"
 						:key="index"
-						:title="item.title | stateFormat"
+						:title="item.title"
 						:desc="item.status === null ? '出发地' : item.status === '0' ? '未达到' : '已达到' + '　' + item.arrival_time"
 					></u-steps-item>
 				</u-steps>
@@ -133,11 +133,13 @@ export default {
 			isJourneyIndent: false
 		};
 	},
-	onLoad() {
+	onLoad() {},
+	onShow() {
 		let vm = this;
 		vm.checkIndentStatus();
+		vm.getAllIndent();
 	},
-	onShow() {
+	onPullDownRefresh() {
 		let vm = this;
 		vm.getAllIndent();
 	},
@@ -159,7 +161,7 @@ export default {
 			vm.queryInfo.total = res.data.total;
 			vm.ownerListData = vm.$app.getMoreListData(res.data.data, vm.ownerListData, vm.queryInfo.current_page);
 			if (res.data.data.length < vm.queryInfo.per_page) {
-				vm.isDataShowUser = true;
+				vm.isDataShowOwner = true;
 			}
 		},
 
@@ -169,6 +171,10 @@ export default {
 		 */
 		async getPathLineData(id) {
 			let vm = this;
+			const token = uni.getStorageSync('token');
+			if (token === '' || token === undefined || token === null) {
+				return vm.$app.navTo('/pages/login/index');
+			}
 			const { data: res } = await vm.$http.get('index/path/line', { params: { id: id } });
 			if (res.code !== 200) return vm.$message.toast(res.msg);
 			vm.stepsSort = res.data.sort;
@@ -181,6 +187,11 @@ export default {
 		 * @param {Object} mobile
 		 */
 		rindUp(mobile) {
+			let vm = this;
+			const token = uni.getStorageSync('token');
+			if (token === '' || token === undefined || token === null) {
+				return vm.$app.navTo('/pages/login/index');
+			}
 			uni.makePhoneCall({
 				phoneNumber: mobile
 			});
@@ -208,11 +219,14 @@ export default {
 		 */
 		async checkIndentStatus() {
 			let vm = this;
-			const { data: res } = await vm.$http.get('base/check/indent/status');
-			if (res.code === 403) {
-				vm.isJourneyIndent = true;
-			} else {
-				vm.isJourneyIndent = false;
+			const token = uni.getStorageSync('token');
+			if (token !== '' && token !== undefined && token !== null) {
+				const { data: res } = await vm.$http.get('base/check/indent/status');
+				if (res.code === 403) {
+					vm.isJourneyIndent = true;
+				} else {
+					vm.isJourneyIndent = false;
+				}
 			}
 		},
 
@@ -222,6 +236,10 @@ export default {
 		 */
 		callOwner(item) {
 			let vm = this;
+			const token = uni.getStorageSync('token');
+			if (token === '' || token === undefined || token === null) {
+				return vm.$app.navTo('/pages/login/index');
+			}
 			vm.$message.confirm('确认要呼叫该车主吗？', function() {
 				if (vm.isJourneyIndent) {
 					return vm.$message.modal('您当前正在进行一个订单！');
@@ -229,6 +247,13 @@ export default {
 					vm.$app.navTo('/pages/index/call?item=' + encodeURIComponent(JSON.stringify(item)));
 				}
 			});
+		},
+
+		/**
+		 * 跳转到聊天窗口
+		 */
+		navigateToChat() {
+			this.$app.navTo('/pages/chat/private/chat');
 		}
 	}
 };

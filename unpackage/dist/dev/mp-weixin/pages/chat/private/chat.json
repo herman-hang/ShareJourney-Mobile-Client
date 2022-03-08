@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "私聊",
+  "usingComponents": {
+    "audio-player": "/components/AudioPlayer/AudioPlayer"
+  }
+}

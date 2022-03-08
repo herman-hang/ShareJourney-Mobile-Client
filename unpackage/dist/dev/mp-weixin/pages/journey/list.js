@@ -96,37 +96,37 @@ var components
 try {
   components = {
     uSearch: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-search/u-search */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-search/u-search")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-search/u-search.vue */ 536))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-search/u-search */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-search/u-search")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-search/u-search.vue */ 637))
     },
     uCountDown: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-count-down/u-count-down */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-count-down/u-count-down")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-count-down/u-count-down.vue */ 527))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-count-down/u-count-down */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-count-down/u-count-down")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-count-down/u-count-down.vue */ 628))
     },
     uLine: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-line/u-line */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-line/u-line")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-line/u-line.vue */ 469))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-line/u-line */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-line/u-line")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-line/u-line.vue */ 570))
     },
     "u-Text": function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u--text/u--text */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u--text/u--text")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u--text/u--text.vue */ 430))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u--text/u--text */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u--text/u--text")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u--text/u--text.vue */ 531))
     },
     uIcon: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-icon/u-icon */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-icon/u-icon")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-icon/u-icon.vue */ 452))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-icon/u-icon */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-icon/u-icon")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-icon/u-icon.vue */ 553))
     },
     uAvatar: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-avatar/u-avatar */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-avatar/u-avatar")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-avatar/u-avatar.vue */ 477))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-avatar/u-avatar */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-avatar/u-avatar")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-avatar/u-avatar.vue */ 578))
     },
     uButton: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-button/u-button */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-button/u-button")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-button/u-button.vue */ 485))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-button/u-button */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-button/u-button")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-button/u-button.vue */ 586))
     },
     uPopup: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-popup/u-popup */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-popup/u-popup")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-popup/u-popup.vue */ 503))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-popup/u-popup */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-popup/u-popup")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-popup/u-popup.vue */ 604))
     },
     uSteps: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-steps/u-steps */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-steps/u-steps")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-steps/u-steps.vue */ 511))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-steps/u-steps */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-steps/u-steps")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-steps/u-steps.vue */ 612))
     },
     uStepsItem: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-steps-item/u-steps-item */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-steps-item/u-steps-item")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-steps-item/u-steps-item.vue */ 519))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-steps-item/u-steps-item */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-steps-item/u-steps-item")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-steps-item/u-steps-item.vue */ 620))
     },
     uDivider: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-divider/u-divider */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-divider/u-divider")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-divider/u-divider.vue */ 495))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-divider/u-divider */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-divider/u-divider")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-divider/u-divider.vue */ 596))
     }
   }
 } catch (e) {
@@ -164,17 +164,6 @@ var render = function() {
     }
   })
 
-  var l1 = _vm.__map(_vm.stepsData, function(item, index) {
-    var $orig = _vm.__get_orig(item)
-
-    var f2 = _vm._f("stateFormat")(item.title)
-
-    return {
-      $orig: $orig,
-      f2: f2
-    }
-  })
-
   if (!_vm._isMounted) {
     _vm.e0 = function($event) {
       _vm.isPathLine = false
@@ -185,8 +174,7 @@ var render = function() {
     {},
     {
       $root: {
-        l0: l0,
-        l1: l1
+        l0: l0
       }
     }
   )
@@ -358,11 +346,13 @@ var _default =
       isJourneyIndent: false };
 
   },
-  onLoad: function onLoad() {
+  onLoad: function onLoad() {},
+  onShow: function onShow() {
     var vm = this;
     vm.checkIndentStatus();
+    vm.getAllIndent();
   },
-  onShow: function onShow() {
+  onPullDownRefresh: function onPullDownRefresh() {
     var vm = this;
     vm.getAllIndent();
   },
@@ -384,7 +374,7 @@ var _default =
                 vm.queryInfo.total = res.data.total;
                 vm.ownerListData = vm.$app.getMoreListData(res.data.data, vm.ownerListData, vm.queryInfo.current_page);
                 if (res.data.data.length < vm.queryInfo.per_page) {
-                  vm.isDataShowUser = true;
+                  vm.isDataShowOwner = true;
                 }case 10:case "end":return _context.stop();}}}, _callee);}))();
     },
 
@@ -392,13 +382,17 @@ var _default =
         * 根据旅途信息ID获取轨迹线
         * @param {Object} id
         */
-    getPathLineData: function getPathLineData(id) {var _this2 = this;return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee2() {var vm, _yield$vm$$http$get2, res;return _regenerator.default.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
-                vm = _this2;_context2.next = 3;return (
-                  vm.$http.get('index/path/line', { params: { id: id } }));case 3:_yield$vm$$http$get2 = _context2.sent;res = _yield$vm$$http$get2.data;if (!(
-                res.code !== 200)) {_context2.next = 7;break;}return _context2.abrupt("return", vm.$message.toast(res.msg));case 7:
+    getPathLineData: function getPathLineData(id) {var _this2 = this;return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee2() {var vm, token, _yield$vm$$http$get2, res;return _regenerator.default.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
+                vm = _this2;
+                token = uni.getStorageSync('token');if (!(
+                token === '' || token === undefined || token === null)) {_context2.next = 4;break;}return _context2.abrupt("return",
+                vm.$app.navTo('/pages/login/index'));case 4:_context2.next = 6;return (
+
+                  vm.$http.get('index/path/line', { params: { id: id } }));case 6:_yield$vm$$http$get2 = _context2.sent;res = _yield$vm$$http$get2.data;if (!(
+                res.code !== 200)) {_context2.next = 10;break;}return _context2.abrupt("return", vm.$message.toast(res.msg));case 10:
                 vm.stepsSort = res.data.sort;
                 vm.stepsData = res.data.data;
-                vm.isPathLine = true;case 10:case "end":return _context2.stop();}}}, _callee2);}))();
+                vm.isPathLine = true;case 13:case "end":return _context2.stop();}}}, _callee2);}))();
     },
 
     /**
@@ -406,6 +400,11 @@ var _default =
         * @param {Object} mobile
         */
     rindUp: function rindUp(mobile) {
+      var vm = this;
+      var token = uni.getStorageSync('token');
+      if (token === '' || token === undefined || token === null) {
+        return vm.$app.navTo('/pages/login/index');
+      }
       uni.makePhoneCall({
         phoneNumber: mobile });
 
@@ -431,14 +430,17 @@ var _default =
     /**
         * 检测当前是否存在进行的订单
         */
-    checkIndentStatus: function checkIndentStatus() {var _this3 = this;return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee3() {var vm, _yield$vm$$http$get3, res;return _regenerator.default.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
-                vm = _this3;_context3.next = 3;return (
-                  vm.$http.get('base/check/indent/status'));case 3:_yield$vm$$http$get3 = _context3.sent;res = _yield$vm$$http$get3.data;
+    checkIndentStatus: function checkIndentStatus() {var _this3 = this;return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee3() {var vm, token, _yield$vm$$http$get3, res;return _regenerator.default.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
+                vm = _this3;
+                token = uni.getStorageSync('token');if (!(
+                token !== '' && token !== undefined && token !== null)) {_context3.next = 8;break;}_context3.next = 5;return (
+                  vm.$http.get('base/check/indent/status'));case 5:_yield$vm$$http$get3 = _context3.sent;res = _yield$vm$$http$get3.data;
                 if (res.code === 403) {
                   vm.isJourneyIndent = true;
                 } else {
                   vm.isJourneyIndent = false;
-                }case 6:case "end":return _context3.stop();}}}, _callee3);}))();
+                }case 8:case "end":return _context3.stop();}}}, _callee3);}))();
+
     },
 
     /**
@@ -447,6 +449,10 @@ var _default =
         */
     callOwner: function callOwner(item) {
       var vm = this;
+      var token = uni.getStorageSync('token');
+      if (token === '' || token === undefined || token === null) {
+        return vm.$app.navTo('/pages/login/index');
+      }
       vm.$message.confirm('确认要呼叫该车主吗？', function () {
         if (vm.isJourneyIndent) {
           return vm.$message.modal('您当前正在进行一个订单！');
@@ -454,6 +460,13 @@ var _default =
           vm.$app.navTo('/pages/index/call?item=' + encodeURIComponent(JSON.stringify(item)));
         }
       });
+    },
+
+    /**
+        * 跳转到聊天窗口
+        */
+    navigateToChat: function navigateToChat() {
+      this.$app.navTo('/pages/chat/private/chat');
     } } };exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 

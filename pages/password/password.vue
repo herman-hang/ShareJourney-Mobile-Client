@@ -3,8 +3,8 @@
 		<view class="wrapper">
 			<view class="input-content">
 				<view class="cu-form-group" style="border: 2upx solid whitesmoke;margin-bottom: 20px;border-radius: 30px">
-					<view class="title">手机号:</view>
-					<input type="number" :value="mobile" placeholder="请输入手机号" maxlength="11" data-key="mobile" @input="inputChange" />
+					<view class="title">手机号码:</view>
+					<input type="number" :value="mobile" placeholder="请输入手机号码" maxlength="11" data-key="mobile" @input="inputChange" />
 				</view>
 				<view class="cu-form-group" style="border: 2upx solid whitesmoke;margin-bottom: 20px;border-radius: 30px">
 					<text class="title">验证码:</text>
@@ -12,7 +12,7 @@
 					<button class="send-msg" @click="useVerify" :disabled="sending">{{ sendTime }}</button>
 				</view>
 				<view class="cu-form-group" style="border: 2upx solid whitesmoke;margin-bottom: 20px;border-radius: 30px">
-					<text class="title">设置密码</text>
+					<text class="title">设置密码:</text>
 					<input
 						type="password"
 						:value="password"
@@ -126,18 +126,18 @@ export default {
 		async toPassword() {
 			const { mobile, password, code } = this;
 			if (!mobile) {
-				this.$message.toast('请输入手机号');
+				this.$message.toast('请输入手机号码');
 			} else if (!password) {
 				this.$message.toast('请设置密码');
 			} else if (password.length < 6) {
-				this.$message.toast('密码位数必须大于六位');
+				this.$message.toast('密码位数必须大于6位');
 			} else {
 				this.$message.loading('正在修改密码中...');
 				const verification = this.$db.get('verification');
 				const { data: res } = await this.$http.post('password', { mobile: mobile, password: password, code: code, verification: verification });
 				if (res.code !== 200) return this.$message.toast(res.msg);
 				this.$db.del('verification');
-				this.$app.navTo('pages/login/login');
+				this.$app.navTo('/pages/login/login');
 			}
 		}
 	}

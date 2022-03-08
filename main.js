@@ -1,7 +1,6 @@
 import App from './App'
 import Vue from 'vue'
 import axios from 'axios'
-
 import * as core from 'common/app.js'
 // 请求拦截器和响应器
 import './utils/request.js'
@@ -13,15 +12,15 @@ import './utils/format.js'
 import * as message from './utils/message.js'
 // 导入uview-ui框架
 import uView from '@/uni_modules/uview-ui'
+import {
+	router,
+	RouterMount
+} from 'router.js'
 //挂载到原型对象上
 Vue.prototype.$db = db
 Vue.prototype.$app = core
 Vue.prototype.$http = axios
 Vue.prototype.$message = message
-import {
-	router,
-	RouterMount
-} from 'router.js'
 Vue.use(router)
 Vue.use(uView)
 Vue.config.productionTip = false

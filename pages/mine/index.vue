@@ -31,7 +31,7 @@
 						<text decode="true" class="my-13">收入余额</text>
 						<text decode="true" class="my-14">￥{{ is_owner == '0' ? '0.00' : money }}</text>
 						<view class="my-15">
-							<image src="/static/image/my/images/my_16_16.jpg" mode="scaleToFill" border="0" class="my-16"></image>
+							<image @click="toIncome" src="/static/image/my/images/my_16_16.jpg" mode="scaleToFill" border="0" class="my-16"></image>
 							<image @click="toWithdraw()" src="/static/image/my/images/my_17_17.jpg" mode="scaleToFill" border="0" class="my-17"></image>
 						</view>
 					</view>
@@ -40,7 +40,7 @@
 						<text decode="true" class="my-18">总提现额</text>
 						<text decode="true" class="my-19">￥{{ is_owner == '0' ? '0.00' : withdraw_money }}</text>
 						<view class="my-20">
-							<image src="/static/image/my/images/my_21_21.jpg" mode="scaleToFill" border="0" class="my-21"></image>
+							<image src="/static/image/my/images/my_21_21.jpg" mode="scaleToFill" border="0" class="my-21" @click="toWithdrawDetail"></image>
 							<image src="/static/image/my/images/my_22_22.jpg" mode="scaleToFill" border="0" class="my-22" @click="toRule"></image>
 						</view>
 					</view>
@@ -53,7 +53,7 @@
 							<image src="/static/image/my/images/my_40_40.jpg" mode="scaleToFill" border="0" class="my-40"></image>
 						</view>
 					</view>
-					<view class="my-41">
+					<view class="my-41" @click="toRecord">
 						<image src="/static/image/my/images/my_42_42.jpg" mode="scaleToFill" border="0" class="my-42"></image>
 						<text decode="true" class="my-43">旅行记录</text>
 						<image src="/static/image/my/images/my_40_40.jpg" mode="scaleToFill" border="0" class="my-44"></image>
@@ -79,7 +79,7 @@
 							<image src="/static/image/my/images/my_40_40.jpg" mode="scaleToFill" border="0" class="my-61"></image>
 						</view>
 					</view>
-					<view class="my-62">
+					<view class="my-62" @click="toSystem()">
 						<image src="/static/image/my/images/my_63_63.jpg" mode="scaleToFill" border="0" class="my-63"></image>
 						<text decode="true" class="my-64">应用设置</text>
 						<image src="/static/image/my/images/my_40_40.jpg" mode="scaleToFill" border="0" class="my-65"></image>
@@ -191,6 +191,34 @@ export default {
 		 */
 		toMyIndent() {
 			this.$app.navTo('/pages/indent/list');
+		},
+
+		/**
+		 * 跳到旅行记录
+		 */
+		toRecord() {
+			this.$app.navTo('/pages/record/list');
+		},
+
+		/**
+		 * 跳转到提现明细
+		 */
+		toWithdrawDetail() {
+			this.$app.navTo('/pages/mine/withdraw');
+		},
+
+		/**
+		 * 跳转到账单
+		 */
+		toIncome() {
+			this.$app.navTo('/pages/mine/income');
+		},
+
+		/**
+		 * 系统设置
+		 */
+		toSystem() {
+			this.$app.navTo('/pages/system/system');
 		},
 
 		/**

@@ -4,7 +4,6 @@ import * as db from './db.js'
 import {
 	baseUrl
 } from '../config.js'
-
 //配置请求的根路径
 axios.defaults.baseURL = baseUrl
 // request拦截器,在请求之前做一些处理

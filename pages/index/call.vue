@@ -20,7 +20,7 @@
 			<view class="item">
 				<view class="item-text">
 					<u--text :lines="1" text="拼成价"></u--text>
-					<u--text :lines="1" size="24" bold mode="price" :text="tripData.money"></u--text>
+					<u--text :lines="1" size="24" bold :text="'￥' + tripData.money"></u--text>
 					<u--text :lines="1" text="起"></u--text>
 				</view>
 			</view>

@@ -7,8 +7,11 @@
     "pages/index/call",
     "pages/index/navigation",
     "pages/journey/list",
-    "pages/message/list",
+    "pages/chat/conversations",
+    "pages/chat/private/chat",
     "pages/mine/index",
+    "pages/mine/withdraw",
+    "pages/mine/income",
     "pages/login/index",
     "pages/login/login",
     "pages/login/bind",
@@ -30,7 +33,17 @@
     "pages/certification/registration/registration",
     "pages/certification/message",
     "pages/money/rule",
-    "pages/indent/list"
+    "pages/indent/list",
+    "pages/record/list",
+    "pages/system/system",
+    "pages/system/about",
+    "pages/system/about/introduce",
+    "pages/system/password",
+    "pages/system/mobile/mobile",
+    "pages/system/mobile/change",
+    "pages/system/email/email",
+    "pages/system/email/change",
+    "pages/system/email/bind"
   ],
   "subPackages": [],
   "window": {
@@ -58,7 +71,7 @@
         "text": "旅途"
       },
       {
-        "pagePath": "pages/message/list",
+        "pagePath": "pages/chat/conversations",
         "iconPath": "static/image/tabbar/comment.png",
         "selectedIconPath": "static/image/tabbar/comment-active.png",
         "text": "消息"

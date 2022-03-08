@@ -90,12 +90,6 @@ export default {
 					required: true,
 					message: '请选择提现方式',
 					trigger: ['blur', 'change']
-				},
-				withdraw_money: {
-					type: 'string',
-					required: true,
-					message: '请输入提现金额',
-					trigger: ['change']
 				}
 			},
 			// 是否显示键盘
@@ -293,7 +287,7 @@ export default {
 			this.isError = false;
 			this.isShowCodeKeyboard = false;
 			this.isShowPopup = false;
-			this.$app.navTo('pages/money/index');
+			this.$app.navTo('/pages/mine/withdraw');
 		}
 	}
 };

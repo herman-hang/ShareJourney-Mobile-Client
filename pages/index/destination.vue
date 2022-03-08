@@ -4,11 +4,10 @@
 		<view class="card">
 			<u-search
 				@clickIcon="selectSite"
-				@change="change"
 				@clear="clear"
-				@blur="change"
-				@custom="change"
-				@search="change"
+				@blur="search"
+				@custom="search"
+				@search="search"
 				searchIcon="map"
 				:label="site.city"
 				actionText="搜索"
@@ -78,18 +77,19 @@ export default {
 			let vm = this;
 			// 对中文解码
 			vm.site = JSON.parse(decodeURIComponent(decodeURIComponent(option.item)));
+			// 实例化腾讯地图API
+			vm.qqmapsdk = new QQMapWX({
+				key: qqMapKey
+			});
 			vm.getCity(vm.site.city);
 		},
 
 		/**
 		 * 获取城市周边地点
+		 * @param {Object} keyword //搜索关键词
 		 */
 		getCity(keyword) {
 			let vm = this;
-			// 实例化腾讯地图API
-			vm.qqmapsdk = new QQMapWX({
-				key: qqMapKey
-			});
 			vm.qqmapsdk.search({
 				keyword: keyword, //搜索关键词
 				sig: qqMapSig,
@@ -155,9 +155,27 @@ export default {
 		/**
 		 * 内容发生变化时
 		 */
-		change() {
+		search() {
 			let vm = this;
-			vm.getCity(vm.keyword);
+			vm.getSuggestion(vm.keyword);
+		},
+		
+		/**
+		 * 搜索地名关键词
+		 */
+		getSuggestion(keyword){
+			let vm = this;
+			vm.qqmapsdk.getSuggestion({
+				keyword: keyword, //搜索关键词
+				sig: qqMapSig,
+				page_size: 20,
+				success: function(res) {
+					if (res.status === 0) {
+						vm.cityData = res.data;
+						vm.isShow = true;
+					}
+				}
+			});
 		}
 	}
 };
