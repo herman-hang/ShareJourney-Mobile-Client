@@ -29,8 +29,9 @@
 			<view class="time-item">
 				<view class="item-footer">
 					<view class="time-item-text" v-if="journeyData.owner !== null">
-						<u-avatar :src="journeyData.owner.photo"></u-avatar>
-						<u--text :lines="1" :text="journeyData.owner.name" bold></u--text>
+						<u-avatar v-if="journeyData.owner.photo !== null" :src="journeyData.owner.photo"></u-avatar>
+						<u-avatar v-else :text="journeyData.owner.name" randomBgColor></u-avatar>
+						<u--text :lines="1" :text="journeyData.owner.name + '司机'" bold></u--text>
 						<u--text :lines="1" text="|" type="info"></u--text>
 						<u--text :lines="1" :text="journeyData.owner.plate_number"></u--text>
 						<u--text :lines="1" text="|" type="info"></u--text>
@@ -328,7 +329,6 @@ cover-view {
 		display: flex;
 		/deep/ .u-text {
 			flex: 0;
-			padding-right: 10rpx;
 		}
 	}
 	.item-footer {

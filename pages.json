@@ -85,10 +85,7 @@
 			}
 		},
 		{
-			"path": "pages/chat/private/chat",
-			"style": {
-				"navigationBarTitleText": "私聊"
-			}
+			"path": "pages/chat/private/chat"
 		},
 		{
 			"path": "pages/mine/index",

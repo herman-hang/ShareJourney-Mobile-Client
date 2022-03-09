@@ -175,12 +175,24 @@ export default {
 					vm.screenHeight = e.screenHeight * 0.73;
 				}
 			});
-			vm.line = JSON.parse(decodeURIComponent(decodeURIComponent(item.line)));
-			vm.polyline = vm.line.polyline;
-			vm.markers = vm.line.markers;
+			// 根据旅途ID获取轨迹线
+			vm.queryLine(item.id);
 			vm.indexToData = item;
 			// 获取最晚出发时间
 			vm.getCurrentTime(2);
+		},
+
+		/**
+		 * 根据旅途ID获取轨迹线
+		 * @param {Object} id 旅途ID
+		 */
+		async queryLine(id) {
+			let vm = this;
+			const { data: res } = await vm.$http.get('index/query/line', { params: { id: id } });
+			if (res.code !== 200) return vm.$message.toast(res.msg);
+			vm.line = JSON.parse(decodeURIComponent(decodeURIComponent(res.data.line)));
+			vm.polyline = vm.line.polyline;
+			vm.markers = vm.line.markers;
 			vm.getTripData();
 		},
 
@@ -241,7 +253,7 @@ export default {
 		 */
 		confirmSelectTime(e) {
 			let vm = this;
-			vm.formData.deadline = vm.$options.filters.timestamp(e.value);
+			vm.formData.deadline = uni.$u.timeFormat(e.value, 'yyyy-mm-dd hh:MM:ss');
 			vm.showTimeSelect = false;
 		},
 

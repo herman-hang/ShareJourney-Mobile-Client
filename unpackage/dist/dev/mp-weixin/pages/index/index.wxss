@@ -129,7 +129,6 @@ cover-view.data-v-57280228 {
 }
 .time-item .time-item-text.data-v-57280228 .u-text {
   flex: 0;
-  padding-right: 10rpx;
 }
 .time-item .time-item-length.data-v-57280228 {
   width: 535rpx;

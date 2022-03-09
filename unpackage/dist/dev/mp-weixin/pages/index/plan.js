@@ -383,8 +383,6 @@ var _config = __webpack_require__(/*! @/config.js */ 44);function _interopRequir
     vm.map = uni.createMapContext('map', this);
     // 路线规划
     vm.directions();
-    // 获取最晚出发时间
-    vm.getCurrentTime(2);
   },
   methods: {
     /**
@@ -415,25 +413,26 @@ var _config = __webpack_require__(/*! @/config.js */ 44);function _interopRequir
       // 显示坐标图标
       vm.addPosition(vm.site.start.longitude, vm.site.start.latitude, vm.site.start.address, 0);
       vm.addPosition(vm.site.end.longitude, vm.site.end.latitude, vm.site.end.address, 11);
+      // 获取最晚出发时间
+      vm.getCurrentTime(2);
     },
 
     /**
         * 获取出行相关数据
         */
     getTripData: function getTripData() {var _this = this;return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee() {var vm, _yield$vm$$http$get, res;return _regenerator.default.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
-                vm = _this;
-                console.log(vm.directionData.routes[0].taxi_fare.fare);_context.next = 4;return (
+                vm = _this;_context.next = 3;return (
                   vm.$http.get('index/trip/compute', {
                     params: {
                       money: vm.directionData.routes[0].taxi_fare.fare,
                       km: vm.directionData.routes[0].distance,
                       time: vm.directionData.routes[0].duration,
                       number: vm.formData.number,
-                      type: vm.site.start.type } }));case 4:_yield$vm$$http$get = _context.sent;res = _yield$vm$$http$get.data;if (!(
+                      type: vm.site.start.type } }));case 3:_yield$vm$$http$get = _context.sent;res = _yield$vm$$http$get.data;if (!(
 
 
-                res.code !== 200)) {_context.next = 8;break;}return _context.abrupt("return", vm.$message.toast(res.msg));case 8:
-                vm.tripData = res.data;case 9:case "end":return _context.stop();}}}, _callee);}))();
+                res.code !== 200)) {_context.next = 7;break;}return _context.abrupt("return", vm.$message.toast(res.msg));case 7:
+                vm.tripData = res.data;case 8:case "end":return _context.stop();}}}, _callee);}))();
     },
 
     /**
@@ -643,7 +642,7 @@ var _config = __webpack_require__(/*! @/config.js */ 44);function _interopRequir
         */
     confirmSelectTime: function confirmSelectTime(e) {
       var vm = this;
-      vm.formData.deadline = vm.$options.filters.timestamp(e.value);
+      vm.formData.deadline = uni.$u.timeFormat(e.value, 'yyyy-mm-dd hh:MM:ss');
       vm.showTimeSelect = false;
     },
 

@@ -8,25 +8,27 @@
 			</u-upload>
 		</view>
 		<view class="card">
-			<u--form labelPosition="left" ref="materialFormRef" :model="materialForm">
+			<u--form :rules="rules" labelPosition="left" ref="materialFormRef" :model="materialForm">
 				<u-form-item labelWidth="160rpx" label="用户名" borderBottom><u--text type="info" :text="materialForm.user"></u--text></u-form-item>
 				<u-form-item labelWidth="160rpx" label="注册时间" borderBottom><u--text type="info" :text="materialForm.create_time | date"></u--text></u-form-item>
-				<u-form-item labelWidth="160rpx" label="昵称" borderBottom>
+				<u-form-item prop="nickname" labelWidth="160rpx" label="昵称" borderBottom>
 					<u--input @change="saveMaterial()" v-model="materialForm.nickname" placeholder="请输入昵称" border="none"></u--input>
 				</u-form-item>
-				<u-form-item @click="showSex = true" labelWidth="160rpx" label="性别" borderBottom>
+				<u-form-item prop="sex" @click="showSex = true" labelWidth="160rpx" label="性别" borderBottom>
 					<u--input v-model="sexValue" disabled disabledColor="#ffffff" placeholder="请选择性别" border="none"></u--input>
 					<u-icon slot="right" name="arrow-right"></u-icon>
 				</u-form-item>
-				<u-form-item labelWidth="160rpx" label="年龄" borderBottom><u--input v-model="materialForm.age" placeholder="请输入年龄" border="none"></u--input></u-form-item>
+				<u-form-item prop="age" labelWidth="160rpx" label="年龄" borderBottom>
+					<u--input  @change="saveMaterial()" v-model="materialForm.age" placeholder="请输入年龄" border="none"></u--input>
+				</u-form-item>
 				<u-form-item labelWidth="160rpx" label="地区" borderBottom>
-					<u--input @blur="saveMaterial()" v-model="materialForm.region" placeholder="请输入地区" border="none"></u--input>
+					<u--input @change="saveMaterial()" v-model="materialForm.region" placeholder="请输入地区" border="none"></u--input>
 				</u-form-item>
-				<u-form-item labelWidth="160rpx" label="QQ号码" borderBottom>
-					<u--input @blur="saveMaterial()" v-model="materialForm.qq" placeholder="请输入QQ号码" border="none"></u--input>
+				<u-form-item prop="qq" labelWidth="160rpx" label="QQ号码" borderBottom>
+					<u--input @change="saveMaterial()" v-model="materialForm.qq" placeholder="请输入QQ号码" border="none"></u--input>
 				</u-form-item>
-				<u-form-item labelWidth="160rpx" label="简介" borderBottom>
-					<u--textarea @blur="saveMaterial()" v-model="materialForm.introduction" placeholder="请输入简介"></u--textarea>
+				<u-form-item prop="introduction" labelWidth="160rpx" label="简介" borderBottom>
+					<u--textarea @blur="saveMaterial()" @input="saveMaterial()" v-model="materialForm.introduction" placeholder="请输入简介"></u--textarea>
 				</u-form-item>
 			</u--form>
 
@@ -63,7 +65,16 @@ export default {
 					name: '保密',
 					index: '2'
 				}
-			]
+			],
+			// 表单验证规则
+			rules: {
+				nickname: {
+					type: 'string',
+					required: true,
+					message: '请填写昵称',
+					trigger: ['blur', 'change']
+				}
+			}
 		};
 	},
 	onLoad() {

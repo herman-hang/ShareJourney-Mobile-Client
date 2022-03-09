@@ -20,7 +20,7 @@
 						<text class="box-font-title">驾驶证</text>
 						<text class="box-font-item">准驾车型：至少包含A1、A2、A3、B1、B2、C1、C2</text>
 					</view>
-					<u-button v-if="statusData.patente_url === ''" type="primary" text="去上传" class="box-btn" size="mini" @click="toPatente"></u-button>
+					<u-button v-if="statusData.patente_url === '0'" type="primary" text="去上传" class="box-btn" size="mini" @click="toPatente"></u-button>
 					<u-button v-else type="success" text="重新上传" class="box-btn" size="mini" plain @click="toPatente"></u-button>
 				</view>
 				<u-line></u-line>
@@ -31,7 +31,7 @@
 						<text class="box-font-title">行驶证</text>
 						<text class="box-font-item">非运营性质车辆，本人车辆或者亲友车辆均可认证</text>
 					</view>
-					<u-button v-if="statusData.registration_url === ''" type="primary" text="去上传" class="box-btn" size="mini" @click="toRegistration"></u-button>
+					<u-button v-if="statusData.registration_url === '0'" type="primary" text="去上传" class="box-btn" size="mini" @click="toRegistration"></u-button>
 					<u-button v-else type="success" text="重新上传" class="box-btn" size="mini" plain @click="toRegistration"></u-button>
 				</view>
 				<u-line></u-line>
@@ -42,7 +42,7 @@
 						<text class="box-font-title">车辆信息</text>
 						<text class="box-font-item">请使用真实照片，座位数量不超过7座</text>
 					</view>
-					<u-button v-if="statusData.car_url === ''" type="primary" text="去填写" class="box-btn" size="mini" @click="toCarInfo"></u-button>
+					<u-button v-if="statusData.car_url === '0'" type="primary" text="去填写" class="box-btn" size="mini" @click="toCarInfo"></u-button>
 					<u-button v-else type="success" text="重新填写" class="box-btn" size="mini" plain @click="toCarInfo"></u-button>
 				</view>
 				<u-line></u-line>
@@ -53,7 +53,7 @@
 						<text class="box-font-title">提现信息</text>
 						<text class="box-font-item">如实填写提现账户信息，仅允许填写一次</text>
 					</view>
-					<u-button v-if="statusData.withdraw_info === ''" type="primary" text="去填写" class="box-btn" size="mini" @click="toWithdraw"></u-button>
+					<u-button v-if="statusData.withdraw_info === '0'" type="primary" text="去填写" class="box-btn" size="mini" @click="toWithdraw"></u-button>
 					<u-button v-else type="success" text="重新填写" class="box-btn" size="mini" plain @click="toWithdraw"></u-button>
 				</view>
 				<u-line></u-line>
@@ -65,7 +65,7 @@
 				<!-- 协议地址 -->
 				<navigator class="agreement" url="/pages/certification/agreement" open-type="navigate">《车主认证协议》</navigator>
 			</view>
-			<u-button type="primary" text="提交认证"></u-button>
+			<u-button type="primary" text="提交认证" @click="authSubmit"></u-button>
 		</view>
 	</view>
 </template>
@@ -162,6 +162,16 @@ export default {
 				default:
 					return false;
 			}
+		},
+
+		/**
+		 * 提交认证
+		 */
+		async authSubmit() {
+			const { data: res } = await this.$http.get('mine/user/owner/auth');
+			if (res.code !== 200) return this.$message.toast(res.msg);
+			// 跳转到审核页面
+			this.$app.navTo('/pages/certification/message?status=1');
 		}
 	}
 };

@@ -50,7 +50,6 @@
 }
 .time-item .time-item-text.data-v-01c3b006 .u-text {
   flex: 0;
-  padding-right: 10rpx;
 }
 .time-item .time-item-length.data-v-01c3b006 {
   width: 535rpx;

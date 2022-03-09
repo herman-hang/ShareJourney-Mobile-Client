@@ -73,7 +73,7 @@ export default {
 				desc: '获取用户相关信息',
 				success: async infoRes => {
 					const { data: res } = await this.$http.post('login/weixin', { code: self.code, param: infoRes, platform: this.platform });
-					if (res.code == 401) {
+					if (res.code == 403) {
 						return uni.showModal({
 							showCancel: false,
 							title: '登录成功',

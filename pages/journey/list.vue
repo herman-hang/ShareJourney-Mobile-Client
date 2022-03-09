@@ -49,12 +49,12 @@
 					<view class="time-item-text time-item-length">
 						<u--text text="●" type="success"></u--text>
 						<u--text :lines="1" :text="item.start | stateFormat"></u--text>
-						<u--text type="info" :lines="1" size="12" text="100m"></u--text>
+						<!-- <u--text type="info" :lines="1" size="12" text="100m"></u--text> -->
 					</view>
 					<view class="time-item-text time-item-length">
 						<u--text text="●" type="primary"></u--text>
 						<u--text :lines="1" :text="item.end | stateFormat"></u--text>
-						<u--text type="info" :lines="1" size="12" text="1km"></u--text>
+						<!-- <u--text type="info" :lines="1" size="12" text="1km"></u--text> -->
 					</view>
 				</view>
 				<view class="item-box"><u-icon name="arrow-right" size="12" bold @click="getPathLineData(item.id)"></u-icon></view>
@@ -69,7 +69,8 @@
 			<view class="time-item">
 				<view class="item-footer">
 					<view class="time-item-text">
-						<u-avatar :src="item.photo"></u-avatar>
+						<u-avatar v-if="item.photo !== null" :src="item.photo"></u-avatar>
+						<u-avatar v-else :text="item.name" randomBgColor></u-avatar>
 						<u--text :lines="1" :text="item.name + '司机'" bold></u--text>
 						<u--text :lines="1" text="|" type="info"></u--text>
 						<u--text :lines="1" :text="'接单' + item.indent_sum + '次'"></u--text>
@@ -275,7 +276,6 @@ export default {
 		display: flex;
 		/deep/ .u-text {
 			flex: 0;
-			padding-right: 10rpx;
 		}
 	}
 	.time-item-length {

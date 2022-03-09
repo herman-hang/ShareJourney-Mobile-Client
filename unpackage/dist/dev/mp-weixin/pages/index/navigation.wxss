@@ -86,7 +86,6 @@ cover-view.data-v-ff7b912c {
 }
 .time-item .time-item-text.data-v-ff7b912c .u-text {
   flex: 0;
-  padding-right: 10rpx;
 }
 .time-item .item-footer.data-v-ff7b912c {
   display: flex;

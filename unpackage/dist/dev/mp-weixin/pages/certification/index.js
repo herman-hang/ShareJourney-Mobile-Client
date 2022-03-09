@@ -320,6 +320,16 @@ var db = _interopRequireWildcard(__webpack_require__(/*! ../../utils/db.js */ 45
 
                 false);case 20:case "end":return _context.stop();}}}, _callee);}))();
 
+    },
+
+    /**
+        * 提交认证
+        */
+    authSubmit: function authSubmit() {var _this2 = this;return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee2() {var _yield$_this2$$http$g, res;return _regenerator.default.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:_context2.next = 2;return (
+                  _this2.$http.get('mine/user/owner/auth'));case 2:_yield$_this2$$http$g = _context2.sent;res = _yield$_this2$$http$g.data;if (!(
+                res.code !== 200)) {_context2.next = 6;break;}return _context2.abrupt("return", _this2.$message.toast(res.msg));case 6:
+                // 跳转到审核页面
+                _this2.$app.navTo('/pages/certification/message?status=1');case 7:case "end":return _context2.stop();}}}, _callee2);}))();
     } } };exports.default = _default;
 
 /***/ }),

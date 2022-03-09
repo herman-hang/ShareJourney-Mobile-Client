@@ -205,7 +205,7 @@ var _default =
                   desc: '获取用户相关信息',
                   success: function () {var _success = _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee(infoRes) {var _yield$_this$$http$po, res;return _regenerator.default.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:_context.next = 2;return (
                                 _this.$http.post('login/weixin', { code: self.code, param: infoRes, platform: _this.platform }));case 2:_yield$_this$$http$po = _context.sent;res = _yield$_this$$http$po.data;if (!(
-                              res.code == 401)) {_context.next = 8;break;}return _context.abrupt("return",
+                              res.code == 403)) {_context.next = 8;break;}return _context.abrupt("return",
                               uni.showModal({
                                 showCancel: false,
                                 title: '登录成功',

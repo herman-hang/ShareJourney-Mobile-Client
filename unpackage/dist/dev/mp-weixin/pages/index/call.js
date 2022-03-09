@@ -360,13 +360,25 @@ var _default =
           vm.screenHeight = e.screenHeight * 0.73;
         } });
 
-      vm.line = JSON.parse(decodeURIComponent(decodeURIComponent(item.line)));
-      vm.polyline = vm.line.polyline;
-      vm.markers = vm.line.markers;
+      // 根据旅途ID获取轨迹线
+      vm.queryLine(item.id);
       vm.indexToData = item;
       // 获取最晚出发时间
       vm.getCurrentTime(2);
-      vm.getTripData();
+    },
+
+    /**
+        * 根据旅途ID获取轨迹线
+        * @param {Object} id 旅途ID
+        */
+    queryLine: function queryLine(id) {var _this = this;return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee() {var vm, _yield$vm$$http$get, res;return _regenerator.default.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
+                vm = _this;_context.next = 3;return (
+                  vm.$http.get('index/query/line', { params: { id: id } }));case 3:_yield$vm$$http$get = _context.sent;res = _yield$vm$$http$get.data;if (!(
+                res.code !== 200)) {_context.next = 7;break;}return _context.abrupt("return", vm.$message.toast(res.msg));case 7:
+                vm.line = JSON.parse(decodeURIComponent(decodeURIComponent(res.data.line)));
+                vm.polyline = vm.line.polyline;
+                vm.markers = vm.line.markers;
+                vm.getTripData();case 11:case "end":return _context.stop();}}}, _callee);}))();
     },
 
     /**
@@ -426,7 +438,7 @@ var _default =
         */
     confirmSelectTime: function confirmSelectTime(e) {
       var vm = this;
-      vm.formData.deadline = vm.$options.filters.timestamp(e.value);
+      vm.formData.deadline = uni.$u.timeFormat(e.value, 'yyyy-mm-dd hh:MM:ss');
       vm.showTimeSelect = false;
     },
 
@@ -467,31 +479,31 @@ var _default =
     /**
         * 获取出行相关数据
         */
-    getTripData: function getTripData() {var _this = this;return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee() {var vm, _yield$vm$$http$get, res;return _regenerator.default.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
-                vm = _this;_context.next = 3;return (
+    getTripData: function getTripData() {var _this2 = this;return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee2() {var vm, _yield$vm$$http$get2, res;return _regenerator.default.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
+                vm = _this2;_context2.next = 3;return (
                   vm.$http.get('owner/trip/compute', {
                     params: {
                       km: vm.line.trip.km,
                       time: vm.line.trip.time,
                       owner_id: vm.indexToData.owner_id,
-                      number: vm.formData.number } }));case 3:_yield$vm$$http$get = _context.sent;res = _yield$vm$$http$get.data;if (!(
+                      number: vm.formData.number } }));case 3:_yield$vm$$http$get2 = _context2.sent;res = _yield$vm$$http$get2.data;if (!(
 
 
-                res.code !== 200)) {_context.next = 7;break;}return _context.abrupt("return", vm.$message.toast(res.msg));case 7:
-                vm.tripData = res.data;case 8:case "end":return _context.stop();}}}, _callee);}))();
+                res.code !== 200)) {_context2.next = 7;break;}return _context2.abrupt("return", vm.$message.toast(res.msg));case 7:
+                vm.tripData = res.data;case 8:case "end":return _context2.stop();}}}, _callee2);}))();
     },
 
     /**
         * 跳转到路线导航详情
         */
-    toNavigation: function toNavigation() {var _this2 = this;return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee2() {var vm, code, _yield$vm$$http$post, res;return _regenerator.default.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
-                vm = _this2;
+    toNavigation: function toNavigation() {var _this3 = this;return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee3() {var vm, code, _yield$vm$$http$post, res;return _regenerator.default.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
+                vm = _this3;
                 vm.isLoading = true;
                 // 获取微信登录临时凭证
-                _context2.next = 4;return vm.$app.wechatLogin();case 4:code = _context2.sent;_context2.next = 7;return (
-                  vm.$http.post('pay/call/wechat', { code: code, journey: vm.indexToData, trip: vm.formData }));case 7:_yield$vm$$http$post = _context2.sent;res = _yield$vm$$http$post.data;if (!(
-                res.code !== 200)) {_context2.next = 12;break;}
-                vm.isLoading = false;return _context2.abrupt("return",
+                _context3.next = 4;return vm.$app.wechatLogin();case 4:code = _context3.sent;_context3.next = 7;return (
+                  vm.$http.post('pay/call/wechat', { code: code, journey: vm.indexToData, trip: vm.formData }));case 7:_yield$vm$$http$post = _context3.sent;res = _yield$vm$$http$post.data;if (!(
+                res.code !== 200)) {_context3.next = 12;break;}
+                vm.isLoading = false;return _context3.abrupt("return",
                 vm.$message.modal(res.msg));case 12:
 
 
@@ -512,7 +524,7 @@ var _default =
                                                                           	fail: function(err) {
                                                                           		console.log('fail:' + JSON.stringify(err));
                                                                           	}
-                                                                          }); */case 13:case "end":return _context2.stop();}}}, _callee2);}))();
+                                                                          }); */case 13:case "end":return _context3.stop();}}}, _callee3);}))();
     } } };exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
