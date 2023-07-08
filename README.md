@@ -73,3 +73,6 @@
 ![Image text](https://github.com/herman-hang/ShareJourney-Mobile-Client/raw/main/demo/我的订单.png)
 
 - 我的钱包
+
+![Image text](https://github.com/herman-hang/ShareJourney-Mobile-Client/raw/main/demo/我的钱包.png)
+
